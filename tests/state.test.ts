@@ -22,4 +22,13 @@ describe('NuageState', () => {
   it('lerp interpole', () => {
     expect(lerp(0, 10, 0.5)).toBe(5);
   });
+  it('nuit pleine à minuit, jour plein à midi', () => {
+    expect(computeSceneParams({ ...createInitialState(), timeOfDay: 0 }).night).toBe(1);
+    expect(computeSceneParams({ ...createInitialState(), timeOfDay: 0.5 }).night).toBe(0);
+  });
+  it('la joie embrase les aurores plus que la tristesse', () => {
+    const j = computeSceneParams({ ...createInitialState(), emotion: 'joie' });
+    const t = computeSceneParams({ ...createInitialState(), emotion: 'tristesse' });
+    expect(j.aurora).toBeGreaterThan(t.aurora);
+  });
 });

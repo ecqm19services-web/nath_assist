@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { SKY_FRAG, SKY_VERT } from './cloudShader';
 import type { SceneParams } from './state';
 
-// Scène fullscreen : un seul quad + shader ; aucune géométrie inutile.
+// Scène fullscreen : un seul quad + shader ; toutes les transitions sont lissées
+// (le ciel ne "flashe" jamais quand l'humeur ou le souffle change).
 export function createScene(canvas: HTMLCanvasElement) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
   const uniforms = {
@@ -10,11 +11,33 @@ export function createScene(canvas: HTMLCanvasElement) {
     uAltitude: { value: 0.45 },
     uLuminosite: { value: 0.7 },
     uTurbulence: { value: 0.2 },
+    uNight: { value: 0 },
+    uAurora: { value: 0.55 },
+    uPulse: { value: 0 },
     uFocus: { value: new THREE.Vector2(0.5, 0.5) },
+    uAspect: { value: 1 },
+    uTap: { value: new THREE.Vector3(0.5, 0.5, 999) },
     uCol1: { value: new THREE.Color('#1b2a4a') },
     uCol2: { value: new THREE.Color('#7fa8d9') },
     uCol3: { value: new THREE.Color('#dfefff') },
   };
+  // Cible (immédiate) vs courant (lissé) : exponentielle ~1 s.
+  const target = {
+    alt: 0.45, lum: 0.7, turb: 0.2, night: 0, aurora: 0.55,
+    col1: new THREE.Color('#1b2a4a'), col2: new THREE.Color('#7fa8d9'),
+    col3: new THREE.Color('#dfefff'),
+    focus: new THREE.Vector2(0.5, 0.5),
+  };
+  const current = {
+    alt: 0.45, lum: 0.7, turb: 0.2, night: 0, aurora: 0.55,
+    col1: new THREE.Color('#1b2a4a'), col2: new THREE.Color('#7fa8d9'),
+    col3: new THREE.Color('#dfefff'),
+    focus: new THREE.Vector2(0.5, 0.5),
+  };
+  let bpm = 0;
+  let pulsePhase = 0;
+  let tapAge = 999;
+
   const mat = new THREE.ShaderMaterial({
     vertexShader: SKY_VERT,
     fragmentShader: SKY_FRAG,
@@ -26,22 +49,59 @@ export function createScene(canvas: HTMLCanvasElement) {
 
   function resize() {
     renderer.setSize(window.innerWidth, window.innerHeight, false);
+    uniforms.uAspect.value = window.innerWidth / Math.max(1, window.innerHeight);
   }
   window.addEventListener('resize', resize);
   resize();
 
   return {
     apply(params: SceneParams, focus?: [number, number]) {
-      if (focus) uniforms.uFocus.value.set(focus[0], focus[1]);
-      uniforms.uAltitude.value = params.altitude;
-      uniforms.uLuminosite.value = params.luminosite;
-      uniforms.uTurbulence.value = params.turbulence;
-      uniforms.uCol1.value.set(params.palette[0]);
-      uniforms.uCol2.value.set(params.palette[1]);
-      uniforms.uCol3.value.set(params.palette[2]);
+      target.alt = params.altitude;
+      target.lum = params.luminosite;
+      target.turb = params.turbulence;
+      target.night = params.night;
+      target.aurora = params.aurora;
+      target.col1.setStyle(params.palette[0]);
+      target.col2.setStyle(params.palette[1]);
+      target.col3.setStyle(params.palette[2]);
+      if (focus) target.focus.set(focus[0], focus[1]);
+    },
+    setBpm(v: number | null) {
+      bpm = v ?? 0;
+    },
+    tap(x: number, y: number) {
+      tapAge = 0;
+      uniforms.uTap.value.set(x, y, 0);
     },
     frame(dt: number) {
       uniforms.uTime.value += dt;
+      // Lissage exponentiel : factoriel ~2,5 → une seconde pour atteindre la cible.
+      const k = 1 - Math.exp(-dt * 2.5);
+      current.alt += (target.alt - current.alt) * k;
+      current.lum += (target.lum - current.lum) * k;
+      current.turb += (target.turb - current.turb) * k;
+      current.night += (target.night - current.night) * k;
+      current.aurora += (target.aurora - current.aurora) * k;
+      current.col1.lerp(target.col1, k);
+      current.col2.lerp(target.col2, k);
+      current.col3.lerp(target.col3, k);
+      current.focus.lerp(target.focus, k);
+      // Pulsation lumineuse au rythme du cœur (± si aucun pouls mesuré).
+      pulsePhase += dt * (bpm > 0 ? bpm / 60 : 0.2);
+      uniforms.uPulse.value = Math.sin(pulsePhase * 2 * Math.PI);
+      if (tapAge < 100) {
+        tapAge += dt;
+        uniforms.uTap.value.z = tapAge;
+      }
+      uniforms.uAltitude.value = current.alt;
+      uniforms.uLuminosite.value = current.lum;
+      uniforms.uTurbulence.value = current.turb;
+      uniforms.uNight.value = current.night;
+      uniforms.uAurora.value = current.aurora;
+      uniforms.uFocus.value.copy(current.focus);
+      uniforms.uCol1.value.copy(current.col1);
+      uniforms.uCol2.value.copy(current.col2);
+      uniforms.uCol3.value.copy(current.col3);
       renderer.render(scene, new THREE.Camera());
     },
   };

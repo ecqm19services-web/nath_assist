@@ -6,6 +6,7 @@ import { createEmotionSmoother, mapEmotion } from './input/emotion';
 import { cheekLuminance, estimateBpm } from './nuage/rppg';
 import { generateAura } from './aura/aura';
 import { attachPointer, attachTilt } from './input/touch';
+import { ambientLevel, ambientMood, startAmbient } from './audio/ambient';
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const scene = createScene(canvas);
@@ -25,6 +26,16 @@ let focus: [number, number] = [0.5, 0.5];
 attachPointer(canvas, (x, y) => { focus = [x, y]; });
 attachTilt((x) => { state.breath = Math.max(state.breath, Math.abs(x)); });
 
+// Un toucher du ciel : onde lumineuse + éveil de la musique (politique autoplay).
+let reveille = false;
+canvas.addEventListener('pointerdown', (e) => {
+  const r = canvas.getBoundingClientRect();
+  scene.tap((e.clientX - r.left) / r.width, 1 - (e.clientY - r.top) / r.height);
+  if (!reveille) {
+    reveille = startAmbient(aura.musiqueSeed);
+  }
+});
+
 // rPPG : échantillonnage ~8 fps de la luminance cutanée, pouls glissant.
 const rctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!;
 const lum: number[] = [];
@@ -41,6 +52,9 @@ let last = performance.now();
 function boucle(now: number) {
   const dt = (now - last) / 1000;
   last = now;
+  // L'heure locale pilote le cycle jour/nuit du ciel.
+  const d = new Date();
+  state.timeOfDay = (d.getHours() + d.getMinutes() / 60) / 24;
   // Décroissance douce du souffle : les nuages retombent quand on cesse de souffler.
   state.breath = Math.max(0, state.breath - dt * 0.5);
   // Le nuage « respire » doucement au rythme du pouls détecté.
@@ -49,8 +63,14 @@ function boucle(now: number) {
     state.breath = Math.max(state.breath, 0.08 * phase + 0.08);
   }
   scene.apply(computeSceneParams(state), focus);
+  scene.setBpm(state.bpm);
   scene.frame(dt);
-  etat.textContent = `aura : ${aura.nom} · humeur : ${state.emotion} · souffle : ${(state.breath * 100) | 0}% · pouls : ${state.bpm ? Math.round(state.bpm) : '—'}`;
+  // L'ambiance sonore suit l'humeur et l'intensité du souffle.
+  ambientMood(state.emotion);
+  ambientLevel(state.breath);
+  etat.textContent = reveille
+    ? `aura : ${aura.nom} · humeur : ${state.emotion} · souffle : ${(state.breath * 100) | 0}% · pouls : ${state.bpm ? Math.round(state.bpm) : '—'}`
+    : `aura : ${aura.nom} · touche le ciel pour éveiller la musique`;
   requestAnimationFrame(boucle);
 }
 requestAnimationFrame(boucle);
