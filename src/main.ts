@@ -4,6 +4,7 @@ import { startBreath } from './input/breathIO';
 import { startFace } from './input/faceIO';
 import { mapEmotion } from './input/emotion';
 import { cheekLuminance, estimateBpm } from './nuage/rppg';
+import { generateAura } from './aura/aura';
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const scene = createScene(canvas);
@@ -15,6 +16,7 @@ const video = document.getElementById('cam') as HTMLVideoElement;
 startFace(video, (s) => { state.emotion = mapEmotion(s); });
 
 const etat = document.getElementById('etat')!;
+const aura = generateAura(state.seed);
 
 // rPPG : échantillonnage ~8 fps de la luminance cutanée, pouls glissant.
 const rctx = document.createElement('canvas').getContext('2d')!;
@@ -39,7 +41,7 @@ function boucle(now: number) {
   }
   scene.apply(computeSceneParams(state));
   scene.frame(dt);
-  etat.textContent = `humeur : ${state.emotion} · souffle : ${(state.breath * 100) | 0}% · pouls : ${state.bpm ?? '—'}`;
+  etat.textContent = `aura : ${aura.nom} · humeur : ${state.emotion} · souffle : ${(state.breath * 100) | 0}% · pouls : ${state.bpm ?? '—'}`;
   requestAnimationFrame(boucle);
 }
 requestAnimationFrame(boucle);
