@@ -7,6 +7,7 @@ import { cheekLuminance, estimateBpm } from './nuage/rppg';
 import { generateAura } from './aura/aura';
 import { attachPointer, attachTilt } from './input/touch';
 import { ambientLevel, ambientMood, startAmbient } from './audio/ambient';
+import { createCompagneUI } from './compagne/ui';
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const scene = createScene(canvas);
@@ -25,6 +26,14 @@ const aura = generateAura(state.seed);
 let focus: [number, number] = [0.5, 0.5];
 attachPointer(canvas, (x, y) => { focus = [x, y]; });
 attachTilt((x) => { state.breath = Math.max(state.breath, Math.abs(x)); });
+
+// La Compagne : voix et bulles, branchées sur l'état vivant.
+createCompagneUI(() => ({
+  emotion: state.emotion,
+  breath: state.breath,
+  timeOfDay: state.timeOfDay,
+  seed: aura.musiqueSeed,
+}));
 
 // Un toucher du ciel : onde lumineuse + éveil de la musique (politique autoplay).
 let reveille = false;
