@@ -5,6 +5,7 @@ import { startFace } from './input/faceIO';
 import { mapEmotion } from './input/emotion';
 import { cheekLuminance, estimateBpm } from './nuage/rppg';
 import { generateAura } from './aura/aura';
+import { attachPointer, attachTilt } from './input/touch';
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const scene = createScene(canvas);
@@ -17,6 +18,11 @@ startFace(video, (s) => { state.emotion = mapEmotion(s); });
 
 const etat = document.getElementById('etat')!;
 const aura = generateAura(state.seed);
+
+// Le doigt décale le champ de nuages ; l'inclinaison soulève le ciel.
+let focus: [number, number] = [0.5, 0.5];
+attachPointer(canvas, (x, y) => { focus = [x, y]; });
+attachTilt((x) => { state.breath = Math.max(state.breath, Math.abs(x)); });
 
 // rPPG : échantillonnage ~8 fps de la luminance cutanée, pouls glissant.
 const rctx = document.createElement('canvas').getContext('2d')!;
@@ -39,7 +45,7 @@ function boucle(now: number) {
     const phase = Math.sin((Date.now() / (60000 / state.bpm)) * 2 * Math.PI);
     state.breath = Math.max(state.breath, 0.08 * phase + 0.08);
   }
-  scene.apply(computeSceneParams(state));
+  scene.apply(computeSceneParams(state), focus);
   scene.frame(dt);
   etat.textContent = `aura : ${aura.nom} · humeur : ${state.emotion} · souffle : ${(state.breath * 100) | 0}% · pouls : ${state.bpm ?? '—'}`;
   requestAnimationFrame(boucle);

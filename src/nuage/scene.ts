@@ -10,6 +10,7 @@ export function createScene(canvas: HTMLCanvasElement) {
     uAltitude: { value: 0.45 },
     uLuminosite: { value: 0.7 },
     uTurbulence: { value: 0.2 },
+    uFocus: { value: new THREE.Vector2(0.5, 0.5) },
     uCol1: { value: new THREE.Color('#1b2a4a') },
     uCol2: { value: new THREE.Color('#7fa8d9') },
     uCol3: { value: new THREE.Color('#dfefff') },
@@ -30,7 +31,8 @@ export function createScene(canvas: HTMLCanvasElement) {
   resize();
 
   return {
-    apply(params: SceneParams) {
+    apply(params: SceneParams, focus?: [number, number]) {
+      if (focus) uniforms.uFocus.value.set(focus[0], focus[1]);
       uniforms.uAltitude.value = params.altitude;
       uniforms.uLuminosite.value = params.luminosite;
       uniforms.uTurbulence.value = params.turbulence;

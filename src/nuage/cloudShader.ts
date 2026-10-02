@@ -2,6 +2,7 @@
 export const SKY_FRAG = /* glsl */ `
 precision mediump float;
 uniform float uTime, uAltitude, uLuminosite, uTurbulence;
+uniform vec2 uFocus;
 uniform vec3 uCol1, uCol2, uCol3;
 varying vec2 vUv;
 
@@ -17,7 +18,7 @@ float fbm(vec2 p){
   return v;
 }
 void main(){
-  vec2 uv = vUv;
+  vec2 uv = vUv + (uFocus - 0.5) * 0.15;
   float t = uTime * 0.03;
   float clouds = fbm(uv * 3.0 + vec2(t, t * 0.4));
   clouds = smoothstep(0.55 - uAltitude * 0.45, 0.95, clouds);
