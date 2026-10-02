@@ -11,3 +11,18 @@ export function mapEmotion(s: Shapes): Emotion {
   };
   return (Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0]) as Emotion;
 }
+
+// Lissage temporel : une émotion n'est retenue que si elle persiste `threshold` frames
+// (anti-clignotement ; le calme ambiant ne peut plus être ponctuellement volé par un artefact).
+export function createEmotionSmoother(threshold = 20): (next: Emotion) => Emotion {
+  let current: Emotion = 'calme';
+  let candidate: Emotion | null = null;
+  let count = 0;
+  return (next: Emotion): Emotion => {
+    if (next === current) { candidate = null; count = 0; return current; }
+    if (next === candidate) count++;
+    else { candidate = next; count = 1; }
+    if (count >= threshold) { current = next; candidate = null; count = 0; }
+    return current;
+  };
+}

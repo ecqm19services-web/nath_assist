@@ -22,6 +22,7 @@ export async function startFace(
     video.srcObject = stream;
     await video.play();
     let ts = 0;
+    let lastSeen = performance.now();
     const boucle = () => {
       const now = performance.now();
       if (now > ts) {
@@ -29,6 +30,7 @@ export async function startFace(
         const res = landmarker.detectForVideo(video, now);
         const b = res.faceBlendshapes?.[0]?.categories;
         if (b) {
+          lastSeen = now;
           const get = (n: string) => b.find((c) => c.categoryName === n)?.score ?? 0;
           onShapes({
             smile: (get('mouthSmileLeft') + get('mouthSmileRight')) / 2,
@@ -36,6 +38,9 @@ export async function startFace(
             eyeBlink: (get('eyeBlinkLeft') + get('eyeBlinkRight')) / 2,
             jawOpen: get('jawOpen'),
           });
+        } else if (now - lastSeen > 2000) {
+          // Plus de visage depuis 2 s → retour garanti au calme (état non collant).
+          onShapes({ smile: 0, browDown: 0, eyeBlink: 0, jawOpen: 0 });
         }
       }
       requestAnimationFrame(boucle);

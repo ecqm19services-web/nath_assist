@@ -2,7 +2,7 @@ import { createScene } from './nuage/scene';
 import { computeSceneParams, createInitialState } from './nuage/state';
 import { startBreath } from './input/breathIO';
 import { startFace } from './input/faceIO';
-import { mapEmotion } from './input/emotion';
+import { createEmotionSmoother, mapEmotion } from './input/emotion';
 import { cheekLuminance, estimateBpm } from './nuage/rppg';
 import { generateAura } from './aura/aura';
 import { attachPointer, attachTilt } from './input/touch';
@@ -12,9 +12,10 @@ const scene = createScene(canvas);
 const state = createInitialState();
 state.seed = localStorage.getItem('nuage.seed') ?? crypto.randomUUID();
 localStorage.setItem('nuage.seed', state.seed);
-startBreath((v) => { state.breath = v; });
+startBreath((v) => { state.breath = Math.max(state.breath, v); });
 const video = document.getElementById('cam') as HTMLVideoElement;
-startFace(video, (s) => { state.emotion = mapEmotion(s); });
+const lisser = createEmotionSmoother();
+startFace(video, (s) => { state.emotion = lisser(mapEmotion(s)); });
 
 const etat = document.getElementById('etat')!;
 const aura = generateAura(state.seed);
@@ -25,7 +26,7 @@ attachPointer(canvas, (x, y) => { focus = [x, y]; });
 attachTilt((x) => { state.breath = Math.max(state.breath, Math.abs(x)); });
 
 // rPPG : échantillonnage ~8 fps de la luminance cutanée, pouls glissant.
-const rctx = document.createElement('canvas').getContext('2d')!;
+const rctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!;
 const lum: number[] = [];
 setInterval(() => {
   const v = cheekLuminance(video, rctx);
@@ -40,6 +41,8 @@ let last = performance.now();
 function boucle(now: number) {
   const dt = (now - last) / 1000;
   last = now;
+  // Décroissance douce du souffle : les nuages retombent quand on cesse de souffler.
+  state.breath = Math.max(0, state.breath - dt * 0.5);
   // Le nuage « respire » doucement au rythme du pouls détecté.
   if (state.bpm) {
     const phase = Math.sin((Date.now() / (60000 / state.bpm)) * 2 * Math.PI);
@@ -47,7 +50,7 @@ function boucle(now: number) {
   }
   scene.apply(computeSceneParams(state), focus);
   scene.frame(dt);
-  etat.textContent = `aura : ${aura.nom} · humeur : ${state.emotion} · souffle : ${(state.breath * 100) | 0}% · pouls : ${state.bpm ?? '—'}`;
+  etat.textContent = `aura : ${aura.nom} · humeur : ${state.emotion} · souffle : ${(state.breath * 100) | 0}% · pouls : ${state.bpm ? Math.round(state.bpm) : '—'}`;
   requestAnimationFrame(boucle);
 }
 requestAnimationFrame(boucle);
