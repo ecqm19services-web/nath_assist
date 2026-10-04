@@ -14,6 +14,9 @@ export function createScene(canvas: HTMLCanvasElement) {
     uNight: { value: 0 },
     uAurora: { value: 0.55 },
     uPulse: { value: 0 },
+    uPluie: { value: 0 },
+    uEclair: { value: 0 },
+    uMeteor: { value: new THREE.Vector4(0, 0, 0, 0) },
     uFocus: { value: new THREE.Vector2(0.5, 0.5) },
     uAspect: { value: 1 },
     uTap: { value: new THREE.Vector3(0.5, 0.5, 999) },
@@ -23,7 +26,7 @@ export function createScene(canvas: HTMLCanvasElement) {
   };
   // Cible (immédiate) vs courant (lissé) : exponentielle ~1 s.
   const target = {
-    alt: 0.45, lum: 0.7, turb: 0.2, night: 0, aurora: 0.55,
+    alt: 0.45, lum: 0.7, turb: 0.2, night: 0, aurora: 0.55, pluie: 0,
     col1: new THREE.Color('#1b2a4a'), col2: new THREE.Color('#7fa8d9'),
     col3: new THREE.Color('#dfefff'),
     focus: new THREE.Vector2(0.5, 0.5),
@@ -37,6 +40,9 @@ export function createScene(canvas: HTMLCanvasElement) {
   let bpm = 0;
   let pulsePhase = 0;
   let tapAge = 999;
+  let pluieCur = 0;
+  let eclairV = 0;
+  const meteor = { x: 0, y: 0, age: 0, actif: 0 };
 
   const mat = new THREE.ShaderMaterial({
     vertexShader: SKY_VERT,
@@ -61,6 +67,7 @@ export function createScene(canvas: HTMLCanvasElement) {
       target.turb = params.turbulence;
       target.night = params.night;
       target.aurora = params.aurora;
+      target.pluie = params.pluie;
       target.col1.setStyle(params.palette[0]);
       target.col2.setStyle(params.palette[1]);
       target.col3.setStyle(params.palette[2]);
@@ -68,6 +75,17 @@ export function createScene(canvas: HTMLCanvasElement) {
     },
     setBpm(v: number | null) {
       bpm = v ?? 0;
+    },
+    // La foudre intérieure : un flash qui s'éteint en ~1 s.
+    eclair() {
+      eclairV = 1;
+    },
+    // Une étoile filante au départ choisi (x,y ∈ ciel haut).
+    filer(x: number, y: number) {
+      meteor.x = x;
+      meteor.y = y;
+      meteor.age = 0;
+      meteor.actif = 1;
     },
     tap(x: number, y: number) {
       tapAge = 0;
@@ -82,6 +100,12 @@ export function createScene(canvas: HTMLCanvasElement) {
       current.turb += (target.turb - current.turb) * k;
       current.night += (target.night - current.night) * k;
       current.aurora += (target.aurora - current.aurora) * k;
+      pluieCur += (target.pluie - pluieCur) * (1 - Math.exp(-dt * 0.8)); // une pluie s'annonce, elle ne débarque pas
+      eclairV *= Math.exp(-dt * 2.6);
+      if (meteor.actif > 0) {
+        meteor.age += dt;
+        if (meteor.age > 1.4) meteor.actif = 0;
+      }
       current.col1.lerp(target.col1, k);
       current.col2.lerp(target.col2, k);
       current.col3.lerp(target.col3, k);
@@ -98,6 +122,9 @@ export function createScene(canvas: HTMLCanvasElement) {
       uniforms.uTurbulence.value = current.turb;
       uniforms.uNight.value = current.night;
       uniforms.uAurora.value = current.aurora;
+      uniforms.uPluie.value = pluieCur;
+      uniforms.uEclair.value = eclairV;
+      uniforms.uMeteor.value.set(meteor.x, meteor.y, meteor.age, meteor.actif);
       uniforms.uFocus.value.copy(current.focus);
       uniforms.uCol1.value.copy(current.col1);
       uniforms.uCol2.value.copy(current.col2);

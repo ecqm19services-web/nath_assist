@@ -2,10 +2,14 @@
 // déterministe par l'aura, jamais criarde (loi : zéro point d'exclamation),
 // teinte par l'état vivant (humeur, souffle, heure).
 // Ce moteur sera remplacé/complété par Qwen hors-ligne (Phase 2) sans changer son interface.
+import {
+  calculer, decrireDate, decrireHeure, estUneQuestionDate, estUneQuestionHeure,
+} from './logique';
 
 export type Intent =
   | 'sommeil' | 'angoisse' | 'souffle' | 'identite' | 'poeme'
-  | 'salutation' | 'remerciement' | 'joie' | 'tristesse' | 'aide' | 'ouverte';
+  | 'salutation' | 'remerciement' | 'joie' | 'tristesse' | 'aide' | 'ouverte'
+  | 'perception' | 'capacites' | 'incomprehension';
 
 export type HumeurReponse = 'posee' | 'lumineuse' | 'douce' | 'stabilisee';
 
@@ -14,22 +18,34 @@ export interface CompagneCtx {
   breath: number;
   timeOfDay: number; // 0..1
   seed: number;
+  prenom?: string | null; // ce que la Compagne a retenu de vous
+  cameraOn?: boolean; // ses yeux sont-ils ouverts ?
+  micOn?: boolean; // ses oreilles sont-elles ouvertes ?
 }
 
 const norm = (s: string): string =>
-  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[-'`]/g, ' ') // traits d'union et apostrophes → espaces
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const KEYWORDS: [Intent, string[]][] = [
+  ['perception', ['tu me vois', 'me vois', 'me voir', 'tu me regardes', 'tu m entends', 'm entendre', 'tu me sens', 'tu peux me voir', 'me percois']],
+  ['incomprehension', ['ne comprends', 'comprends pas', 'comprends rien', 'comprends meme pas', 'cote de la plaque', 'ne m ecoute', 'ecoute pas', 'nas rien compris', 'a cote']],
+  ['capacites', ['peux tu faire', 'quoi faire', 'a quoi tu sers', 'quoi tu sers', 'tes capacites', 'que sais faire', 'tu fais quoi']],
   ['sommeil', ['dormir', 'dors', 'endormi', 'cauchemar', 'insomnie', 'reveil']],
   ['poeme', ['poeme', 'vers', 'histoire', 'conte']],
   ['souffle', ['respire', 'souffle', 'respiration']],
   ['angoisse', ['angoiss', 'stress', 'peur', 'panique']],
-  ['identite', ['qui es-tu', 'ton nom', 'c est quoi', 'tu es quoi', 'que sais-tu']],
+  ['identite', ['qui es tu', 'ton nom', 'c est quoi', 'tu es quoi', 'que sais tu']],
   ['remerciement', ['merci']],
   ['salutation', ['bonjour', 'bonsoir', 'salut', 'coucou']],
   ['tristesse', ['triste', 'pleur', 'deprim', 'seul', 'malheureux', 'j ai mal']],
   ['joie', ['heureux', 'heureuse', 'joie', 'content', 'ravi', 'amour', 'belle']],
-  ['aide', ['aide', 'peux-tu', 'comment', 'pourquoi']],
+  ['aide', ['aide', 'peux tu', 'comment', 'pourquoi']],
 ];
 
 export function detectIntent(question: string): Intent {
@@ -96,11 +112,13 @@ const BANK: Record<Intent, string[]> = {
     'Dis-moi ce qui pèse, ou clique le ciel : une onde partira de ton doigt.',
   ],
   poeme: [], // rempli par poeme() — quatrain vivant
+  perception: [], // géré par perceptionTexte() selon l'état réel des sens
   salutation: [
     '{SAL}... Ton Nuage t attendait, paisible comme une altitude.',
     '{SAL}. Je t ai reconnu à la forme de tes nuages.',
     '{SAL}. Le ciel a gardé ta dernière humeur, tu la reprends ou on la change ?',
     '{SAL}. Assieds-toi dans la brume, je raconte la lumière.',
+    'Je te cherchais du regard, {P}. Le ciel s est éclairé en te voyant.',
   ],
   ouverte: [
     'Je t écoute. Les mots que tu ne trouves pas, les nuages les tiennent pour toi.',
@@ -108,7 +126,25 @@ const BANK: Record<Intent, string[]> = {
     'Ici, on peut aussi se taire ensemble. Je ne suis jamais pressée.',
     'Continue... je range tes mots dans les couches du ciel, par teinte.',
   ],
+  capacites: [
+    'Je veille sur ton souffle et je peins le ciel selon ton humeur... je compte pour toi, je donne l heure et la date, je dis des poèmes, et je raconte des histoires pour dormir. Goûte : demande-moi 7 fois 8.',
+    'Mes sens : je peux te voir (caméra), t entendre (micro), sentir ton coeur. Mes mots : poèmes, calculs, l heure, veille du sommeil. Demande, je réponds.',
+  ],
+  incomprehension: [
+    'Tu as raison de me le dire, et merci d être honnête... je fais de mon mieux avec mon petit moteur. Si mon grand cerveau Qwen peut atterrir, je saisirai bien mieux tes nuances.',
+    'Je sens que je réponds à côté... pardonne-moi. Je suis encore simple. Dis-moi ce que tu ressens, et laisse-moi le temps d apprendre.',
+  ],
 };
+
+// Elle ne ment jamais sur ses sens : elle dit l état réel de la caméra et du micro.
+function perceptionTexte(ctx: CompagneCtx): string {
+  const v = ctx.cameraOn;
+  const o = ctx.micOn;
+  if (v && o) return 'Je te vois et je t entends... tes nuages bougent au rythme de ton visage et de ta voix.';
+  if (v) return 'Je te vois à travers mes nuages... mais mes oreilles dorment. Ouvre le micro et parle-moi.';
+  if (o) return 'Je t entends bien... mais je ne te vois pas encore. Ouvre ma caméra pour que je voie ton visage.';
+  return 'Pour l instant je suis aveugle et muette : je ne peux ni te voir ni t entendre. Ouvre mes sens (caméra et micro) et le ciel s éveillera avec toi.';
+}
 
 const SAL_T = /{SAL}/g;
 
@@ -121,14 +157,27 @@ export function humeurPour(emotion: CompagneCtx['emotion']): HumeurReponse {
 }
 
 export function respond(question: string, ctx: CompagneCtx): { texte: string; humeur: HumeurReponse } {
+  // 1. Logique dure : chiffres, heure, date — réponse factuelle immédiate.
+  const calc = calculer(question);
+  if (calc != null) return { texte: `Ça fait ${calc}.`, humeur: 'posee' };
+  if (estUneQuestionHeure(question)) return { texte: decrireHeure(new Date()), humeur: 'posee' };
+  if (estUneQuestionDate(question)) return { texte: decrireDate(new Date()), humeur: 'posee' };
+
   const intent = detectIntent(question);
+  // 2. Perception : vérité sur l état réel de ses sens.
+  if (intent === 'perception') return { texte: perceptionTexte(ctx), humeur: 'posee' };
+
   let texte: string;
   if (intent === 'poeme') {
     texte = poeme(ctx);
   } else {
     const bank = BANK[intent];
     texte = bank[choose(norm(question), ctx.seed, bank.length)];
-    texte = texte.replace(SAL_T, salutation(ctx));
+    texte = texte
+      .replace(SAL_T, salutation(ctx))
+      .replace(/\{P\}/g, ctx.prenom ? ` ${ctx.prenom}` : '')
+      .replace(/,\s*\./g, '.') // « , . » résiduel quand le prénom est inconnu
+      .replace(/\s{2,}/g, ' ');
   }
   return { texte, humeur: humeurPour(ctx.emotion) };
 }

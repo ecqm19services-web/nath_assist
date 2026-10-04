@@ -31,4 +31,8 @@ describe('NuageState', () => {
     const t = computeSceneParams({ ...createInitialState(), emotion: 'tristesse' });
     expect(j.aurora).toBeGreaterThan(t.aurora);
   });
+  it("la tristesse fait pleuvoir le ciel, la joie l'en préserve", () => {
+    expect(computeSceneParams({ ...createInitialState(), emotion: 'tristesse' }).pluie).toBeGreaterThanOrEqual(0.6);
+    expect(computeSceneParams({ ...createInitialState(), emotion: 'joie' }).pluie).toBe(0);
+  });
 });

@@ -8,16 +8,19 @@ import { generateAura } from './aura/aura';
 import { attachPointer, attachTilt } from './input/touch';
 import { ambientLevel, ambientMood, startAmbient } from './audio/ambient';
 import { createCompagneUI } from './compagne/ui';
+import { probaEvenements } from './nuage/meteo';
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const scene = createScene(canvas);
 const state = createInitialState();
 state.seed = localStorage.getItem('nuage.seed') ?? crypto.randomUUID();
 localStorage.setItem('nuage.seed', state.seed);
-startBreath((v) => { state.breath = Math.max(state.breath, v); });
+// État réel des sens : la Compagne ne ment jamais sur ce qu'elle perçoit.
+const capteurs = { cameraOn: false, micOn: false };
+startBreath((v) => { state.breath = Math.max(state.breath, v); }).then((ok) => { capteurs.micOn = ok; });
 const video = document.getElementById('cam') as HTMLVideoElement;
 const lisser = createEmotionSmoother();
-startFace(video, (s) => { state.emotion = lisser(mapEmotion(s)); });
+startFace(video, (s) => { state.emotion = lisser(mapEmotion(s)); }).then((ok) => { capteurs.cameraOn = ok; });
 
 const etat = document.getElementById('etat')!;
 const aura = generateAura(state.seed);
@@ -27,13 +30,24 @@ let focus: [number, number] = [0.5, 0.5];
 attachPointer(canvas, (x, y) => { focus = [x, y]; });
 attachTilt((x) => { state.breath = Math.max(state.breath, Math.abs(x)); });
 
-// La Compagne : voix et bulles, branchées sur l'état vivant.
+// La Compagne : voix, bulles, mémoire et vie propre, branchées sur l'état vivant.
 createCompagneUI(() => ({
   emotion: state.emotion,
   breath: state.breath,
   timeOfDay: state.timeOfDay,
   seed: aura.musiqueSeed,
+  bpm: state.bpm,
+  cameraOn: capteurs.cameraOn,
+  micOn: capteurs.micOn,
 }));
+
+// Le ciel vit seul : toutes les 15 s, il décide d'un éclair ou d'une filante
+// selon l'humeur et l'heure — personne ne lui a rien demandé.
+setInterval(() => {
+  const p = probaEvenements(state.emotion, computeSceneParams(state).night);
+  if (Math.random() < p.eclair) scene.eclair();
+  if (Math.random() < p.filer) scene.filer(0.08 + Math.random() * 0.75, 0.7 + Math.random() * 0.25);
+}, 15000);
 
 // Un toucher du ciel : onde lumineuse + éveil de la musique (politique autoplay).
 let reveille = false;

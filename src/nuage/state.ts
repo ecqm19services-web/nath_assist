@@ -15,6 +15,7 @@ export interface SceneParams {
   turbulence: number;  // 0..1 : agitation du ciel
   night: number;       // 0..1 : nuit tombée (étoiles, lune, aurores)
   aurora: number;      // 0..1 : intensité des rubans d'aurore (humeur)
+  pluie: number;       // 0..1 : pluie — la tristesse a le droit de tomber
   palette: [string, string, string];
 }
 
@@ -35,10 +36,10 @@ const PALETTES: Record<Emotion, [string, string, string]> = {
 
 export function computeSceneParams(s: NuageState): SceneParams {
   const emBase = {
-    calme: { alt: 0.45, lum: 0.7, turb: 0.2, aur: 0.55 },
-    joie: { alt: 0.7, lum: 0.9, turb: 0.35, aur: 0.95 },
-    tristesse: { alt: 0.2, lum: 0.35, turb: 0.1, aur: 0.25 },
-    tension: { alt: 0.6, lum: 0.45, turb: 0.85, aur: 0.4 },
+    calme: { alt: 0.45, lum: 0.7, turb: 0.2, aur: 0.55, pluie: 0.12 },
+    joie: { alt: 0.7, lum: 0.9, turb: 0.35, aur: 0.95, pluie: 0 },
+    tristesse: { alt: 0.2, lum: 0.35, turb: 0.1, aur: 0.25, pluie: 0.7 },
+    tension: { alt: 0.6, lum: 0.45, turb: 0.85, aur: 0.4, pluie: 0.45 },
   }[s.emotion];
   // Nuit dérivée de l'heure locale : plein jour à midi (t=0.5), nuit pleine dès minuit,
   // crépuscule franc à partir de ~19 h (seuil 0,25 → 0,2 pour que le ciel "bascule" le soir).
@@ -49,6 +50,7 @@ export function computeSceneParams(s: NuageState): SceneParams {
     turbulence: Math.min(1, emBase.turb + s.breath * 0.1),
     night,
     aurora: emBase.aur,
+    pluie: emBase.pluie,
     palette: PALETTES[s.emotion],
   };
 }

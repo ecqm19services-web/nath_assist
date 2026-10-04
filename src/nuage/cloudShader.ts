@@ -3,6 +3,8 @@
 export const SKY_FRAG = /* glsl */ `
 precision mediump float;
 uniform float uTime, uAltitude, uLuminosite, uTurbulence, uNight, uAurora, uPulse;
+uniform float uPluie, uEclair;   // pluie continue (humeur) + flash d'orage
+uniform vec4 uMeteor;             // xy : départ, z : âge, w : actif — étoile filante
 uniform vec2 uFocus;
 uniform float uAspect; // largeur/hauteur : pour que l'onde du toucher soit circulaire
 uniform vec3 uTap; // xy : position du toucher, z : âge en secondes (>=100 : inactif)
@@ -79,6 +81,31 @@ void main(){
     float d = length((uv - uTap.xy) * vec2(uAspect, 1.0)); // onde circulaire, pas ellipse
     float ring = exp(-120.0 * (d - r) * (d - r)) * exp(-0.6 * uTap.z); // fondu lent, visible
     col += ring * (uCol3 * 0.6 + vec3(0.25));
+  }
+
+  // Pluie : traits fins qui tombent à des vitesses différentes selon la colonne.
+  if (uPluie > 0.01) {
+    float cellx = floor(uv.x * 140.0);
+    float rnd = hash(vec2(cellx, 7.0));
+    float chute = fract(uv.y * 6.0 + uTime * (1.6 + rnd * 1.2) + rnd * 9.0);
+    float trait = smoothstep(0.985, 1.0, chute) * step(0.45, rnd);
+    col += trait * uPluie * vec3(0.5, 0.6, 0.75) * 0.5;
+  }
+
+  // Éclair : le ciel blanc une fraction de seconde, puis l'oubli.
+  col += vec3(uEclair * 0.55, uEclair * 0.6, uEclair * 0.7);
+
+  // Étoile filante : tête brillante + traînée qui s'allume puis s'éteint.
+  if (uMeteor.w > 0.0) {
+    vec2 dir = normalize(vec2(0.9, -0.42));
+    vec2 p = uMeteor.xy + dir * (uMeteor.z * 0.55);
+    vec2 rel = uv - p;
+    float along = dot(rel, dir);
+    float perp = length(rel - dir * along);
+    float tete = exp(-dot(rel, rel) * 5000.0);
+    float queue = step(along, 0.0) * step(-0.3, along) * exp(-perp * perp * 2600.0) * (-along / 0.3);
+    float feu = exp(-pow(uMeteor.z - 0.45, 2.0) * 9.0) * uMeteor.w;
+    col += (tete * 1.2 + queue * 0.8) * feu * vec3(1.0, 0.95, 0.8);
   }
 
   gl_FragColor = vec4(col, 1.0);

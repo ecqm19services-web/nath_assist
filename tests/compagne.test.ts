@@ -44,4 +44,22 @@ describe('compagne engine', () => {
     expect(detectIntent('fais-moi un poeme')).toBe('poeme');
     expect(respond('fais-moi un poeme', ctx).texte.split('\n')).toHaveLength(4);
   });
+  it('calcule au lieu de répondre à côté', () => {
+    expect(respond('combien font 7 fois 8', ctx).texte).toContain('56');
+  });
+  it('perçoit l état réel de ses sens', () => {
+    const aveugle = respond('est-ce que tu me vois', { ...ctx, cameraOn: false, micOn: false });
+    expect(aveugle.texte.toLowerCase()).toMatch(/cam|micro|activer|yeux/);
+    const voyante = respond('est-ce que tu me vois', { ...ctx, cameraOn: true, micOn: true });
+    expect(voyante.texte.toLowerCase()).toContain('vois');
+  });
+  it('assume l incompréhension qu on lui reproche', () => {
+    expect(detectIntent('en gros tu ne comprends même pas ce que je dis')).toBe('incomprehension');
+    const r = respond('tu ne comprends rien', ctx);
+    expect(r.texte.toLowerCase()).toMatch(/cerveau|comprends|mieux/);
+  });
+  it('énumère ses capacités', () => {
+    expect(detectIntent('que peux-tu faire ?')).toBe('capacites');
+    expect(respond('a quoi tu sers', ctx).texte.toLowerCase()).toContain('poème');
+  });
 });

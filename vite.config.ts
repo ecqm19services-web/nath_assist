@@ -17,6 +17,10 @@ export default defineConfig({
         { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
       ],
     },
-    workbox: { globPatterns: ['**/*.{js,css,html,webmanifest,png}'] },
+    workbox: {
+      globPatterns: ['**/*.{js,css,html,webmanifest,png}'],
+      // Le cerveau Qwen (chunk WebLLM ~6 Mo) doit être pré-cache pour fonctionner hors-ligne.
+      maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+    },
   })],
 });
