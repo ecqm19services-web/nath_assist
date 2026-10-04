@@ -62,4 +62,42 @@ describe('compagne engine', () => {
     expect(detectIntent('que peux-tu faire ?')).toBe('capacites');
     expect(respond('a quoi tu sers', ctx).texte.toLowerCase()).toContain('poème');
   });
+  it('se souvient d un calcul et enchaîne sur le résultat', () => {
+    const r1 = respond('7 fois 8', ctx);
+    expect(r1.resultat).toBe(56);
+    const r2 = respond('plus 2', { ...ctx, dernierResultat: r1.resultat });
+    expect(r2.texte).toContain('58');
+    expect(r2.resultat).toBe(58);
+  });
+  it('reconnaît la tendresse et n y répond jamais par du vide', () => {
+    expect(detectIntent('je t aime')).toBe('tendresse');
+    const r = respond('je t aime', ctx);
+    expect(r.texte.length).toBeGreaterThan(15);
+    expect(r.texte).not.toContain('!');
+  });
+  it('reçoit une pique sans jamais rendre l insulte', () => {
+    expect(detectIntent('tu es nulle')).toBe('piqure');
+    const r = respond('espèce d idiote', ctx);
+    expect(r.texte).not.toMatch(/\b(con|idiote|nulle|moche|stupide)\b/i);
+    expect(r.texte.length).toBeGreaterThan(15);
+  });
+  it('fait un nouveau poème quand on lui dit « encore »', () => {
+    expect(detectIntent('raconte encore')).toBe('suite');
+    const r = respond('raconte encore', { ...ctx, dernierSujet: 'poeme' });
+    expect(r.texte.split('\n')).toHaveLength(4);
+  });
+  it('dit son propre ciel quand on lui demande « et toi ? »', () => {
+    expect(detectIntent('et toi ?')).toBe('etat');
+    const r = respond('et toi ?', { ...ctx, emotion: 'joie' });
+    expect(r.texte.toLowerCase()).toMatch(/nuage|clair|lumiere|douce|orage|soleil/);
+  });
+  it('un poème neuf à chaque tour de conversation', () => {
+    const p1 = respond('fais un poeme', ctx).texte;
+    const p2 = respond('fais un poeme', { ...ctx, tour: 2 }).texte;
+    expect(p2).not.toBe(p1);
+    // Carrousel : à chaque position, le vers a tourné — « encore » ne recycle jamais à l'identique.
+    const a = p1.split('\n');
+    const b = p2.split('\n');
+    a.forEach((v, i) => expect(b[i]).not.toBe(v));
+  });
 });

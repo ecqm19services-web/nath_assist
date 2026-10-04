@@ -21,6 +21,11 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
                backdrop-filter: blur(8px); }
 .bulle-moi { align-self: flex-end; color: #cfe3d9; background: rgba(28, 46, 38, .45);
              border: 1px solid rgba(159, 255, 200, .14); backdrop-filter: blur(8px); }
+.compagne-relance { display: inline-block; margin-top: 6px; padding: 2px 10px;
+                    font: inherit; font-size: .85em; color: #9fd6ff; cursor: pointer;
+                    background: rgba(159, 216, 255, .08); border: 1px dashed rgba(159, 216, 255, .4);
+                    border-radius: 999px; transition: background .3s; }
+.compagne-relance:hover { background: rgba(159, 216, 255, .2); }
 @keyframes bulle-in { from { opacity: 0; transform: translateY(8px); }
                       to { opacity: 1; transform: none; } }
 .compagne-ligne { display: flex; gap: 8px; align-items: center; }

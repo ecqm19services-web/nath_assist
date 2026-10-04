@@ -1,7 +1,7 @@
 // L'interface de la Compagne : bulles douces en bas du ciel, micro local,
 // clavier complet (accessibilité), mémoire du prénom et vie proactive —
 // elle pense et parle toute seule, sans qu'on la sollicite.
-import { respond, type CompagneCtx } from './engine';
+import { respond, type CompagneCtx, type Intent } from './engine';
 import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
 import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
 import { choisirMonologue, nextDelai, type MonoCtx } from './proactive';
@@ -53,23 +53,46 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
 
   let dernierEchange = performance.now();
 
+  // Mémoire immédiate de la conversation : son dernier calcul, de quoi on parlait,
+  // le tour — pour que « plus 2 », « encore » et les poèmes ne sortent pas du vide.
+  const memoireLoc: { resultat: number | null; sujet: Intent | null; tour: number } = {
+    resultat: null, sujet: null, tour: 0,
+  };
+
   // Le grand cerveau (Qwen, gratuit, local) télécharge en silence ; le petit
   // moteur répond pendant ce temps — personne n'attend jamais.
   let cerveau: Cerveau | null = null;
   const histoire: Message[] = [];
-  if (gpuDisponible()) {
+
+  function chargerCerveau() {
     const bCerveau = bulle('Je télécharge mon cerveau… 0 %', 'nuage');
     creerCerveau((p) => {
       bCerveau.textContent = `Je télécharge mon cerveau Qwen… ${Math.min(99, Math.round(p * 100))} %`;
-    }).then((c) => {
+    }).then(({ cerveau: c, raison }) => {
       if (c) {
         cerveau = c;
         bCerveau.textContent = 'Mon cerveau est arrivé. Dis les phrases les plus tordues, je suivrai.';
-      } else {
-        bCerveau.textContent = 'Le gros cerveau n’a pas pu atterrir ici… je reste attentive avec mon petit moteur.';
+        return;
       }
+      bCerveau.textContent = raison === 'reseau'
+        ? 'Un hic du réseau empêche mon gros cerveau d atterrir... je reste attentive avec mon petit moteur.'
+        : raison === 'machine'
+          ? 'Ma carte graphique refuse ce cerveau, trop costaud pour elle... mon petit moteur suffit, essaie un modèle plus léger si tu veux.'
+          : 'Le gros cerveau n’a pas pu atterrir ici... je reste attentive avec mon petit moteur.';
+      // Jamais bloquant, jamais sans recours : une reprise est toujours possible
+      // (les fragments déjà téléchargés restent en cache, la reprise repart plus loin).
+      const relance = document.createElement('button');
+      relance.type = 'button';
+      relance.className = 'compagne-relance';
+      relance.textContent = 'réessayer le cerveau';
+      relance.addEventListener('click', () => {
+        relance.remove();
+        chargerCerveau();
+      });
+      bCerveau.appendChild(relance);
     });
   }
+  if (gpuDisponible()) chargerCerveau();
 
   function traiter(question: string) {
     const q = question.trim();
@@ -115,7 +138,17 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
       return;
     }
 
-    const r = respond(q, { ...c, prenom: memoire.prenom });
+    const r = respond(q, {
+      ...c,
+      prenom: memoire.prenom,
+      dernierResultat: memoireLoc.resultat,
+      dernierSujet: memoireLoc.sujet,
+      tour: memoireLoc.tour,
+    });
+    // Elle note : résultat pour la suite, sujet pour les enchaînements, tour pour le neuf.
+    memoireLoc.tour++;
+    if (r.resultat != null) memoireLoc.resultat = r.resultat;
+    memoireLoc.sujet = r.sujet;
     // Respiration avant de répondre : la Compagne ne riposte pas, elle répond.
     setTimeout(() => dire(r.texte, r.humeur), 700);
   }

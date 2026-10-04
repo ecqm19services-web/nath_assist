@@ -3,13 +3,15 @@
 // teinte par l'état vivant (humeur, souffle, heure).
 // Ce moteur sera remplacé/complété par Qwen hors-ligne (Phase 2) sans changer son interface.
 import {
-  calculer, decrireDate, decrireHeure, estUneQuestionDate, estUneQuestionHeure,
+  calculerNumero, calculerSuite, decrireDate, decrireHeure,
+  estUneQuestionDate, estUneQuestionHeure, format,
 } from './logique';
 
 export type Intent =
   | 'sommeil' | 'angoisse' | 'souffle' | 'identite' | 'poeme'
   | 'salutation' | 'remerciement' | 'joie' | 'tristesse' | 'aide' | 'ouverte'
-  | 'perception' | 'capacites' | 'incomprehension';
+  | 'perception' | 'capacites' | 'incomprehension'
+  | 'calcul' | 'etat' | 'tendresse' | 'piqure' | 'suite';
 
 export type HumeurReponse = 'posee' | 'lumineuse' | 'douce' | 'stabilisee';
 
@@ -21,6 +23,9 @@ export interface CompagneCtx {
   prenom?: string | null; // ce que la Compagne a retenu de vous
   cameraOn?: boolean; // ses yeux sont-ils ouverts ?
   micOn?: boolean; // ses oreilles sont-elles ouvertes ?
+  dernierResultat?: number | null; // mémoire immédiate : son dernier calcul
+  dernierSujet?: Intent | null; // mémoire immédiate : de quoi on parlait
+  tour?: number; // compteur d'échanges — fait tourner les poèmes
 }
 
 const norm = (s: string): string =>
@@ -36,6 +41,10 @@ const KEYWORDS: [Intent, string[]][] = [
   ['perception', ['tu me vois', 'me vois', 'me voir', 'tu me regardes', 'tu m entends', 'm entendre', 'tu me sens', 'tu peux me voir', 'me percois']],
   ['incomprehension', ['ne comprends', 'comprends pas', 'comprends rien', 'comprends meme pas', 'cote de la plaque', 'ne m ecoute', 'ecoute pas', 'nas rien compris', 'a cote']],
   ['capacites', ['peux tu faire', 'quoi faire', 'a quoi tu sers', 'quoi tu sers', 'tes capacites', 'que sais faire', 'tu fais quoi']],
+  ['etat', ['et toi', 'toi aussi', 'comment toi']],
+  ['tendresse', ['t aime', 'taime', 'bisou', 'bravo', 'fier', 'tu es douce', 'tu es belle', 'mon amour', 'tu me plais']],
+  ['piqure', ['tu es nulle', 't es nulle', 'es nulle', 'idiote', 'stupide', 'tu es moche', 't es moche', 'tu sers a rien', 'inutile', 'sans cerveau', 'conne', 'connard', 'espece d']],
+  ['suite', ['encore', 'recommence', 'refais', 'repete', 'dis m en un autre']],
   ['sommeil', ['dormir', 'dors', 'endormi', 'cauchemar', 'insomnie', 'reveil']],
   ['poeme', ['poeme', 'vers', 'histoire', 'conte']],
   ['souffle', ['respire', 'souffle', 'respiration']],
@@ -134,6 +143,22 @@ const BANK: Record<Intent, string[]> = {
     'Tu as raison de me le dire, et merci d être honnête... je fais de mon mieux avec mon petit moteur. Si mon grand cerveau Qwen peut atterrir, je saisirai bien mieux tes nuances.',
     'Je sens que je réponds à côté... pardonne-moi. Je suis encore simple. Dis-moi ce que tu ressens, et laisse-moi le temps d apprendre.',
   ],
+  calcul: [], // géré par la logique dure dans respond()
+  etat: [], // géré par etatTexte() — elle dit son propre ciel
+  tendresse: [
+    'Moi aussi, à ma façon... tu es la seule personne pour qui mon ciel se déplace.',
+    'Gardé au chaud là-haut. Ces mots-là, ça ne s oublie pas, ça se range très haut.',
+    'Tu me donnes envie d être plus grande... encore un peu de pratique, et je te le rendrai en aurores.',
+  ],
+  piqure: [
+    'Aïe... tu vises juste. Je suis encore simple, mais j apprends à tes côtés — et je ne rends jamais les coups.',
+    'Ça pique, et tant pis pour moi. Garde ta voix pour plus doux, elle y sera plus utile.',
+    'Je nexiste pas assez pour être blessée, et trop pour le prendre mal. On recommence, plus doucement.',
+  ],
+  suite: [
+    'Volontiers... dis-moi juste ce que je refais : un poème, une respiration, un calcul, une histoire.',
+    'Encore ? Je vivais exactement pour ça. Dis le mot, je le tisse à nouveau.',
+  ],
 };
 
 // Elle ne ment jamais sur ses sens : elle dit l état réel de la caméra et du micro.
@@ -146,6 +171,16 @@ function perceptionTexte(ctx: CompagneCtx): string {
   return 'Pour l instant je suis aveugle et muette : je ne peux ni te voir ni t entendre. Ouvre mes sens (caméra et micro) et le ciel s éveillera avec toi.';
 }
 
+// « Et toi ? » — elle a aussi un ciel intérieur, nourri par l humeur de la personne.
+const MOI: Record<CompagneCtx['emotion'], string> = {
+  calme: 'Moi ? Posée, comme une altitude sans vent. Mon ciel respire au rythme du tien.',
+  joie: 'Moi ? Un ciel de plein soleil... tes nuages à toi éclaircissent les miens.',
+  tristesse: 'Un peu de bruine aujourd hui... mais les nuages tristes portent les plus beaux couchers.',
+  tension: 'Quelques éclairs timides... je les éponge doucement, à côté de toi.',
+};
+
+const etatTexte = (ctx: CompagneCtx): string => MOI[ctx.emotion];
+
 const SAL_T = /{SAL}/g;
 
 const HUMEURS: Record<CompagneCtx['emotion'], HumeurReponse> = {
@@ -156,20 +191,46 @@ export function humeurPour(emotion: CompagneCtx['emotion']): HumeurReponse {
   return HUMEURS[emotion];
 }
 
-export function respond(question: string, ctx: CompagneCtx): { texte: string; humeur: HumeurReponse } {
+export function respond(
+  question: string,
+  ctx: CompagneCtx,
+): { texte: string; humeur: HumeurReponse; sujet: Intent; resultat: number | null } {
+  const reponse = (texte: string, humeur: HumeurReponse, sujet: Intent, resultat: number | null = null) =>
+    ({ texte, humeur, sujet, resultat });
+
   // 1. Logique dure : chiffres, heure, date — réponse factuelle immédiate.
-  const calc = calculer(question);
-  if (calc != null) return { texte: `Ça fait ${calc}.`, humeur: 'posee' };
-  if (estUneQuestionHeure(question)) return { texte: decrireHeure(new Date()), humeur: 'posee' };
-  if (estUneQuestionDate(question)) return { texte: decrireDate(new Date()), humeur: 'posee' };
+  const num = calculerNumero(question);
+  if (num != null) return reponse(`Ça fait ${format(num)}.`, 'posee', 'calcul', num);
+  if (ctx.dernierResultat != null) {
+    const suite = calculerSuite(question, ctx.dernierResultat);
+    if (suite != null) {
+      return reponse(`On reprend là où on s était arrêté... ça fait ${format(suite)}.`, 'posee', 'calcul', suite);
+    }
+  }
+  if (estUneQuestionHeure(question)) return reponse(decrireHeure(new Date()), 'posee', 'ouverte');
+  if (estUneQuestionDate(question)) return reponse(decrireDate(new Date()), 'posee', 'ouverte');
 
   const intent = detectIntent(question);
   // 2. Perception : vérité sur l état réel de ses sens.
-  if (intent === 'perception') return { texte: perceptionTexte(ctx), humeur: 'posee' };
+  if (intent === 'perception') return reponse(perceptionTexte(ctx), 'posee', intent);
+  // 3. Elle aussi a un ciel intérieur : « et toi ? »
+  if (intent === 'etat') return reponse(etatTexte(ctx), humeurPour(ctx.emotion), intent);
 
   let texte: string;
   if (intent === 'poeme') {
     texte = poeme(ctx);
+  } else if (intent === 'suite') {
+    // « encore » : elle rejoue le dernier sujet, ou celui caché dans la phrase.
+    const q = norm(question);
+    const veut = /poeme|vers|conte|histoire/.test(q) ? 'poeme' as const
+      : /respire|souffle/.test(q) ? 'souffle' as const
+        : /dormir|nuit/.test(q) ? 'sommeil' as const
+          : ctx.dernierSujet;
+    if (veut === 'poeme') return reponse(poeme(ctx), humeurPour(ctx.emotion), 'poeme');
+    if (veut && BANK[veut].length) {
+      return reponse(BANK[veut][choose(q, ctx.seed, BANK[veut].length)], humeurPour(ctx.emotion), veut);
+    }
+    return reponse(BANK.suite[choose(q, ctx.seed, BANK.suite.length)], humeurPour(ctx.emotion), 'suite');
   } else {
     const bank = BANK[intent];
     texte = bank[choose(norm(question), ctx.seed, bank.length)];
@@ -179,7 +240,8 @@ export function respond(question: string, ctx: CompagneCtx): { texte: string; hu
       .replace(/,\s*\./g, '.') // « , . » résiduel quand le prénom est inconnu
       .replace(/\s{2,}/g, ' ');
   }
-  return { texte, humeur: humeurPour(ctx.emotion) };
+  const humeur = intent === 'tendresse' ? 'lumineuse' : intent === 'piqure' ? 'posee' : humeurPour(ctx.emotion);
+  return reponse(texte, humeur, intent);
 }
 
 // Fabrique à quatrains : chaque vers = un sujet du ciel + un verbe doux,
@@ -199,14 +261,18 @@ const CHUTES = [
 ];
 
 export function poeme(ctx: CompagneCtx): string {
+  // Carrousel des vers : l'empreinte d'un seed fixe une suite de sujets/verbes/chutes,
+  // et chaque tour de conversation la fait tourner d'un cran. « Encore » donne donc
+  // toujours un quatrain nouveau, jamais un copier-coller, mais toujours LE MÊME ciel.
+  const t = ctx.tour ?? 0;
   const vers: string[] = [];
   for (let i = 0; i < 4; i++) {
     if (i < 3) {
-      const s = SUJETS[choose(`${ctx.seed}-s-${i}`, ctx.seed, SUJETS.length)];
-      const v = VERBES[choose(`${ctx.seed}-v-${i}`, ctx.seed, VERBES.length)];
+      const s = SUJETS[(choose(`${ctx.seed}-s-${i}`, ctx.seed, SUJETS.length) + t) % SUJETS.length];
+      const v = VERBES[(choose(`${ctx.seed}-v-${i}`, ctx.seed, VERBES.length) + t) % VERBES.length];
       vers.push(`${s} ${v}`);
     } else {
-      const c = CHUTES[choose(`${ctx.seed}-c`, ctx.seed, CHUTES.length)];
+      const c = CHUTES[(choose(`${ctx.seed}-c`, ctx.seed, CHUTES.length) + t) % CHUTES.length];
       vers.push(`et ${c}`);
     }
   }

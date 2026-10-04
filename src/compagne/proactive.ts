@@ -97,7 +97,10 @@ export function choisirMonologue(
 ): { texte: string; humeur: 'posee' | 'lumineuse' | 'douce' | 'stabilisee' } {
   const regle = REGLES.find((r) => r.quand(ctx)) ?? REGLES[REGLES.length - 1];
   const idx = hash(`${ctx.seed}-${minute}`) % regle.mots.length;
-  const texte = regle.mots[idx].replace(/\{P\}/g, P(ctx)).replace(/\s{2,}/g, ' ');
+  const texte = regle.mots[idx]
+    .replace(/\{P\}/g, P(ctx))
+    .replace(/,\s*\./g, '.') // « , . » orphelin quand le prénom est inconnu
+    .replace(/\s{2,}/g, ' ');
   const humeur =
     ctx.emotion === 'joie' ? 'lumineuse'
       : ctx.emotion === 'tristesse' ? 'douce'
