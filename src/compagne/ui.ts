@@ -66,8 +66,13 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
 
   function chargerCerveau() {
     const bCerveau = bulle('Je télécharge mon cerveau… 0 %', 'nuage');
-    creerCerveau((p) => {
-      bCerveau.textContent = `Je télécharge mon cerveau Qwen… ${Math.min(99, Math.round(p * 100))} %`;
+    creerCerveau((p, texte) => {
+      // Le % de WebLLM repart à zéro à chaque fragment du modèle : afficher le fragment
+      // en cours rend les variations honnêtes et lisibles (pas un faux « ça recule »).
+      const frag = texte.replace(/^Loading/, 'chargement').slice(0, 44);
+      bCerveau.textContent = frag
+        ? `Je télécharge mon cerveau Qwen… ${Math.min(99, Math.round(p * 100))} % · ${frag}`
+        : `Je télécharge mon cerveau Qwen… ${Math.min(99, Math.round(p * 100))} %`;
     }).then(({ cerveau: c, raison }) => {
       if (c) {
         cerveau = c;
