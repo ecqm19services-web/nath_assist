@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [VitePWA({
     registerType: 'autoUpdate',
     manifest: {
-      name: 'NUAGE — by Nath-Tech',
-      short_name: 'NUAGE',
-      description: 'La compagne vivante qui vous voit, vous entend, vous accompagne.',
+      name: "Nath Assist — l’assistant vivant",
+      short_name: 'Nath Assist',
+      description: 'L assistant vivant qui vous voit, vous entend, vous comprend. Dites « Hey Nath ».',
       theme_color: '#05070f',
       background_color: '#05070f',
       display: 'standalone',

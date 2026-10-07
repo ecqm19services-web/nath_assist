@@ -7,6 +7,8 @@ export interface VoiceHandle {
   sttDisponible: boolean;
   ttsDisponible: boolean;
   ecouter: (cb: (texte: string) => void) => void;
+  /** Écoute permanente façon « Hey Nath » : renvoie une fonction d'arrêt. */
+  ecouteEnContinu: (cb: (texte: string) => void) => () => void;
   parler: (texte: string, humeur: HumeurReponse) => void;
 }
 
@@ -50,6 +52,49 @@ export function createVoice(): VoiceHandle {
       } catch {
         /* déjà en cours d'écoute — on ignore */
       }
+    },
+    ecouteEnContinu(cb) {
+      if (!SR) return () => {};
+      // Instance dédiée (le moteur ponctuel `recog` reste libre pour le bouton micro).
+      const r = new SR();
+      r.lang = 'fr-FR';
+      r.continuous = true;
+      r.interimResults = false;
+      r.maxAlternatives = 1;
+      let actif = true;
+      r.onresult = (e: any) => {
+        // Jamais pendant qu'elle parle : sa propre voix ne doit pas se réveiller elle-même.
+        if (w.speechSynthesis?.speaking) return;
+        const d = e.results[e.results.length - 1];
+        if (d?.isFinal) cb(d[0].transcript as string);
+      };
+      r.onerror = (e: any) => {
+        // Micro refusé / moteur indisponible → on éteint sans bruit ni larmes.
+        if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') actif = false;
+      };
+      r.onend = () => {
+        // Chrome coupe seul au bout d'un moment : on relance en douceur tant que c'est actif.
+        if (actif) {
+          try {
+            r.start();
+          } catch {
+            /* déjà redémarrée */
+          }
+        }
+      };
+      try {
+        r.start();
+      } catch {
+        /* échec de démarrage : le bouton micro manuel reste disponible */
+      }
+      return () => {
+        actif = false;
+        try {
+          r.abort();
+        } catch {
+          /* déjà arrêtée */
+        }
+      };
     },
     parler(texte, humeur) {
       if (!hasTts) return;

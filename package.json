@@ -1,7 +1,7 @@
 {
-  "name": "nuage-app",
+  "name": "nath-assist",
   "version": "0.1.0",
-  "description": "NUAGE — la compagne vivante (by Nath-Tech)",
+  "description": "Nath Assist — l'assistant vivant ICF·Future (by Nath-Tech)",
   "type": "module",
   "scripts": {
     "dev": "vite",

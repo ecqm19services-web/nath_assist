@@ -34,10 +34,12 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
                   color: #eaf4ff; font: inherit; outline: none; backdrop-filter: blur(8px); }
 .compagne-champ:focus-visible { border-color: #9fd8ff; }
 .compagne-champ::placeholder { color: #7e93b5; }
-.compagne-mic, .compagne-envoi { padding: 9px 12px; border-radius: 14px; cursor: pointer;
+.compagne-mic, .compagne-envoi, .compagne-reveil { padding: 9px 12px; border-radius: 14px; cursor: pointer;
                                  border: 1px solid rgba(159, 216, 255, .22);
                                  background: rgba(10, 16, 32, .5); color: #9fd8ff; font: inherit;
-                                 backdrop-filter: blur(8px); }
+                                 backdrop-filter: blur(8px); transition: color .3s, border-color .3s, background .3s; }
 .compagne-mic.a-lécoute { color: #b9f6d0; border-color: #b9f6d0;
                           animation: mic-pulse 1.6s ease-in-out infinite; }
+.compagne-reveil.actif { color: #7dffc4; border-color: rgba(125, 255, 196, .6);
+                        background: rgba(28, 60, 46, .6); animation: mic-pulse 2.2s ease-in-out infinite; }
 @keyframes mic-pulse { 50% { box-shadow: 0 0 0 6px rgba(185, 246, 208, .12); } }

@@ -1,4 +1,4 @@
-// Shader cinématographique NUAGE v2 : nuit étoilée, lune, soleil, aurores,
+// Shader cinématographique du ciel Nath Assist v2 : nuit étoilée, lune, soleil, aurores,
 // deux couches de nuages en parallaxe, pulsation cardiaque et ondulation tactile.
 export const SKY_FRAG = /* glsl */ `
 precision mediump float;

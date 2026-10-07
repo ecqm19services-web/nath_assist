@@ -12,6 +12,13 @@ describe('compagne engine', () => {
     expect(detectIntent('respire avec moi')).toBe('souffle');
     expect(detectIntent('xyzzyblabla')).toBe('ouverte');
   });
+
+  it('se nomme toujours Nath quand on lui demande qui elle est', () => {
+    for (let seed = 0; seed < 60; seed++) {
+      const ctx: CompagneCtx = { emotion: 'calme', breath: 0.5, timeOfDay: 0.5, seed };
+      expect(respond('qui es-tu ?', ctx).texte).toContain('Nath');
+    }
+  });
   it('insensible aux accents et à la casse', () => {
     expect(detectIntent('JE SUIS TRÈS TRISTE')).toBe('tristesse');
     expect(detectIntent('Je suis tres triste')).toBe('tristesse');

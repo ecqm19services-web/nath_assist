@@ -97,4 +97,4 @@ function boucle(now: number) {
   requestAnimationFrame(boucle);
 }
 requestAnimationFrame(boucle);
-console.log('NUAGE v1-alpha — by Nath-Tech');
+console.log('Nath Assist v1-alpha — ICF·Future by Nath-Tech');

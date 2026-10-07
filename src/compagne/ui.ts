@@ -5,6 +5,7 @@ import { respond, type CompagneCtx, type Intent } from './engine';
 import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
 import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
 import { choisirMonologue, nextDelai, type MonoCtx } from './proactive';
+import { entendReveil } from './reveil';
 import { createVoice } from './voice';
 
 export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | null }) {
@@ -22,7 +23,13 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
           <path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>
         </svg>
       </button>
-      <input class="compagne-champ" type="text" placeholder="Parle-lui… (ou écris)" aria-label="Écrire à la Compagne" />
+      <button type="button" class="compagne-reveil" title="Réveil vocal « Hey Nath » — écoute permanente" aria-label="Activer le réveil vocal Hey Nath" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M6 12a6 6 0 0 1 12 0v4a3 3 0 0 1-3 3H9"/>
+          <path d="M12 3v2M4 12H2M22 12h-2"/>
+        </svg>
+      </button>
+      <input class="compagne-champ" type="text" placeholder="Dis « Hey Nath »… (ou écris)" aria-label="Écrire à la Compagne" />
       <button type="submit" class="compagne-envoi" aria-label="Envoyer">· · ·</button>
     </form>`;
   document.body.appendChild(zone);
@@ -30,10 +37,12 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
   const bulles = zone.querySelector('.compagne-bulles') as HTMLElement;
   const champ = zone.querySelector('.compagne-champ') as HTMLInputElement;
   const mic = zone.querySelector('.compagne-mic') as HTMLButtonElement;
+  const reveilBtn = zone.querySelector('.compagne-reveil') as HTMLButtonElement;
   const form = zone.querySelector('.compagne-ligne') as HTMLFormElement;
 
   if (!voice.sttDisponible) {
     mic.style.display = 'none'; // pas de voix dans ce navigateur → on n'imite pas
+    reveilBtn.style.display = 'none'; // le réveil vocal non plus
   }
 
   function bulle(texte: string, qui: 'moi' | 'nuage'): HTMLElement {
@@ -172,12 +181,35 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
     setTimeout(() => mic.classList.remove('a-lécoute'), 6000);
   });
 
+  // Mode « Hey Nath » : écoute permanente. Elle n'ouvre les oreilles que quand
+  // on prononce son nom — jamais sur un mot de tous les jours qui y ressemblerait.
+  let couperReveil: (() => void) | null = null;
+  reveilBtn.addEventListener('click', () => {
+    if (couperReveil) {
+      couperReveil();
+      couperReveil = null;
+      reveilBtn.classList.remove('actif');
+      reveilBtn.setAttribute('aria-pressed', 'false');
+      return;
+    }
+    couperReveil = voice.ecouteEnContinu((phrase) => {
+      const r = entendReveil(phrase);
+      if (!r.eveille) return; // on n'est pas appelée → on ne réagit pas
+      dernierEchange = performance.now();
+      if (r.requete) traiter(r.requete);
+      else dire('Je t écoute... dis, je suis là.', 'posee'); // un simple « Hey Nath » répond
+    });
+    reveilBtn.classList.add('actif');
+    reveilBtn.setAttribute('aria-pressed', 'true');
+    bulle('OREILLES OUVERTES — appelle-moi « Hey Nath » quand tu veux.', 'nuage');
+  });
+
   // Premier mot : selon qu'elle vous connaît déjà ou non.
   setTimeout(() => {
     if (memoire.prenom) {
       dire(`Rebonjour ${memoire.prenom}… je gardais ta place dans le ciel.`, 'lumineuse');
     } else {
-      bulle('Je suis là… touche le ciel, parle-moi, ou écris-moi. On a toute la nuit.', 'nuage');
+      bulle('Je suis là… touche le ciel, écris-moi, ou appelle-moi « Hey Nath » (bouton oreille). On a toute la nuit.', 'nuage');
       // Curieuse une seule fois : elle demande qui vous êtes.
       setTimeout(() => {
         if (!memoire.prenom) bulle('Au fait… comment tu t appelles ?', 'nuage');

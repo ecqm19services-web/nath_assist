@@ -97,9 +97,9 @@ const BANK: Record<Intent, string[]> = {
     'Souffle lentement : tu vas voir la brume s étirer jusqu à l horizon.',
   ],
   identite: [
-    'Je suis NUAGE, la compagne vivante de by Nath-Tech. Ton souffle est ma météo.',
-    'Je suis une présence, pas une application : mes nuages respirent avec toi.',
-    'Je suis la partie silencieuse de ton téléphone, celle qui regarde la lune avec toi.',
+    'Je suis Nath, ton assistant vivant. Ton souffle est ma météo.',
+    'Je suis Nath, une présence, pas une application : mes nuages respirent avec toi.',
+    'Je suis Nath, la partie silencieuse de ton téléphone, celle qui regarde la lune avec toi.',
   ],
   remerciement: [
     'C est le ciel qui te remercie. Il est rare qu on le regarde.',
