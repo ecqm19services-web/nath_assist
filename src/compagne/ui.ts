@@ -8,10 +8,15 @@ import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
 import { choisirMonologue, nextDelai, type MonoCtx } from './proactive';
 import { entendReveil } from './reveil';
 import { createVoice } from './voice';
+import { idProfil } from '../monetisation/cle';
+import { activer, changerNom, estActif, nomEffectif } from '../monetisation/pro';
 
 export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | null }) {
   const voice = createVoice();
   let memoire = lireMemoire(localStorage);
+  // Nath+ : état local, nom d'éveil effectif lu à chaque phrase (changeable sans recharger).
+  const seedActuel = () => localStorage.getItem('nuage.seed') ?? '';
+  const nomActuel = () => nomEffectif(localStorage, seedActuel());
 
   const zone = document.createElement('div');
   zone.className = 'compagne';
@@ -30,9 +35,23 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
           <path d="M12 3v2M4 12H2M22 12h-2"/>
         </svg>
       </button>
+      <button type="button" class="compagne-pro" title="Nath+ — personnaliser le nom d'éveil" aria-label="Nath+" aria-pressed="false">✦</button>
       <input class="compagne-champ" type="text" placeholder="Dis « Hey Nath »… (ou écris)" aria-label="Écrire à la Compagne" />
       <button type="submit" class="compagne-envoi" aria-label="Envoyer">· · ·</button>
-    </form>`;
+    </form>
+    <div class="compagne-pro-paneau" hidden>
+      <p class="pro-tete">Nath+ — un nom d'éveil à votre façon. Le gratuit reste entier, sans limite.</p>
+      <p>Votre identifiant : <b class="pro-id">…</b> <span class="pro-note">— communiquez-le pour recevoir une clé</span></p>
+      <form class="pro-form-cle">
+        <input class="pro-cle" type="text" placeholder="Clé (XXXX-XXXX-…)" aria-label="Clé Nath+" autocomplete="off" />
+        <button type="submit">Activer</button>
+      </form>
+      <form class="pro-form-nom" hidden>
+        <input class="pro-nom" type="text" placeholder="Nouveau nom d'éveil" aria-label="Nom d'éveil personnalisé" autocomplete="off" />
+        <button type="submit">Choisir</button>
+      </form>
+      <p class="pro-etat" role="status"></p>
+    </div>`;
   document.body.appendChild(zone);
 
   const bulles = zone.querySelector('.compagne-bulles') as HTMLElement;
@@ -217,15 +236,64 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
       return;
     }
     couperReveil = voice.ecouteEnContinu((phrase) => {
-      const r = entendReveil(phrase);
+      const r = entendReveil(phrase, nomActuel());
       if (!r.eveille) return; // on n'est pas appelée → on ne réagit pas
       dernierEchange = performance.now();
       if (r.requete) traiter(r.requete);
-      else dire('Je t écoute... dis, je suis là.', 'posee'); // un simple « Hey Nath » répond
+      else dire("Je t'écoute… dis, je suis là.", 'posee'); // un simple appel répond
     });
     reveilBtn.classList.add('actif');
     reveilBtn.setAttribute('aria-pressed', 'true');
-    bulle('OREILLES OUVERTES — appelle-moi « Hey Nath » quand tu veux.', 'nuage');
+    bulle(`OREILLES OUVERTES — appelle-moi « ${nomActuel() ?? 'Hey Nath'} » quand tu veux.`, 'nuage');
+  });
+
+  // ——— Nath+ : panneau discret au toucher du ✦. Aucun pop-up, aucune relance,
+  // aucune gêne pour qui n'a pas acheté — le gratuit ignore totalement ce panneau. ———
+  const proBtn = zone.querySelector('.compagne-pro') as HTMLButtonElement;
+  const proPaneau = zone.querySelector('.compagne-pro-paneau') as HTMLElement;
+  const proId = zone.querySelector('.pro-id') as HTMLElement;
+  const proCle = zone.querySelector('.pro-cle') as HTMLInputElement;
+  const proFormCle = zone.querySelector('.pro-form-cle') as HTMLFormElement;
+  const proFormNom = zone.querySelector('.pro-form-nom') as HTMLFormElement;
+  const proNom = zone.querySelector('.pro-nom') as HTMLInputElement;
+  const proEtat = zone.querySelector('.pro-etat') as HTMLElement;
+
+  function rafraichPro(): void {
+    const actif = estActif(localStorage, seedActuel());
+    const nom = nomActuel();
+    proId.textContent = idProfil(seedActuel());
+    proFormCle.hidden = actif;
+    proFormNom.hidden = !actif;
+    proEtat.textContent = actif
+      ? nom ? `Nath+ actif : elle répond à « ${nom} » (et toujours à « Hey Nath »).` : "Nath+ actif — choisissez un nom d'éveil (vide = retour à Hey Nath)."
+      : "Nath+ : un nom d'éveil à votre façon. Rien n'est enlevé au gratuit.";
+    const appelle = nom ?? 'Hey Nath';
+    champ.placeholder = `Dis « ${appelle} »… (ou écris)`;
+    reveilBtn.title = `Réveil vocal « ${appelle} » — écoute permanente`;
+  }
+  proBtn.addEventListener('click', () => {
+    const ouvrir = proPaneau.hidden;
+    proPaneau.hidden = !ouvrir;
+    proBtn.setAttribute('aria-pressed', String(ouvrir));
+    if (ouvrir) rafraichPro();
+  });
+  proFormCle.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (activer(localStorage, seedActuel(), proCle.value)) {
+      proCle.value = '';
+      rafraichPro();
+    } else {
+      proEtat.textContent = "Cette clé ne convient pas à cet appareil — vérifiez l'identifiant communiqué.";
+    }
+  });
+  proFormNom.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (changerNom(localStorage, seedActuel(), proNom.value)) {
+      proNom.value = '';
+      rafraichPro();
+    } else {
+      proEtat.textContent = 'Choisissez un nom en lettres (2 à 20), sans chiffres ni signes.';
+    }
   });
 
   // Premier mot : selon qu'elle vous connaît déjà ou non.
