@@ -23,3 +23,13 @@ export function messageEveilVoix(p: number): string {
   const pct = Math.min(99, Math.max(0, Math.round(p * 100)));
   return `Éveil de ma voix en cours... ${pct} %`;
 }
+
+// La couture du futur : le jour où Kokoro parlera français (issue amont #223,
+// phonémiseur anglais-only à ce jour), cocher kokoroFrPret = true et Nath prendra
+// cette voix — sinon celle du système, sinon le silence écrit. Jamais de nom à l'écran.
+export type MoteurVoix = 'kokoro' | 'systeme' | 'muet';
+
+export function choisirMoteurVoix(etat: { kokoroFrPret: boolean; ttsDisponible: boolean }): MoteurVoix {
+  if (etat.kokoroFrPret) return 'kokoro';
+  return etat.ttsDisponible ? 'systeme' : 'muet';
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { choisirVoixFr, messageEveilVoix } from '../src/compagne/voix';
+import { choisirMoteurVoix, choisirVoixFr, messageEveilVoix } from '../src/compagne/voix';
 
 const v = (name: string, lang: string): SpeechSynthesisVoice =>
   ({ name, lang } as SpeechSynthesisVoice);
@@ -39,5 +39,20 @@ describe('confidentialité de l\'audio : jamais de nom de moteur à l\'écran', 
     expect(m).toContain('Éveil de ma voix en cours');
     expect(m).toContain('42 %');
     expect(m.toLowerCase()).not.toMatch(/kokoro|onnx|espeak|huggingface|transformers|siwis|pytorch|modèle/);
+  });
+});
+
+describe('sélecteur de moteur de voix (couture du futur Kokoro FR)', () => {
+  it('Kokoro français non prêt → voix du système (option A)', () => {
+    expect(choisirMoteurVoix({ kokoroFrPret: false, ttsDisponible: true })).toBe('systeme');
+  });
+
+  it('Kokoro français prêt → on le prend, sans jamais le nommer à l\'écran', () => {
+    expect(choisirMoteurVoix({ kokoroFrPret: true, ttsDisponible: true })).toBe('kokoro');
+  });
+
+  it('ni l\'un ni l\'autre → muet, l\'écrit reste entier', () => {
+    expect(choisirMoteurVoix({ kokoroFrPret: false, ttsDisponible: false })).toBe('muet');
+    expect(choisirMoteurVoix({ kokoroFrPret: true, ttsDisponible: false })).toBe('kokoro');
   });
 });
