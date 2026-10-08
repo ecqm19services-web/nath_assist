@@ -41,4 +41,14 @@ describe('proactivité de la Compagne', () => {
     const ctx = { emotion: 'joie', breath: 0.6, timeOfDay: 0.4, seed: 9, prenom: 'Awa', bpm: 60 } as const;
     expect(choisirMonologue(ctx, 12).texte).toBe(choisirMonologue(ctx, 12).texte);
   });
+
+  it('ne se répète jamais deux fois de suite', () => {
+    const ctx = { emotion: 'calme', breath: 0.6, timeOfDay: 0.9, seed: 3, prenom: null, bpm: null } as const;
+    let dernier = '';
+    for (let minute = 0; minute < 60; minute++) {
+      const m = choisirMonologue(ctx, minute, dernier);
+      expect(m.texte).not.toBe(dernier);
+      dernier = m.texte;
+    }
+  });
 });

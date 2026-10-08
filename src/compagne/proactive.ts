@@ -91,16 +91,24 @@ function hash(s: string): number {
   return h >>> 0;
 }
 
+const nettoyer = (s: string, ctx: MonoCtx): string =>
+  s.replace(/\{P\}/g, P(ctx))
+    .replace(/,\s*\./g, '.') // « , . » orphelin quand le prénom est inconnu
+    .replace(/\s{2,}/g, ' ');
+
 export function choisirMonologue(
   ctx: MonoCtx,
   minute: number,
+  dernier?: string, // sa phrase précédente — jamais de disque rayé
 ): { texte: string; humeur: 'posee' | 'lumineuse' | 'douce' | 'stabilisee' } {
   const regle = REGLES.find((r) => r.quand(ctx)) ?? REGLES[REGLES.length - 1];
-  const idx = hash(`${ctx.seed}-${minute}`) % regle.mots.length;
-  const texte = regle.mots[idx]
-    .replace(/\{P\}/g, P(ctx))
-    .replace(/,\s*\./g, '.') // « , . » orphelin quand le prénom est inconnu
-    .replace(/\s{2,}/g, ' ');
+  let idx = hash(`${ctx.seed}-${minute}`) % regle.mots.length;
+  // Le hash peut retomber sur la même minute ou sur la même phrase : on décale
+  // d'un cran dans la même règle — jamais la phrase qui vient d'être dite.
+  if (regle.mots.length > 1 && dernier != null) {
+    while (nettoyer(regle.mots[idx], ctx) === dernier) idx = (idx + 1) % regle.mots.length;
+  }
+  const texte = nettoyer(regle.mots[idx], ctx);
   const humeur =
     ctx.emotion === 'joie' ? 'lumineuse'
       : ctx.emotion === 'tristesse' ? 'douce'

@@ -61,6 +61,7 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
   }
 
   let dernierEchange = performance.now();
+  let dernierMono = ''; // sa dernière phrase intérieure — jamais de disque rayé
 
   // Mémoire immédiate de la conversation : son dernier calcul, de quoi on parlait,
   // le tour — pour que « plus 2 », « encore » et les poèmes ne sortent pas du vide.
@@ -226,7 +227,8 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
       // Si on vient de lui parler, on repousse : elle n interrompt jamais.
       if (performance.now() - dernierEchange < 25000) return penserSeule();
       const c: MonoCtx = { ...getCtx(), prenom: memoire.prenom };
-      const m = choisirMonologue(c, Math.floor(Date.now() / 60000));
+      const m = choisirMonologue(c, Math.floor(Date.now() / 60000), dernierMono);
+      dernierMono = m.texte;
       bulle(m.texte, 'nuage'); // monologue = murmuré à l écrit, la voix reste pour les réponses
       penserSeule();
     }, nextDelai(Math.random));
