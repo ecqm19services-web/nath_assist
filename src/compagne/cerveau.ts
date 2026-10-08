@@ -29,13 +29,23 @@ export function gpuDisponible(): boolean {
 
 // Vraie sonde WebGPU : 'gpu' dans navigator ne suffit pas — encore faut-il
 // qu'une carte adaptable existe (les machines sans GPU échouent ici, pas au téléchargement).
-async function gpuUtilisable(): Promise<boolean> {
-  if (!gpuDisponible()) return false;
+// Et il faut l'extension 'shader-f16' : sans elle, les cerveaux q4f16 ne compilent
+// pas — on le sait AVANT de télécharger des centaines de méga-octets.
+export type EtatSonde = 'ok' | 'sans-gpu' | 'sans-f16';
+
+export async function sondeGPU(): Promise<EtatSonde> {
+  if (!gpuDisponible()) return 'sans-gpu';
   try {
-    const gpu = (navigator as unknown as { gpu?: { requestAdapter(): Promise<unknown> } }).gpu;
-    return (await gpu?.requestAdapter()) != null;
+    const gpu = (navigator as unknown as {
+      gpu?: {
+        requestAdapter(init?: unknown): Promise<{ features: { has(name: string): boolean } } | null>;
+      };
+    }).gpu;
+    const adapter = await gpu?.requestAdapter({ powerPreference: 'high-performance' });
+    if (!adapter) return 'sans-gpu';
+    return adapter.features.has('shader-f16') ? 'ok' : 'sans-f16';
   } catch {
-    return false;
+    return 'sans-gpu';
   }
 }
 
@@ -53,7 +63,9 @@ const attendre = (ms: number): Promise<void> => new Promise((r) => setTimeout(r,
 export async function creerCerveau(
   onProgress: (p: number, texte: string) => void = () => {},
 ): Promise<ResultatCerveau> {
-  if (!(await gpuUtilisable())) return { cerveau: null, raison: 'sans-gpu' };
+  const sonde = await sondeGPU();
+  if (sonde === 'sans-gpu') return { cerveau: null, raison: 'sans-gpu' };
+  if (sonde === 'sans-f16') return { cerveau: null, raison: 'machine' }; // ne compilera pas ici — inutile de rien télécharger
   let CreateMLCEngine: typeof import('@mlc-ai/web-llm')['CreateMLCEngine'];
   try {
     ({ CreateMLCEngine } = await import('@mlc-ai/web-llm'));
