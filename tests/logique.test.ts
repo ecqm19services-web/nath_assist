@@ -48,6 +48,16 @@ describe('logique arithmétique de la Compagne', () => {
     expect(calculerSuite('moins 50', 56)).toBe(6);
     expect(calculerSuite('bonjour', 56)).toBeNull();
   });
+  it('enchaîne plusieurs étapes dans une seule phrase', () => {
+    expect(calculer('7 fois 8 puis ajoute 2')).toBe('58');
+    expect(calculer('si multiplie 7 fois 8 puis ajoute 2')).toBe('58');
+    expect(calculer('fais 12 fois 12 puis moins 44')).toBe('100');
+  });
+  it('suite avec mots de liaison et verbes', () => {
+    expect(calculerSuite('puis ajoute 2', 56)).toBe(58);
+    expect(calculerSuite('et puis fois 3', 8)).toBe(24);
+    expect(calculerSuite('retire 6', 56)).toBe(50);
+  });
   it('évalue un nombre isolé (chiffres et lettres)', () => {
     expect(evaluerNombre('42')).toBe(42);
     expect(evaluerNombre('douze')).toBe(12);

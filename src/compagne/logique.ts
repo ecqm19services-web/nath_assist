@@ -20,9 +20,16 @@ type Op = 'plus' | 'moins' | 'fois' | 'divise';
 type Tok = { t: 'nb'; v: number } | { t: 'op'; v: Op } | { t: 'ouv' } | { t: 'fer' };
 
 const MOTS_OP: Record<string, Op> = {
-  plus: 'plus', additionne: 'plus', moins: 'moins', retire: 'moins',
+  plus: 'plus', additionne: 'plus', ajoute: 'plus', moins: 'moins', retire: 'moins',
   fois: 'fois', multiplie: 'fois', x: 'fois', divise: 'divise',
 };
+
+// Petits mots de l'imparlé (« si… puis… combien ») : ils ne cassent plus la chaîne,
+// ils sont simplement transparents — « 7 fois 8 puis ajoute 2 » devient 7×8+2.
+const MOTS_VIDES = new Set([
+  'si', 'combien', 'puis', 'alors', 'donne', 'calcule', 'calcul', 'fais', 'fait',
+  'vaut', 'egal', 'est', 'ce', 'que', 'quoi', 'resultat', 'reponse', 'nombre', 'montant',
+]);
 
 // Le texte → une suite de jetons : nombres (chiffres ou lettres), opérateurs, parenthèses.
 // Tout mot hors vocabulaire coupe la chaîne : la Compagne ne devine jamais un calcul.
@@ -45,6 +52,7 @@ function tokeniser(question: string): Tok[][] {
     else if (MOTS_OP[raw]) tok = { t: 'op', v: MOTS_OP[raw] }; // additionne, retire…
     else if (raw === '(') tok = { t: 'ouv' };
     else if (raw === ')') tok = { t: 'fer' };
+    else if (MOTS_VIDES.has(raw)) continue; // transparent : ne casse pas la chaîne
     if (tok) {
       courant.push(tok);
     } else if (courant.length) {
@@ -109,7 +117,10 @@ function parseExpr(tk: Tok[], e: Etat): number | null {
 
 // Évalue la première suite de jetons qui est VRAIMENT un calcul complet ; sinon null.
 export function calculerNumero(question: string): number | null {
-  for (const run of tokeniser(question)) {
+  for (let run of tokeniser(question)) {
+    // Impératif suspendu (« multiplie 7 fois 8 ») : un opérateur en tête suivi
+    // d'un nombre n'est qu'une façon de parler — on l'efface.
+    if (run.length >= 2 && run[0].t === 'op' && run[1].t === 'nb') run = run.slice(1);
     if (!run.some((x) => x.t === 'op')) continue;
     const e: Etat = { i: 0, ops: 0, echoue: false };
     const v = parseExpr(run, e);
@@ -132,11 +143,12 @@ export function calculerSuite(question: string, precedent: number): number | nul
     .replace(/multiplie par/g, ' fois ')
     .replace(/\s+/g, ' ')
     .trim();
-  const m = s.match(/^(?:et\s+)?(plus|moins|fois|divise|x)\s+(\d+(?:[.,]\d+)?|[a-z-]+)\s*[=.!?\s]*$/);
+  const m = s.match(/^(?:(?:et|puis)\s+)*(plus|moins|ajoute|retire|fois|multiplie|divise|x)\s+(\d+(?:[.,]\d+)?|[a-z-]+)\s*[=.!?\s]*$/);
   if (!m) return null;
   const b = /^\d/.test(m[2]) ? parseFloat(m[2].replace(',', '.')) : NOMBRES[m[2]];
   if (b == null || Number.isNaN(b)) return null;
-  const op: Op = m[1] === 'x' ? 'fois' : (m[1] as Op);
+  const MOTS: Record<string, Op> = { plus: 'plus', ajoute: 'plus', moins: 'moins', retire: 'moins', fois: 'fois', multiplie: 'fois', x: 'fois', divise: 'divise' };
+  const op: Op = MOTS[m[1]];
   if (op === 'fois') return precedent * b;
   if (op === 'plus') return precedent + b;
   if (op === 'moins') return precedent - b;

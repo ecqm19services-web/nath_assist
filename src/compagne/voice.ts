@@ -2,6 +2,7 @@
 // fournie par le système d'exploitation — zéro cloud, zéro compte, zéro euro).
 // Navigateur sans voix → repli muet, l'écrit reste entier (loi du jamais-bloquant).
 import type { HumeurReponse } from './engine';
+import { choisirVoixFr } from './voix';
 
 export interface VoiceHandle {
   sttDisponible: boolean;
@@ -33,7 +34,8 @@ export function createVoice(): VoiceHandle {
   const hasTts = 'speechSynthesis' in w;
   const pick = () => {
     const vs: SpeechSynthesisVoice[] = w.speechSynthesis?.getVoices?.() ?? [];
-    frVoice = vs.find((v) => v.lang.toLowerCase().startsWith('fr')) ?? null;
+    // La plus belle voix française du système (naturelle > classique, France > autre).
+    frVoice = choisirVoixFr(vs);
   };
   if (hasTts) {
     pick();

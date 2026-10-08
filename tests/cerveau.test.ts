@@ -1,4 +1,24 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// Fausse librairie : on espionne quel modèle est demandé, sans rien télécharger.
+const { etat } = vi.hoisted(() => ({
+  etat: { appelee: null as string | null, echoue: false },
+}));
+vi.mock('@mlc-ai/web-llm', () => ({
+  CreateMLCEngine: vi.fn(async (modele: string, opts?: { initProgressCallback?: (e: { text: string; progress: number }) => void }) => {
+    etat.appelee = modele;
+    if (etat.echoue) throw new Error('Out of memory on GPU device');
+    opts?.initProgressCallback?.({ text: 'x', progress: 1 });
+    return {
+      chat: {
+        completions: {
+          create: async () => ({ choices: [{ message: { content: 'Bonjour' } }] }),
+        },
+      },
+    };
+  }),
+}));
+
 import { sondeGPU, creerCerveau } from '../src/compagne/cerveau';
 
 // Stub du navigateur : on simule les trois états de machine possibles.
@@ -25,7 +45,7 @@ describe('sonde GPU du cerveau', () => {
     expect(await sondeGPU()).toBe('sans-gpu');
   });
 
-  it('adapter sans shader-f16 → sans-f16 (le grand cerveau ne compilera pas ici)', async () => {
+  it('adapter sans shader-f16 → sans-f16', async () => {
     stubGPU(adapterAvec(false));
     expect(await sondeGPU()).toBe('sans-f16');
   });
@@ -34,18 +54,52 @@ describe('sonde GPU du cerveau', () => {
     stubGPU(adapterAvec(true));
     expect(await sondeGPU()).toBe('ok');
   });
+});
 
-  it('creerCerveau raccourcit sans-f16 en machine SANS rien télécharger', async () => {
+describe('cervelle du cerveau : choix du modèle selon la machine', () => {
+  it('machine sans f16 → repli sur la variante fp32, pas sur l\'échec', async () => {
     stubGPU(adapterAvec(false));
+    etat.appelee = null;
+    etat.echoue = false;
     const res = await creerCerveau();
-    expect(res.cerveau).toBeNull();
-    expect(res.raison).toBe('machine');
+    expect(res.cerveau).not.toBeNull();
+    expect(etat.appelee).toBe('Qwen2.5-0.5B-Instruct-q4f32_1-MLC');
+    expect(res.modele).toContain('q4f32_1');
   });
 
-  it('creerCerveau raccourcit sans-gpu immédiatement', async () => {
+  it('machine avec f16 → variante fp16 (plus légère)', async () => {
+    stubGPU(adapterAvec(true));
+    etat.appelee = null;
+    etat.echoue = false;
+    const res = await creerCerveau();
+    expect(res.cerveau).not.toBeNull();
+    expect(etat.appelee).toBe('Qwen2.5-0.5B-Instruct-q4f16_1-MLC');
+  });
+
+  it('sans-gpu → refus immédiat, la librairie n\'est jamais appelée', async () => {
     Object.defineProperty(globalThis, 'navigator', { value: {}, configurable: true, writable: true });
+    etat.appelee = null;
     const res = await creerCerveau();
     expect(res.cerveau).toBeNull();
     expect(res.raison).toBe('sans-gpu');
+    expect(etat.appelee).toBeNull();
+  });
+
+  it('trop modeste même en fp32 → raison machine, avec bouton de reprise logique', async () => {
+    stubGPU(adapterAvec(false));
+    etat.echoue = true;
+    const res = await creerCerveau();
+    expect(res.cerveau).toBeNull();
+    expect(res.raison).toBe('machine');
+    etat.echoue = false;
+  });
+
+  it('le cerveau mocké répond réellement via ask()', async () => {
+    stubGPU(adapterAvec(true));
+    etat.echoue = false;
+    const { cerveau } = await creerCerveau();
+    expect(cerveau).not.toBeNull();
+    const r = await cerveau!.ask([{ role: 'user', content: 'bonjour' }]);
+    expect(r).toBe('Bonjour');
   });
 });

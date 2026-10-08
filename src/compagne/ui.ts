@@ -2,6 +2,7 @@
 // clavier complet (accessibilité), mémoire du prénom et vie proactive —
 // elle pense et parle toute seule, sans qu'on la sollicite.
 import { respond, type CompagneCtx, type Intent } from './engine';
+import { calculerNumero, calculerSuite, estUneQuestionDate, estUneQuestionHeure } from './logique';
 import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
 import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
 import { choisirMonologue, nextDelai, type MonoCtx } from './proactive';
@@ -130,6 +131,25 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
     }
 
     const c = getCtx();
+
+    // Faits durs d'abord : calculs, suites de calcul, heure, date passent TOUJOURS
+    // par la logique embarquée — elle ne se trompe jamais, même grand cerveau éveillé.
+    const suitePre = memoireLoc.resultat != null ? calculerSuite(q, memoireLoc.resultat) : null;
+    if (calculerNumero(q) != null || suitePre != null || estUneQuestionHeure(q) || estUneQuestionDate(q)) {
+      const r = respond(q, {
+        ...c,
+        prenom: memoire.prenom,
+        dernierResultat: memoireLoc.resultat,
+        dernierSujet: memoireLoc.sujet,
+        tour: memoireLoc.tour,
+      });
+      memoireLoc.tour++;
+      if (r.resultat != null) memoireLoc.resultat = r.resultat;
+      memoireLoc.sujet = r.sujet;
+      histoire.push({ role: 'user', content: q }, { role: 'assistant', content: r.texte });
+      setTimeout(() => dire(r.texte, r.humeur), 700);
+      return;
+    }
 
     // Chemin du grand cerveau : vraie compréhension, mémoire de conversation.
     if (cerveau) {

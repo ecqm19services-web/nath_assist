@@ -21,7 +21,10 @@ export interface ResultatCerveau {
 
 // Du plus fiable au plus costaud : on commence par le léger (500 Mo, réussit
 // sur plus de machines et télécharge vite), puis on tente le grand si besoin.
-const MODELES = ['Qwen2.5-0.5B-Instruct-q4f16_1-MLC', 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC'];
+// Deux familles selon ce que la carte sait compiler : fp16 (requiert l'extension
+// 'shader-f16') ou fp32 — un peu plus lourde, mais compatible avec TOUS les WebGPU.
+const MODELES_F16 = ['Qwen2.5-0.5B-Instruct-q4f16_1-MLC', 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC'];
+const MODELES_F32 = ['Qwen2.5-0.5B-Instruct-q4f32_1-MLC', 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC'];
 
 export function gpuDisponible(): boolean {
   return typeof navigator !== 'undefined' && 'gpu' in navigator;
@@ -65,7 +68,8 @@ export async function creerCerveau(
 ): Promise<ResultatCerveau> {
   const sonde = await sondeGPU();
   if (sonde === 'sans-gpu') return { cerveau: null, raison: 'sans-gpu' };
-  if (sonde === 'sans-f16') return { cerveau: null, raison: 'machine' }; // ne compilera pas ici — inutile de rien télécharger
+  // Sans 'shader-f16', pas d'échec : on prend la variante fp32, que tout WebGPU compile.
+  const MODELES = sonde === 'ok' ? MODELES_F16 : MODELES_F32;
   let CreateMLCEngine: typeof import('@mlc-ai/web-llm')['CreateMLCEngine'];
   try {
     ({ CreateMLCEngine } = await import('@mlc-ai/web-llm'));
