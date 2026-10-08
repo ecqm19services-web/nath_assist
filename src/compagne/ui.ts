@@ -74,14 +74,17 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
   const histoire: Message[] = [];
 
   function chargerCerveau() {
-    const bCerveau = bulle('Je télécharge mon cerveau… 0 %', 'nuage');
-    creerCerveau((p, texte) => {
-      // Le % de WebLLM repart à zéro à chaque fragment du modèle : afficher le fragment
-      // en cours rend les variations honnêtes et lisibles (pas un faux « ça recule »).
-      const frag = texte.replace(/^Loading/, 'chargement').slice(0, 44);
-      bCerveau.textContent = frag
-        ? `Je télécharge mon cerveau Qwen… ${Math.min(99, Math.round(p * 100))} % · ${frag}`
-        : `Je télécharge mon cerveau Qwen… ${Math.min(99, Math.round(p * 100))} %`;
+    // Rien de confidentiel à l'écran : ni nom de modèle, ni fragment brut de la
+    // librairie — seulement des « ressources intellectuelles » en cours de chargement.
+    let ressource = 1;
+    let dernierP = 0;
+    const bCerveau = bulle('Chargement des ressources intellectuelles en cours... 0 %', 'nuage');
+    creerCerveau((p) => {
+      // Le % repart à zéro à chaque ressource : on les compte pour rester honnête
+      // (pas un faux « ça recule »), sans jamais nommer ce qui se charge.
+      if (p < dernierP - 0.2) ressource++;
+      dernierP = p;
+      bCerveau.textContent = `Chargement des ressources intellectuelles en cours... ${Math.min(99, Math.round(p * 100))} % · ressource ${ressource}`;
     }).then(({ cerveau: c, raison }) => {
       if (c) {
         cerveau = c;
@@ -91,7 +94,7 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
       bCerveau.textContent = raison === 'reseau'
         ? 'Un hic du réseau empêche mon gros cerveau d atterrir... je reste attentive avec mon petit moteur.'
         : raison === 'machine'
-          ? 'Ma carte graphique refuse ce cerveau, trop costaud pour elle... mon petit moteur suffit, essaie un modèle plus léger si tu veux.'
+          ? 'Ma carte graphique refuse ce cerveau, trop costaud pour elle... mon petit moteur suffit, et le ciel n en est pas moins vivant.'
           : 'Le gros cerveau n’a pas pu atterrir ici... je reste attentive avec mon petit moteur.';
       // Jamais bloquant, jamais sans recours : une reprise est toujours possible
       // (les fragments déjà téléchargés restent en cache, la reprise repart plus loin).

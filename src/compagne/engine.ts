@@ -140,7 +140,7 @@ const BANK: Record<Intent, string[]> = {
     'Mes sens : je peux te voir (caméra), t entendre (micro), sentir ton coeur. Mes mots : poèmes, calculs, l heure, veille du sommeil. Demande, je réponds.',
   ],
   incomprehension: [
-    'Tu as raison de me le dire, et merci d être honnête... je fais de mon mieux avec mon petit moteur. Si mon grand cerveau Qwen peut atterrir, je saisirai bien mieux tes nuances.',
+    'Tu as raison de me le dire, et merci d être honnête... je fais de mon mieux avec mon petit moteur. Si mon grand cerveau peut atterrir, je saisirai bien mieux tes nuances.',
     'Je sens que je réponds à côté... pardonne-moi. Je suis encore simple. Dis-moi ce que tu ressens, et laisse-moi le temps d apprendre.',
   ],
   calcul: [], // géré par la logique dure dans respond()

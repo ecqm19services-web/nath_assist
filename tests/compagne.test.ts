@@ -19,6 +19,19 @@ describe('compagne engine', () => {
       expect(respond('qui es-tu ?', ctx).texte).toContain('Nath');
     }
   });
+
+  it('ne cite jamais d informations confidentielles sur ses modèles', () => {
+    const questions = [
+      'tu ne comprends rien', 'qui es-tu ?', 'bonjour', 'un poème',
+      '7 fois 8', 'encore', 'et toi ?', 'tu me vois',
+    ];
+    for (const q of questions) {
+      for (let seed = 0; seed < 30; seed++) {
+        const ctx: CompagneCtx = { emotion: 'calme', breath: 0.5, timeOfDay: 0.5, seed };
+        expect(respond(q, ctx).texte.toLowerCase()).not.toMatch(/qwen|mlc|alibaba|instruct|0[.,]5b|1[.,]5b/);
+      }
+    }
+  });
   it('insensible aux accents et à la casse', () => {
     expect(detectIntent('JE SUIS TRÈS TRISTE')).toBe('tristesse');
     expect(detectIntent('Je suis tres triste')).toBe('tristesse');
