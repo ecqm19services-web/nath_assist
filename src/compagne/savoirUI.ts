@@ -434,6 +434,8 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
 
   // ——— Entreprise : une organisation, un visage pour toute l'équipe ———
   let titreSansMarque: string | null = null;
+  const patte = document.getElementById('patte');
+  const patteSansMarque = patte ? patte.innerHTML : '';
   function habiller(m: Marque): void {
     if (titreSansMarque === null) titreSansMarque = document.title;
     const teinte = teinteAffichee(m);
@@ -446,6 +448,11 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
     }
     meta.content = teinte;
     document.title = m.actif ? (m.slogan ? `${m.nom} — ${m.slogan}` : m.nom) : titreSansMarque;
+    if (patte) {
+      patte.innerHTML = m.actif
+        ? `${esc(m.nom)} — <span>${esc(m.slogan || 'l\u2019assistant vivant')}</span>`
+        : patteSansMarque;
+    }
   }
 
   function rendreEntreprise(): void {
@@ -458,7 +465,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
       range.querySelector('.ent-perso')!.addEventListener('click', () => {
         desactiverMarque(storage);
         habiller(lireMarque(storage));
-        rendreEntreprise();
+        rendre('entreprise');
         voix.parler('Je reprends mon visage habituel.', 'douce');
       });
       corps.append(carte, range);
@@ -480,12 +487,12 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
         couleur: lireChamp('ent-teinte'),
       });
       if (ok) {
-        rendreEntreprise();
         habiller(lireMarque(storage));
+        rendre('entreprise');
         voix.parler(`Désormais, je travaille pour ${lireMarque(storage).nom}.`, 'lumineuse');
       } else {
+        sortir.innerHTML = '';
         sortir.appendChild(el('<p class="savoir-msg">Cette clé n’ouvre rien pour ce nom-là — vérifie le nom exact de l’organisation et la clé, bloc par bloc.</p>'));
-        corps.appendChild(sortir);
       }
     });
     corps.append(form, sortir);
