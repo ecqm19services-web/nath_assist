@@ -1,8 +1,11 @@
 // Traduire tout le monde, avec ce qu'on a sous la main — et rien de plus.
 // Aujourd'hui : un lexique local que chacun peut enrichir (le français vers la
-// langue de ton choix, partagé entrée par entrée). Demain : un moteur de
-// traduction local s'il existe ; la couture choisirMoteurTraduction est prête,
-// personne ne devra rien réécrire. On n'invente jamais une traduction inconnue.
+// langue de ton choix, partagé entrée par entrée), un socle de mots sûrs pour
+// ne jamais commencer face à un vide, et un carnet qui se transmet de main en
+// main (copier/coller, hors-ligne, sans compte ni serveur). Demain : un moteur
+// de traduction local s'il existe ; la couture choisirMoteurTraduction est
+// prête, personne ne devra rien réécrire. On n'invente jamais une traduction
+// inconnue.
 
 import { normaliser } from '../etudes/quiz';
 
@@ -90,4 +93,53 @@ export function validerEntrees(brut: string | null | undefined): Entree[] {
   } catch {
     return [];
   }
+}
+
+// Le socle : uniquement des mots sûrs, dans les deux langues les plus demandées.
+// Une langue que personne ne nous a encore apprise reste vide — c'est le rôle
+// des gens de la remplir, pas le nôtre d'inventer.
+const DEPART: Record<string, Entree[]> = {
+  anglais: [
+    ['bonjour', 'hello'], ['merci', 'thank you'], ['oui', 'yes'], ['non', 'no'],
+    ['eau', 'water'], ['pain', 'bread'], ['maison', 'house'], ['ami', 'friend'],
+    ['père', 'father'], ['mère', 'mother'], ['chien', 'dog'], ['chat', 'cat'],
+    ['livre', 'book'], ['école', 'school'], ['jour', 'day'], ['nuit', 'night'],
+  ].map(([de, a]) => ({ de, a, langue: 'anglais' })),
+  espagnol: [
+    ['bonjour', 'hola'], ['merci', 'gracias'], ['oui', 'sí'], ['non', 'no'],
+    ['eau', 'agua'], ['pain', 'pan'], ['maison', 'casa'], ['ami', 'amigo'],
+    ['père', 'padre'], ['mère', 'madre'], ['chien', 'perro'], ['chat', 'gato'],
+    ['livre', 'libro'], ['école', 'escuela'], ['jour', 'día'], ['nuit', 'noche'],
+  ].map(([de, a]) => ({ de, a, langue: 'espagnol' })),
+};
+const ALIAS: Record<string, string> = { english: 'anglais', spanish: 'espagnol' };
+
+export function lexiqueDepart(langue: string): Entree[] {
+  const n = normaliser(langue);
+  const clef = ALIAS[n] ?? n;
+  return (DEPART[clef] ?? []).map((e) => ({ ...e }));
+}
+
+// Le carnet se transmet de main en main : un texte simple, une ligne par mot.
+export function serialiserEntrees(entrees: readonly Entree[]): string {
+  return entrees.map((e) => `${e.langue} | ${e.de} :: ${e.a}`).join('\n');
+}
+
+// Importer le carnet d'un autre : ligne « langue | mot :: traduction »,
+// « # » pour les commentaires ; le doublon s'efface devant la nouvelle parole.
+export function importerEntrees(texte: string, base: readonly Entree[]): Entree[] {
+  let out = [...base];
+  for (const ligne of texte.split(/\r?\n/)) {
+    const l = ligne.trim();
+    if (!l || l.startsWith('#')) continue;
+    const sep = l.indexOf('|');
+    const deuxPoints = l.indexOf('::', sep + 1);
+    if (sep <= 0 || deuxPoints < 0) continue;
+    const langue = l.slice(0, sep).trim();
+    const de = l.slice(sep + 1, deuxPoints).trim();
+    const a = l.slice(deuxPoints + 2).trim();
+    if (!langue || !de || !a) continue;
+    out = ajouterEntree(out, de, a, langue);
+  }
+  return out;
 }

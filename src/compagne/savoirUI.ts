@@ -21,7 +21,15 @@ import {
   trouverDansBase,
   type Savoir,
 } from '../etudes/savoir';
-import { ajouterEntree, traduireExpression, validerEntrees, type Entree } from '../traduction/lexique';
+import {
+  ajouterEntree,
+  importerEntrees,
+  lexiqueDepart,
+  serialiserEntrees,
+  traduireExpression,
+  validerEntrees,
+  type Entree,
+} from '../traduction/lexique';
 
 const CLE_SAVOIR = 'nath.savoir';
 const CLE_LEXIQUE = 'nath.lexique';
@@ -353,10 +361,66 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
         sortir.appendChild(b);
         if (r.manques.length) sortir.appendChild(el(`<p class="savoir-note">mots que je ne connais pas encore : ${esc(r.manques.join(', '))} — ajoute-les ci-dessous, ton lexique grandit pour toujours.</p>`));
       } else {
-        sortir.appendChild(el('<p class="savoir-msg">Je ne connais encore aucun mot dans cette langue. Sème ton lexique une entrée à la fois — ou ajoute la langue à mon dictionnaire local quand un moteur sera prêt.</p>'));
+        const socle = lexiqueDepart(l);
+        if (socle.length) {
+          const b = el(`<p class="savoir-msg">Je ne connais encore rien dans cette langue — mais on m'a donné des mots sûrs en « ${esc(l.trim())} ».</p>`);
+          const charger = el('<button>Charger ce socle de mots</button>');
+          charger.addEventListener('click', () => {
+            let entrees = lireLexique();
+            for (const e of socle) entrees = ajouterEntree(entrees, e.de, e.a, l.trim());
+            storage.setItem(CLE_LEXIQUE, JSON.stringify(entrees));
+            sortir.innerHTML = '';
+            sortir.appendChild(el(`<p class="savoir-msg">${socle.length} mots de vie rangés dans mon carnet. Écris une phrase, je saurai répondre.</p>`));
+            voix.parler('Le socle est chargé. Ton lexique peut grandir.', 'lumineuse');
+          });
+          b.appendChild(charger);
+          sortir.appendChild(b);
+        } else {
+          sortir.appendChild(el('<p class="savoir-msg">Je ne connais encore aucun mot dans cette langue. Sème ton lexique une entrée à la fois, ou colle le carnet d\u2019un autre plus bas — ensemble on traduit tout le monde.</p>'));
+        }
       }
     });
-    corps.append(langue, phrase, ligneBtn, sortir, ajouter);
+
+    // le carnet de tout le monde : se prêter de main en main, hors-ligne
+    const carnet = el(`<details class="savoir-import"><summary>Mon carnet complet — le prêter, ou emprunter celui d\u2019un autre</summary>
+      <div class="savoir-actions"><button class="trad-copier">Copier tout mon lexique</button></div>
+      <textarea class="trad-collecte" rows="3" placeholder="les mots copiés se collent ici pour être prêtés" aria-label="Mon lexique à prêter" hidden></textarea>
+      <textarea class="trad-import" rows="3" placeholder="Colle ici le carnet d\u2019un autre (une ligne par mot : langue | mot :: traduction)" aria-label="Lexique à importer"></textarea>
+      <div class="savoir-actions"><button class="trad-importer">Ajouter ces mots au mien</button></div></details>`);
+    const collecte = carnet.querySelector('.trad-collecte') as HTMLTextAreaElement;
+    carnet.querySelector('.trad-copier')!.addEventListener('click', async () => {
+      const texte = serialiserEntrees(lireLexique());
+      if (!texte) {
+        voix.parler('Mon carnet est encore vide — ajoute des mots, il sera prêt à partager.', 'douce');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(texte);
+        sortir.innerHTML = '';
+        sortir.appendChild(el(`<p class="savoir-msg">${esc(String(texte.split('\n').length))} mots copiés — colle-les chez qui veut, son lexique grandira.</p>`));
+        voix.parler('C\u2019est copié. Tu peux le prêter.', 'lumineuse');
+      } catch {
+        collecte.hidden = false;
+        collecte.value = texte;
+        collecte.select();
+        sortir.appendChild(el('<p class="savoir-note">Sélectionne tout dans la case et copie — le carnet est prêt à être prêté.</p>'));
+      }
+    });
+    carnet.querySelector('.trad-importer')!.addEventListener('click', () => {
+      const brut = (carnet.querySelector('.trad-import') as HTMLTextAreaElement).value;
+      const avant = lireLexique();
+      const apres = importerEntrees(brut, avant);
+      const recus = apres.length - avant.length;
+      if (recus <= 0) {
+        sortir.appendChild(el('<p class="savoir-msg">Rien de nouveau là-dedans — ou les lignes ne sont pas dans le format « langue | mot :: traduction ».</p>'));
+        return;
+      }
+      storage.setItem(CLE_LEXIQUE, JSON.stringify(apres));
+      (carnet.querySelector('.trad-import') as HTMLTextAreaElement).value = '';
+      sortir.appendChild(el(`<p class="savoir-msg">${esc(String(recus))} mots reçus d\u2019un autre — merci à lui. Notre lexique est plus fort.</p>`));
+      voix.parler(`${recus} mots reçus. Merci à celui qui les a semés.`, 'douce');
+    });
+    corps.append(langue, phrase, ligneBtn, sortir, ajouter, carnet);
   }
 
   return bouton;

@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   ajouterEntree,
   choisirMoteurTraduction,
+  importerEntrees,
+  lexiqueDepart,
+  serialiserEntrees,
   traduireExpression,
   validerEntrees,
   type Entree,
@@ -67,7 +70,46 @@ describe('traduction : le lexique de tout le monde', () => {
       { de: '', a: 'x', langue: 'w' },
       { de: 'k', a: '   ', langue: 'w' },
       'pas un objet',
-    ]);
+    ] satisfies readonly unknown[]);
     expect(validerEntrees(brut)).toEqual([{ de: 'bonjour', a: 'salut', langue: 'w' }]);
+  });
+
+  it('lexiqueDepart : un socle solide en anglais et espagnol, rien pour une langue inventée', () => {
+    const en = lexiqueDepart('anglais');
+    expect(en.some((e) => e.de === 'bonjour' && e.a === 'hello' && e.langue === 'anglais')).toBe(true);
+    expect(lexiqueDepart('Anglais ').length).toBe(en.length); // casse et espaces ne comptent pas
+    expect(lexiqueDepart('klingon')).toEqual([]);
+    for (const e of [...en, ...lexiqueDepart('espagnol')]) {
+      expect(e.de.trim() && e.a.trim()).toBeTruthy();
+    }
+  });
+
+  it('serialiserEntrees : une ligne par entrée, format lisible « langue | question :: réponse »', () => {
+    const texte = serialiserEntrees(WOLOF);
+    expect(texte.split('\n')).toHaveLength(3);
+    expect(texte).toContain('wolof | bonjour :: naka nga def');
+    expect(serialiserEntrees([])).toBe('');
+  });
+
+  it('importerEntrees : fusionne le lexique d\u2019un autre, sans doublon ni ligne folle', () => {
+    const texte = `# le carnet de Fatou\nanglais | bonjour :: hello\nanglais | eau :: water\npas une ligne\n  \n`;
+    const avant = [...WOLOF];
+    const apres = importerEntrees(texte, avant);
+    expect(apres.length).toBe(avant.length + 2);
+    expect(traduireExpression('bonjour', 'anglais', apres).resultat).toBe('hello');
+  });
+
+  it('importerEntrees : la dernière parole donnée gagne (doublon remplacé)', () => {
+    const apres = importerEntrees('wolof | bonjour :: jammeray', WOLOF);
+    expect(traduireExpression('bonjour', 'wolof', apres).resultat).toBe('jammeray');
+    expect(apres.length).toBe(WOLOF.length);
+  });
+
+  it('aller-retour : sérialiser puis importer redonne le même lexique', () => {
+    const rond = importerEntrees(serialiserEntrees(WOLOF), []);
+    expect(rond.length).toBe(WOLOF.length);
+    for (const e of WOLOF) {
+      expect(traduireExpression(e.de, e.langue, rond).resultat).toBe(e.a);
+    }
   });
 });
