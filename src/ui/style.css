@@ -58,7 +58,7 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
               border-radius: 50%; border: 1px solid rgba(159, 216, 255, .25);
               background: rgba(10, 16, 32, .55); color: #eaf4ff; font-size: 19px; cursor: pointer;
               backdrop-filter: blur(8px); transition: border-color .3s, transform .2s; }
-.savoir-btn:hover { border-color: #9fd8ff; transform: translateY(-1px); }
+.savoir-btn:hover { border-color: var(--teinte, #9fd8ff); transform: translateY(-1px); }
 .savoir-paneau { position: fixed; top: 60px; right: 12px; z-index: 7; width: min(360px, calc(100vw - 24px));
                  max-height: calc(100vh - 130px); overflow: auto; padding: 12px 14px 16px;
                  border-radius: 16px; border: 1px solid rgba(159, 216, 255, .22);
@@ -68,7 +68,7 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
 .savoir-onglets { display: flex; gap: 6px; }
 .savoir-onglets button { padding: 5px 11px; border-radius: 12px; cursor: pointer; font: inherit;
                          border: 1px solid rgba(159, 216, 255, .18); background: transparent; color: #8fa3c2; }
-.savoir-onglets button.actif { color: #9fd8ff; border-color: rgba(159, 216, 255, .55);
+.savoir-onglets button.actif { color: var(--teinte, #9fd8ff); border-color: rgba(159, 216, 255, .55);
                               background: rgba(18, 40, 58, .55); }
 .savoir-fermer { border: none; background: transparent; color: #8fa3c2; font-size: 20px; cursor: pointer; }
 .savoir-corps { display: flex; flex-direction: column; gap: 9px; margin-top: 10px; }
@@ -78,7 +78,7 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
                  border: 1px solid rgba(159, 216, 255, .22); background: rgba(10, 16, 32, .5); color: #eaf4ff; }
 .savoir-corps button { padding: 7px 12px; border-radius: 11px; cursor: pointer; font: inherit;
                        border: 1px solid rgba(159, 216, 255, .22); background: rgba(10, 16, 32, .5); color: #9fd8ff; }
-.savoir-corps button:hover { border-color: #9fd8ff; }
+.savoir-corps button:hover { border-color: var(--teinte, #9fd8ff); }
 .savoir-actions { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
 .savoir-stats { color: #aeb8cf; font-size: .92em; margin: 2px 0; }
 .savoir-msg { color: #cfe3ff; font-size: .95em; }
@@ -94,10 +94,12 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
 .savoir-choix button.juste { color: #7dffc4; border-color: rgba(125, 255, 196, .55); }
 .savoir-choix button.faux { color: #ff9fb4; border-color: rgba(255, 159, 180, .5); }
 .savoir-fiche { padding: 9px 11px; border-radius: 12px; background: rgba(14, 22, 42, .55); }
-.savoir-fiche h4 { margin: 0 0 4px; color: #9fd8ff; }
+.savoir-fiche h4 { margin: 0 0 4px; color: var(--teinte, #9fd8ff); }
 .savoir-fiche p { margin: 0 0 6px; }
 .savoir-lien { color: #9fe4ff; text-decoration: underline; font-size: .92em; }
 .trad-out { font-size: 1.1em; color: #d8f3ff; }
+.ent-teinte { width: 46px; height: 38px; padding: 2px; border-radius: 11px; flex: 0 0 auto;
+              border: 1px solid rgba(159, 216, 255, .22); background: rgba(10, 16, 32, .5); }
 
 /* Nath+ : bouton étoile discret + panneau doux, jamais agressif. */
 .compagne-pro { padding: 9px 11px; border-radius: 14px; cursor: pointer; font-size: 1em;

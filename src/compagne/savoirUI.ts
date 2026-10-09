@@ -30,6 +30,13 @@ import {
   validerEntrees,
   type Entree,
 } from '../traduction/lexique';
+import {
+  activerMarque,
+  desactiverMarque,
+  lireMarque,
+  teinteAffichee,
+  type Marque,
+} from '../entreprise/marque';
 
 const CLE_SAVOIR = 'nath.savoir';
 const CLE_LEXIQUE = 'nath.lexique';
@@ -55,6 +62,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
           <button data-on="reviser" class="actif">Réviser</button>
           <button data-on="savoir">Savoir</button>
           <button data-on="traduire">Traduire</button>
+          <button data-on="entreprise">Entreprise</button>
         </div>
         <button class="savoir-fermer" title="Fermer" aria-label="Fermer">×</button>
       </div>
@@ -70,7 +78,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
   paneau.querySelector('.savoir-fermer')!.addEventListener('click', () => (paneau.hidden = true));
 
   // ——— état ———
-  let active: 'reviser' | 'savoir' | 'traduire' = 'reviser';
+  let active: 'reviser' | 'savoir' | 'traduire' | 'entreprise' = 'reviser';
   let paquetSel: string | null = null; // null = tous
   let file: Fiche[] = [];
   let vueRevue: 'carte' | 'dette' | 'fin' = 'fin';
@@ -102,6 +110,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
     corps.innerHTML = '';
     if (o === 'reviser') rendreReviser();
     else if (o === 'savoir') rendreSavoir();
+    else if (o === 'entreprise') rendreEntreprise();
     else rendreTraduire();
   }
 
@@ -422,6 +431,67 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
     });
     corps.append(langue, phrase, ligneBtn, sortir, ajouter, carnet);
   }
+
+  // ——— Entreprise : une organisation, un visage pour toute l'équipe ———
+  let titreSansMarque: string | null = null;
+  function habiller(m: Marque): void {
+    if (titreSansMarque === null) titreSansMarque = document.title;
+    const teinte = teinteAffichee(m);
+    document.documentElement.style.setProperty('--teinte', teinte);
+    let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+    meta.content = teinte;
+    document.title = m.actif ? (m.slogan ? `${m.nom} — ${m.slogan}` : m.nom) : titreSansMarque;
+  }
+
+  function rendreEntreprise(): void {
+    const m = lireMarque(storage);
+    const sortir = el('<div class="savoir-resultat"></div>');
+    if (m.actif) {
+      const carte = el(`<div class="savoir-fiche"><h4>${esc(m.nom)}</h4><p>${esc(m.slogan)}</p>
+        <p class="savoir-note">Cet appareil porte le visage de « ${esc(m.organisation)} ».</p></div>`);
+      const range = el('<div class="savoir-actions"><button class="ent-perso">Revenir en mode personnel</button></div>');
+      range.querySelector('.ent-perso')!.addEventListener('click', () => {
+        desactiverMarque(storage);
+        habiller(lireMarque(storage));
+        rendreEntreprise();
+        voix.parler('Je reprends mon visage habituel.', 'douce');
+      });
+      corps.append(carte, range);
+    }
+    const form = el(`<div class="savoir-fiche">
+      <p class="savoir-note">Pour une école, une ONG, une équipe : la clé se demande à Nath-Tech avec le nom exact de l’organisation. Rien n’est bridé, on peut toujours revenir.</p>
+      <div class="savoir-ligne"><input type="text" class="ent-org" placeholder="Organisation (ex. Lycée Bilingue de Douala)" aria-label="Organisation" /></div>
+      <div class="savoir-ligne"><input type="text" class="ent-nom" placeholder="Nom visible (ex. LBD)" aria-label="Nom de la marque" /><input type="text" class="ent-slogan" placeholder="Slogan (facultatif)" aria-label="Slogan" /></div>
+      <div class="savoir-ligne"><input type="color" class="ent-teinte" value="${esc(teinteAffichee(m))}" aria-label="Teinte" /><input type="text" class="ent-cle" placeholder="Clé d’équipe (blocs de 4)" aria-label="Clé d’équipe" /></div>
+      <div class="savoir-actions"><button class="ent-ok">Habiller l’app pour mon équipe</button></div>
+    </div>`);
+    form.querySelector('.ent-ok')!.addEventListener('click', () => {
+      const lireChamp = (c: string) => (form.querySelector(`.${c}`) as HTMLInputElement).value;
+      const ok = activerMarque(storage, {
+        organisation: lireChamp('ent-org'),
+        cle: lireChamp('ent-cle'),
+        nom: lireChamp('ent-nom'),
+        slogan: lireChamp('ent-slogan'),
+        couleur: lireChamp('ent-teinte'),
+      });
+      if (ok) {
+        rendreEntreprise();
+        habiller(lireMarque(storage));
+        voix.parler(`Désormais, je travaille pour ${lireMarque(storage).nom}.`, 'lumineuse');
+      } else {
+        sortir.appendChild(el('<p class="savoir-msg">Cette clé n’ouvre rien pour ce nom-là — vérifie le nom exact de l’organisation et la clé, bloc par bloc.</p>'));
+        corps.appendChild(sortir);
+      }
+    });
+    corps.append(form, sortir);
+  }
+
+  habiller(lireMarque(storage));
 
   return bouton;
 }
