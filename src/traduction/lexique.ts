@@ -111,8 +111,41 @@ const DEPART: Record<string, Entree[]> = {
     ['père', 'padre'], ['mère', 'madre'], ['chien', 'perro'], ['chat', 'gato'],
     ['livre', 'libro'], ['école', 'escuela'], ['jour', 'día'], ['nuit', 'noche'],
   ].map(([de, a]) => ({ de, a, langue: 'espagnol' })),
+  allemand: [
+    ['bonjour', 'hallo'], ['merci', 'danke'], ['oui', 'ja'], ['non', 'nein'],
+    ['eau', 'Wasser'], ['pain', 'Brot'], ['maison', 'Haus'], ['ami', 'Freund'],
+    ['père', 'Vater'], ['mère', 'Mutter'], ['chien', 'Hund'], ['chat', 'Katze'],
+    ['livre', 'Buch'], ['école', 'Schule'], ['jour', 'Tag'], ['nuit', 'Nacht'],
+  ].map(([de, a]) => ({ de, a, langue: 'allemand' })),
+  italien: [
+    ['bonjour', 'ciao'], ['merci', 'grazie'], ['oui', 'sì'], ['non', 'no'],
+    ['eau', 'acqua'], ['pain', 'pane'], ['maison', 'casa'], ['ami', 'amico'],
+    ['père', 'padre'], ['mère', 'madre'], ['chien', 'cane'], ['chat', 'gatto'],
+    ['livre', 'libro'], ['école', 'scuola'], ['jour', 'giorno'], ['nuit', 'notte'],
+  ].map(([de, a]) => ({ de, a, langue: 'italien' })),
+  portugais: [
+    ['bonjour', 'olá'], ['merci', 'obrigado'], ['oui', 'sim'], ['non', 'não'],
+    ['eau', 'água'], ['pain', 'pão'], ['maison', 'casa'], ['ami', 'amigo'],
+    ['père', 'pai'], ['mère', 'mãe'], ['chien', 'cachorro'], ['chat', 'gato'],
+    ['livre', 'livro'], ['école', 'escola'], ['jour', 'dia'], ['nuit', 'noite'],
+  ].map(([de, a]) => ({ de, a, langue: 'portugais' })),
+  arabe: [
+    ['bonjour', 'مرحبا'], ['merci', 'شكرا'], ['oui', 'نعم'], ['non', 'لا'],
+    ['eau', 'ماء'], ['pain', 'خبز'], ['maison', 'بيت'], ['ami', 'صديق'],
+    ['père', 'أب'], ['mère', 'أم'], ['chien', 'كلب'], ['chat', 'قط'],
+    ['livre', 'كتاب'], ['école', 'مدرسة'], ['jour', 'يوم'], ['nuit', 'ليلة'],
+  ].map(([de, a]) => ({ de, a, langue: 'arabe' })),
+  chinois: [
+    ['bonjour', '你好'], ['merci', '谢谢'], ['oui', '是'], ['non', '不'],
+    ['eau', '水'], ['pain', '面包'], ['maison', '家'], ['ami', '朋友'],
+    ['père', '爸爸'], ['mère', '妈妈'], ['chien', '狗'], ['chat', '猫'],
+    ['livre', '书'], ['école', '学校'], ['jour', '日'], ['nuit', '夜'],
+  ].map(([de, a]) => ({ de, a, langue: 'chinois' })),
 };
-const ALIAS: Record<string, string> = { english: 'anglais', spanish: 'espagnol' };
+const ALIAS: Record<string, string> = {
+  english: 'anglais', spanish: 'espagnol', german: 'allemand',
+  italian: 'italien', portuguese: 'portugais', arabic: 'arabe', chinese: 'chinois',
+};
 
 export function lexiqueDepart(langue: string): Entree[] {
   const n = normaliser(langue);

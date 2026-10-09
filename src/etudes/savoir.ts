@@ -50,28 +50,60 @@ export function enregistrerSavoir(base: readonly Savoir[], s: Savoir): Savoir[] 
 
 // Puiser un résumé dans l'encyclopédie libre. Le fetch est injecté : c'est
 // l'appelant qui décide du moment (après accord explicite), jamais ce module.
-export async function chargerDepuisLeNet(
-  sujet: string,
+async function resumeDepuisTitre(
+  titre: string,
   fetchImpl: typeof fetch,
-  langue = 'fr',
+  langue: string,
 ): Promise<ResumeWeb | null> {
   try {
-    const url = `https://${langue}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
-      sujet.trim(),
-    )}`;
+    const url = `https://${langue}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(titre.trim())}`;
     const res = await fetchImpl(url);
     if (!res.ok) return null;
     const o = (await res.json()) as Record<string, any>;
     const resume = typeof o?.extract === 'string' ? o.extract.trim() : '';
     if (!resume) return null;
     return {
-      titre: typeof o.title === 'string' && o.title ? o.title : sujet.trim(),
+      titre: typeof o.title === 'string' && o.title ? o.title : titre.trim(),
       resume,
       url: o?.content_urls?.desktop?.page ?? '',
     };
   } catch {
     return null;
   }
+}
+
+// Les gens disent « la mitose », l'encyclopédie écrit « Mitose ». La recherche
+// plein texte fait le pont : premier titre proposé, ou rien du tout.
+export async function titreDepuisRecherche(
+  sujet: string,
+  fetchImpl: typeof fetch,
+  langue = 'fr',
+): Promise<string | null> {
+  try {
+    const url =
+      `https://${langue}.wikipedia.org/w/api.php?action=query&list=search&srlimit=1&format=json&origin=*&srsearch=` +
+      encodeURIComponent(sujet.trim());
+    const res = await fetchImpl(url);
+    if (!res.ok) return null;
+    const o = (await res.json()) as Record<string, any>;
+    const t = o?.query?.search?.[0]?.title;
+    return typeof t === 'string' && t.trim() ? t.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function chargerDepuisLeNet(
+  sujet: string,
+  fetchImpl: typeof fetch,
+  langue = 'fr',
+): Promise<ResumeWeb | null> {
+  const direct = await resumeDepuisTitre(sujet, fetchImpl, langue);
+  if (direct) return direct;
+  // Le titre tel quel n'a rien donné : on cherche le vrai, une seule fois.
+  const trouve = await titreDepuisRecherche(sujet, fetchImpl, langue);
+  if (!trouve || normaliser(trouve) === normaliser(sujet)) return null;
+  return await resumeDepuisTitre(trouve, fetchImpl, langue);
 }
 
 // Transformer un cours en fiches : dans chaque phrase assez longue, le mot le

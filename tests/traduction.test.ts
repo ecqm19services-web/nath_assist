@@ -84,6 +84,19 @@ describe('traduction : le lexique de tout le monde', () => {
     }
   });
 
+  it('lexiqueDepart : le socle s\u2019étend — allemand, italien, portugais, arabe, chinois parlent tout de suite', () => {
+    const attendues: [string, string][] = [
+      ['allemand', 'hallo'], ['italien', 'ciao'], ['portugais', 'olá'],
+      ['arabe', 'مرحبا'], ['chinois', '你好'],
+    ];
+    for (const [langue, bonjour] of attendues) {
+      const socle = lexiqueDepart(langue);
+      expect(socle.length).toBeGreaterThanOrEqual(12);
+      expect(socle.find((e) => e.de === 'bonjour')?.a).toBe(bonjour);
+      expect(socle.every((e) => e.langue === langue)).toBe(true);
+    }
+  });
+
   it('serialiserEntrees : une ligne par entrée, format lisible « langue | question :: réponse »', () => {
     const texte = serialiserEntrees(WOLOF);
     expect(texte.split('\n')).toHaveLength(3);
