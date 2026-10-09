@@ -9,6 +9,7 @@ import { generateAura } from './aura/aura';
 import { attachPointer, attachTilt } from './input/touch';
 import { ambientLevel, ambientMood, startAmbient } from './audio/ambient';
 import { createCompagneUI } from './compagne/ui';
+import { creerPanneauSavoir } from './compagne/savoirUI';
 import { probaEvenements } from './nuage/meteo';
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
@@ -59,6 +60,10 @@ createCompagneUI(() => ({
   changerFace: () => cam.basculerFace(), // avant ⇄ arrière
   consentement: messageConsentement,
 });
+
+// Le coin d'études (🎓) : réviser des fiches, apprendre un sujet (base locale,
+// puis connexion proposée sur accord), traduire avec un lexique de tout le monde.
+creerPanneauSavoir(localStorage);
 
 // Le ciel vit seul : toutes les 15 s, il décide d'un éclair ou d'une filante
 // selon l'humeur et l'heure — personne ne lui a rien demandé.

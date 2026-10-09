@@ -53,6 +53,52 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
 .compagne-consent span { flex: 1 1 100%; }
 @keyframes mic-pulse { 50% { box-shadow: 0 0 0 6px rgba(185, 246, 208, .12); } }
 
+/* Le coin d'études : bouton lauréal discret, panneau de verre à droite. */
+.savoir-btn { position: fixed; top: 12px; right: 12px; z-index: 6; width: 42px; height: 42px;
+              border-radius: 50%; border: 1px solid rgba(159, 216, 255, .25);
+              background: rgba(10, 16, 32, .55); color: #eaf4ff; font-size: 19px; cursor: pointer;
+              backdrop-filter: blur(8px); transition: border-color .3s, transform .2s; }
+.savoir-btn:hover { border-color: #9fd8ff; transform: translateY(-1px); }
+.savoir-paneau { position: fixed; top: 60px; right: 12px; z-index: 7; width: min(360px, calc(100vw - 24px));
+                 max-height: calc(100vh - 130px); overflow: auto; padding: 12px 14px 16px;
+                 border-radius: 16px; border: 1px solid rgba(159, 216, 255, .22);
+                 background: rgba(8, 13, 26, .82); backdrop-filter: blur(12px);
+                 color: #eaf4ff; font: 14px/1.45 system-ui, sans-serif; }
+.savoir-tete { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.savoir-onglets { display: flex; gap: 6px; }
+.savoir-onglets button { padding: 5px 11px; border-radius: 12px; cursor: pointer; font: inherit;
+                         border: 1px solid rgba(159, 216, 255, .18); background: transparent; color: #8fa3c2; }
+.savoir-onglets button.actif { color: #9fd8ff; border-color: rgba(159, 216, 255, .55);
+                              background: rgba(18, 40, 58, .55); }
+.savoir-fermer { border: none; background: transparent; color: #8fa3c2; font-size: 20px; cursor: pointer; }
+.savoir-corps { display: flex; flex-direction: column; gap: 9px; margin-top: 10px; }
+.savoir-ligne { display: flex; gap: 6px; }
+.savoir-ligne input, .savoir-select, .savoir-import textarea, .trad-langue, .trad-phrase {
+                 flex: 1; min-width: 0; padding: 8px 10px; border-radius: 11px; font: inherit;
+                 border: 1px solid rgba(159, 216, 255, .22); background: rgba(10, 16, 32, .5); color: #eaf4ff; }
+.savoir-corps button { padding: 7px 12px; border-radius: 11px; cursor: pointer; font: inherit;
+                       border: 1px solid rgba(159, 216, 255, .22); background: rgba(10, 16, 32, .5); color: #9fd8ff; }
+.savoir-corps button:hover { border-color: #9fd8ff; }
+.savoir-actions { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.savoir-stats { color: #aeb8cf; font-size: .92em; margin: 2px 0; }
+.savoir-msg { color: #cfe3ff; font-size: .95em; }
+.savoir-note { color: #8fa3c2; font-size: .88em; }
+.savoir-import summary { color: #8fa3c2; cursor: pointer; font-size: .92em; }
+.savoir-import textarea, .trad-phrase { resize: vertical; margin-top: 6px; }
+.savoir-session { padding: 10px 12px; border-radius: 13px; background: rgba(14, 22, 42, .65);
+                  border: 1px solid rgba(159, 216, 255, .2); }
+.savoir-reste { color: #7e93b5; font-size: .85em; margin: 0 0 4px; }
+.savoir-verso { font-size: 1.12em; margin: 0 0 6px; }
+.savoir-recto { color: #9fe4ff; font-size: 1.05em; margin: 0 0 8px; }
+.savoir-choix { display: flex; flex-direction: column; gap: 6px; }
+.savoir-choix button.juste { color: #7dffc4; border-color: rgba(125, 255, 196, .55); }
+.savoir-choix button.faux { color: #ff9fb4; border-color: rgba(255, 159, 180, .5); }
+.savoir-fiche { padding: 9px 11px; border-radius: 12px; background: rgba(14, 22, 42, .55); }
+.savoir-fiche h4 { margin: 0 0 4px; color: #9fd8ff; }
+.savoir-fiche p { margin: 0 0 6px; }
+.savoir-lien { color: #9fe4ff; text-decoration: underline; font-size: .92em; }
+.trad-out { font-size: 1.1em; color: #d8f3ff; }
+
 /* Nath+ : bouton étoile discret + panneau doux, jamais agressif. */
 .compagne-pro { padding: 9px 11px; border-radius: 14px; cursor: pointer; font-size: 1em;
                 border: 1px solid rgba(255, 224, 150, .28); background: rgba(24, 20, 8, .4);
