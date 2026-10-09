@@ -10,8 +10,22 @@ import { entendReveil } from './reveil';
 import { createVoice } from './voice';
 import { idProfil } from '../monetisation/cle';
 import { activer, changerNom, estActif, nomEffectif } from '../monetisation/pro';
+import type { Face } from '../input/camera';
 
-export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | null }) {
+// La caméra est un sens qu'on ne réclame qu'avec accord explicite : l'UI reçoit
+// ces commandes du pilote (main) et ne peut que les déclencher sur un geste net.
+export interface SensCamera {
+  cameraDisponible: boolean;
+  estOuverte: () => boolean;
+  basculer: () => Promise<boolean>; // allume/éteint, renvoie le nouvel état
+  changerFace: () => Promise<Face>; // avant ⇄ arrière
+  consentement: () => string;
+}
+
+export function createCompagneUI(
+  getCtx: () => CompagneCtx & { bpm: number | null },
+  sens: SensCamera,
+) {
   const voice = createVoice();
   let memoire = lireMemoire(localStorage);
   // Nath+ : état local, nom d'éveil effectif lu à chaque phrase (changeable sans recharger).
@@ -33,6 +47,20 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
           <path d="M6 12a6 6 0 0 1 12 0v4a3 3 0 0 1-3 3H9"/>
           <path d="M12 3v2M4 12H2M22 12h-2"/>
+        </svg>
+      </button>
+      <button type="button" class="compagne-yeux" title="Mode vidéo — activer la caméra, avec votre accord" aria-label="Activer la caméra" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+      <button type="button" class="compagne-retourner" title="Changer de caméra (avant / arrière)" aria-label="Changer de caméra" hidden>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+          <path d="M21 3v5h-5"/>
+          <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+          <path d="M3 21v-5h5"/>
         </svg>
       </button>
       <button type="button" class="compagne-pro" title="Nath+ — personnaliser le nom d'éveil" aria-label="Nath+" aria-pressed="false">✦</button>
@@ -58,11 +86,16 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
   const champ = zone.querySelector('.compagne-champ') as HTMLInputElement;
   const mic = zone.querySelector('.compagne-mic') as HTMLButtonElement;
   const reveilBtn = zone.querySelector('.compagne-reveil') as HTMLButtonElement;
+  const yeuxBtn = zone.querySelector('.compagne-yeux') as HTMLButtonElement;
+  const retournerBtn = zone.querySelector('.compagne-retourner') as HTMLButtonElement;
   const form = zone.querySelector('.compagne-ligne') as HTMLFormElement;
 
   if (!voice.sttDisponible) {
     mic.style.display = 'none'; // pas de voix dans ce navigateur → on n'imite pas
     reveilBtn.style.display = 'none'; // le réveil vocal non plus
+  }
+  if (!sens.cameraDisponible) {
+    yeuxBtn.style.display = 'none'; // pas de caméra possible → on ne propose pas de l'allumer
   }
 
   function bulle(texte: string, qui: 'moi' | 'nuage'): HTMLElement {
@@ -294,6 +327,64 @@ export function createCompagneUI(getCtx: () => CompagneCtx & { bpm: number | nul
     } else {
       proEtat.textContent = 'Choisissez un nom en lettres (2 à 20), sans chiffres ni signes.';
     }
+  });
+
+  // ——— Caméra : un sens opt-in. Jamais allumée seule. Un geste sur l'œil →
+  // d'abord une demande de consentement honnête, et seulement après, l'accès. ———
+  function majEtatCamera(ouverte: boolean): void {
+    yeuxBtn.classList.toggle('actif', ouverte);
+    yeuxBtn.setAttribute('aria-pressed', String(ouverte));
+    retournerBtn.hidden = !ouverte; // la bascule avant/arrière n'existe que si on voit
+  }
+
+  async function allumerCamera(): Promise<void> {
+    try {
+      const on = await sens.basculer();
+      majEtatCamera(on);
+      if (on) bulle("Me voilà, je te vois. Touche l'œil pour me fermer les yeux.", 'nuage');
+    } catch {
+      bulle("La caméra est refusée ou indisponible — on continue sans elle, rien n'est forcé.", 'nuage');
+    }
+  }
+
+  function demanderConsentement(): void {
+    const ligne = document.createElement('div');
+    ligne.className = 'compagne-consent';
+    const txt = document.createElement('span');
+    txt.textContent = sens.consentement();
+    const oui = document.createElement('button');
+    oui.type = 'button';
+    oui.className = 'compagne-relance';
+    oui.textContent = "J'allume la caméra";
+    const non = document.createElement('button');
+    non.type = 'button';
+    non.className = 'compagne-relance';
+    non.textContent = 'Plus tard';
+    oui.addEventListener('click', () => {
+      ligne.remove();
+      void allumerCamera();
+    });
+    non.addEventListener('click', () => ligne.remove());
+    ligne.append(txt, oui, non);
+    zone.insertBefore(ligne, form);
+  }
+
+  yeuxBtn.addEventListener('click', () => {
+    if (sens.estOuverte()) {
+      void sens.basculer().then((on) => {
+        majEtatCamera(on);
+        bulle('Je ferme les yeux. Rien de ce que je voyais n’est gardé.', 'nuage');
+      });
+    } else {
+      demanderConsentement();
+    }
+  });
+
+  retournerBtn.addEventListener('click', async () => {
+    const face = await sens.changerFace();
+    retournerBtn.title =
+      face === 'arriere' ? 'Caméra arrière — touche pour revenir à l’avant' : 'Caméra avant — touche pour passer à l’arrière';
+    bulle(face === 'arriere' ? 'Je montre le monde (caméra arrière).' : 'Je te regarde (caméra avant).', 'nuage');
   });
 
   // Premier mot : selon qu'elle vous connaît déjà ou non.

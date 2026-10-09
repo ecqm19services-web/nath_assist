@@ -1,7 +1,8 @@
 import { createScene } from './nuage/scene';
 import { computeSceneParams, createInitialState } from './nuage/state';
 import { startBreath } from './input/breathIO';
-import { startFace } from './input/faceIO';
+import { ControleurCamera } from './input/cameraIO';
+import { messageConsentement } from './input/camera';
 import { createEmotionSmoother, mapEmotion } from './input/emotion';
 import { cheekLuminance, estimateBpm } from './nuage/rppg';
 import { generateAura } from './aura/aura';
@@ -18,9 +19,20 @@ localStorage.setItem('nuage.seed', state.seed);
 // État réel des sens : la Compagne ne ment jamais sur ce qu'elle perçoit.
 const capteurs = { cameraOn: false, micOn: false };
 startBreath((v) => { state.breath = Math.max(state.breath, v); }).then((ok) => { capteurs.micOn = ok; });
+
+// La caméra NE S'ALLUME JAMAIS SEULE : un contrôleur attend un choix explicite
+// de l'utilisateur (bouton œil → consentement → ouverture). Au lancement, elle
+// est fermée, le flux libre, aucun témoin d'accès allumé.
 const video = document.getElementById('cam') as HTMLVideoElement;
 const lisser = createEmotionSmoother();
-startFace(video, (s) => { state.emotion = lisser(mapEmotion(s)); }).then((ok) => { capteurs.cameraOn = ok; });
+const cam = new ControleurCamera(
+  video,
+  localStorage,
+  (s) => { state.emotion = lisser(mapEmotion(s)); },
+  (on) => { capteurs.cameraOn = on; video.classList.toggle('video-actif', on); },
+);
+const cameraDisponible =
+  typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
 
 const etat = document.getElementById('etat')!;
 const aura = generateAura(state.seed);
@@ -39,7 +51,14 @@ createCompagneUI(() => ({
   bpm: state.bpm,
   cameraOn: capteurs.cameraOn,
   micOn: capteurs.micOn,
-}));
+}), {
+  // La caméra est un sens opt-in : l'UI ne peut l'activer qu'avec consentement.
+  cameraDisponible,
+  estOuverte: () => cam.ouverte,
+  basculer: () => cam.basculer(), // allume ou éteint, renvoie le nouvel état
+  changerFace: () => cam.basculerFace(), // avant ⇄ arrière
+  consentement: messageConsentement,
+});
 
 // Le ciel vit seul : toutes les 15 s, il décide d'un éclair ou d'une filante
 // selon l'humeur et l'heure — personne ne lui a rien demandé.
