@@ -21,6 +21,10 @@ export default defineConfig({
       globPatterns: ['**/*.{js,css,html,webmanifest,png}'],
       // Le cerveau Qwen (chunk WebLLM ~6 Mo) doit être pré-cache pour fonctionner hors-ligne.
       maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+      // La page vitrine Entreprise est une vraie page : le SPA ne doit jamais
+      // l'écraser quand le Service Worker est installé (retour visiteur B2B).
+      navigateFallback: 'index.html',
+      navigateFallbackDenylist: [/^\/[^/]/],
     },
   })],
 });
