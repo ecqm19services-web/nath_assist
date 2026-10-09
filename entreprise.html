@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!-- Page vitrine Nath Entreprise — kit de présentation B2B. Propulsée en silence par Nath-Tech. -->
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nath Entreprise — l'assistant vivant de votre équipe</title>
+  <meta name="description" content="Nath Entreprise : votre nom, votre slogan, vos couleurs — un assistant vivant hors-ligne pour toute votre école, votre ONG, votre équipe." />
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; font: 16px/1.6 system-ui, sans-serif; color: #eaf4ff;
+           background: radial-gradient(120% 90% at 50% 0%, #12203c 0%, #070b18 55%, #04070f 100%); }
+    main { max-width: 760px; margin: 0 auto; padding: 48px 20px 64px; }
+    h1 { font-size: 2rem; margin: 0 0 8px; }
+    h1 em { font-style: normal; color: #9fd8ff; }
+    .sous { color: #aeb8cf; margin: 0 0 32px; }
+    .carte { border: 1px solid rgba(159, 216, 255, .22); border-radius: 16px;
+             background: rgba(10, 16, 32, .55); backdrop-filter: blur(8px); padding: 18px 20px; margin: 0 0 18px; }
+    .carte h2 { margin: 0 0 10px; font-size: 1.2rem; color: #9fd8ff; }
+    ul { margin: 0; padding-left: 20px; }
+    li { margin: 4px 0; }
+    .paliers { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .palier { text-align: center; padding: 14px 8px; border-radius: 12px; border: 1px solid rgba(159, 216, 255, .18); }
+    .palier b { display: block; font-size: 1.05rem; color: #9fe4ff; }
+    .prix { font-size: 1.25rem; font-weight: 700; color: #baffd9; margin: 8px 0 2px; }
+    .calc { display: flex; gap: 8px; margin: 10px 0 4px; }
+    .calc input { flex: 1; padding: 10px 12px; border-radius: 11px; border: 1px solid rgba(159, 216, 255, .25);
+                  background: rgba(6, 10, 22, .6); color: #eaf4ff; font: inherit; }
+    .calc button { padding: 10px 16px; border-radius: 11px; border: 1px solid rgba(159, 216, 255, .35);
+                   background: rgba(18, 40, 58, .7); color: #9fd8ff; font: inherit; cursor: pointer; }
+    #resultat { color: #cfe3ff; min-height: 1.6em; }
+    .note { color: #8fa3c2; font-size: .9em; }
+    .cta { display: inline-block; margin-top: 8px; padding: 12px 22px; border-radius: 14px;
+           background: linear-gradient(120deg, #9fd8ff22, #7dffc422); border: 1px solid rgba(159, 216, 255, .5);
+           color: #eaf4ff; text-decoration: none; font-weight: 600; }
+    footer { margin-top: 36px; color: #6f84a6; font-size: .85em; }
+    a { color: #9fe4ff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1><em>Nath Entreprise</em> — l'assistant vivant de votre équipe</h1>
+    <p class="sous">Votre nom, votre slogan, vos couleurs. Une application qui voit, entend et
+      accompagne — pour votre école, votre ONG, votre coopérative, hors-ligne et sans compte.</p>
+
+    <div class="carte">
+      <h2>Ce que votre équipe reçoit</h2>
+      <ul>
+        <li><b>Une application à votre visage</b> : titre, slogan et teinte de votre organisation dès l'ouverture.</li>
+        <li><b>Un coin d'études complet</b> : fiches à mémoire, quiz du jour, dictée de cours — tout fonctionne hors-ligne.</li>
+        <li><b>Un savoir qui grandit</b> : l'assistant puise dans l'encyclopédie libre quand vous le lui demandez, puis le garde en mémoire.</li>
+        <li><b>Un traducteur communautaire</b> : le lexique de vos langues, enrichi par tous, transmis de main en main.</li>
+        <li><b>Le respect d'abord</b> : la caméra ne s'allume jamais sans demander, rien ne sort de l'appareil sans un oui explicite.</li>
+      </ul>
+    </div>
+
+    <div class="carte">
+      <h2>Trois paliers, zéro surprise</h2>
+      <div class="paliers">
+        <div class="palier"><b>Classe</b>jusqu'à 50 personnes<div class="prix">15 000 F/mois</div><span class="note">≈ 300 F par tête</span></div>
+        <div class="palier"><b>École</b>jusqu'à 200 personnes<div class="prix">40 000 F/mois</div><span class="note">≈ 200 F par tête</span></div>
+        <div class="palier"><b>Réseau</b>jusqu'à 1 000 personnes<div class="prix">120 000 F/mois</div><span class="note">≈ 120 F par tête</span></div>
+        <div class="palier"><b>Sur mesure</b>au-delà de 1 000<div class="prix">à convenir</div><span class="note">le juste chiffre, ensemble</span></div>
+      </div>
+      <p class="note">Payable par mobile money, sans engagement longue durée. L'usage personnel de
+        Nath Assist reste gratuit et complet pour chacun, toujours.</p>
+      <h2 style="margin-top:18px">Estimer pour votre équipe</h2>
+      <div class="calc">
+        <input id="personnes" type="number" min="1" placeholder="Nombre de personnes à équiper" />
+        <button id="calculer">Estimer</button>
+      </div>
+      <p id="resultat"></p>
+    </div>
+
+    <div class="carte">
+      <h2>Comment démarrer</h2>
+      <ul>
+        <li>Parlez-nous du <b>nom exact de votre organisation</b> et de la taille de votre équipe.</li>
+        <li>Nous vous remettons la <b>clé d'équipe</b> qui habille l'application pour toute votre structure.</li>
+        <li>Vos équipes ouvrent l'app, onglet <b>🎓 → Entreprise</b>, collent la clé — c'est habillé pour toujours.</li>
+      </ul>
+      <a class="cta" href="https://ecqm19services-web.github.io/nath_assist/">Essayer l'assistant maintenant</a>
+    </div>
+
+    <footer>Nath Entreprise — un service Nath-Tech. Vos données restent dans vos appareils.</footer>
+  </main>
+  <script>
+    // Les quatre paliers, les mêmes que dans l'application.
+    const PALIERS = [
+      { max: 50, nom: 'Classe', mensuel: 15000 },
+      { max: 200, nom: 'École', mensuel: 40000 },
+      { max: 1000, nom: 'Réseau', mensuel: 120000 },
+      { max: Infinity, nom: 'Sur mesure', mensuel: null },
+    ];
+    const fmcfa = (n) => n === null ? 'à convenir' : n.toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ') + ' FCFA';
+    document.getElementById('calculer').addEventListener('click', () => {
+      const n = Number(document.getElementById('personnes').value);
+      const out = document.getElementById('resultat');
+      if (!Number.isFinite(n) || n <= 0) { out.textContent = 'Entrez d’abord le nombre de personnes à équiper.'; return; }
+      const p = PALIERS.find((x) => n <= x.max);
+      out.textContent = p.mensuel === null
+        ? `Sur mesure — parlons de votre réseau de ${n.toLocaleString('fr-FR')} personnes, on trouvera le juste chiffre.`
+        : `${p.nom} — ${fmcfa(p.mensuel)} par mois pour toute l’équipe, soit environ ${Math.round(p.mensuel / n).toLocaleString('fr-FR')} F par personne. Plus vous êtes nombreux, moins chaque tête coûte.`;
+    });
+  </script>
+</body>
+</html>
