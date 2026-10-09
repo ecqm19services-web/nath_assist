@@ -37,6 +37,8 @@ import {
   teinteAffichee,
   type Marque,
 } from '../entreprise/marque';
+import { analyserDictee, epurerDictee } from '../traduction/dictee';
+import { devisEntreprise, formatFCFA } from '../entreprise/devis';
 
 const CLE_SAVOIR = 'nath.savoir';
 const CLE_LEXIQUE = 'nath.lexique';
@@ -164,6 +166,40 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
       if (n) voix.parler(`${n} cartes rangées dans ${paquetCourant()?.nom ?? 'Mes cartes'}.`, 'posee');
     });
     corps.appendChild(importe);
+
+    // dicter un cours entier → des fiches naissent de la voix
+    const dictee = el('<div class="savoir-actions"><button class="savoir-dicter">🎤 Dicter un cours</button></div>');
+    dictee.querySelector('.savoir-dicter')!.addEventListener('click', () => {
+      corps.querySelector('.savoir-session')?.remove();
+      if (!voix.sttDisponible) {
+        corps.appendChild(el('<p class="savoir-msg">Je n\u2019ai pas d\u2019oreille aujourd\u2019hui — colle ton cours en texte, ça marche aussi.</p>'));
+        return;
+      }
+      corps.appendChild(el('<p class="savoir-msg">J\u2019écoute… parle normalement, je retirerai les « euh » tout seul.</p>'));
+      voix.ecouter((entendu) => {
+        const propre = epurerDictee(entendu);
+        const ancien = corps.querySelector('.savoir-msg');
+        ancien?.remove();
+        if (!propre) {
+          corps.appendChild(el('<p class="savoir-msg">Je n\u2019ai rien entendu de assez net — redicte, sans te presser.</p>'));
+          return;
+        }
+        const cible = paquetSel ?? ajouterPaquet(storage, 'Mes cartes')?.id ?? null;
+        if (!cible) return;
+        paquetSel = cible;
+        let n = 0;
+        for (const f of fichesDepuisTexte(propre)) {
+          if (ajouterFiche(storage, cible, f.verso, f.recto)) n++;
+        }
+        rendreReviser();
+        const mot = n
+          ? el(`<p class="savoir-msg">${n} cartes nées de ta voix, rangées dans « ${esc(paquetCourant()?.nom ?? 'Mes cartes')} ». Révise quand tu veux.</p>`)
+          : el('<p class="savoir-msg">Trop court pour faire des cartes — dicte-moi des phrases complètes, une idée par phrase.</p>');
+        corps.insertBefore(mot, corps.firstChild);
+        if (n) voix.parler(`${n} cartes nées de ta dictée.`, 'lumineuse');
+      });
+    });
+    corps.appendChild(dictee);
 
     const actions = el('<div class="savoir-actions"><button class="savoir-reviser">Réviser maintenant</button><button class="savoir-quiz">Quiz du jour</button></div>');
     actions.querySelector('.savoir-reviser')!.addEventListener('click', () => {
@@ -344,9 +380,37 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
     const sortir = el('<div class="savoir-resultat"></div>');
     const ligneBtn = el('<div class="savoir-actions"><button class="trad-faire">Traduire</button></div>');
     const ajouter = el(`<details class="savoir-import"><summary>Ajouter à mon lexique (il reste ici, hors-ligne)</summary>
+      <div class="savoir-actions"><button class="trad-dicter">🎤 Dicter un mot — dites « bonjour veut dire… »</button></div>
       <div class="savoir-ligne"><input type="text" placeholder="mot français" aria-label="Mot français" /><input type="text" placeholder="traduction dans ta langue" aria-label="Traduction" /><button>Ajouter</button></div></details>`);
+    ajouter.querySelector('.trad-dicter')!.addEventListener('click', () => {
+      if (!voix.sttDisponible) {
+        sortir.innerHTML = '';
+        sortir.appendChild(el('<p class="savoir-msg">Je n\u2019ai pas d\u2019oreille aujourd\u2019hui — écris le mot ci-dessous.</p>'));
+        return;
+      }
+      const l = (langue as HTMLInputElement).value.trim();
+      sortir.innerHTML = '';
+      sortir.appendChild(el('<p class="savoir-msg">J\u2019écoute… dis par exemple « bonjour veut dire naka nga def ».</p>'));
+      voix.ecouter((entendu) => {
+        sortir.innerHTML = '';
+        const paire = analyserDictee(entendu);
+        if (!paire) {
+          sortir.appendChild(el(`<p class="savoir-msg">J\u2019ai entendu « ${esc(entendu)} » sans voir le couple — recommence avec « mot veut dire traduction ».</p>`));
+          return;
+        }
+        if (!l) {
+          inFr.value = paire.de;
+          inTrad.value = paire.a;
+          sortir.appendChild(el('<p class="savoir-msg">Donne-moi le nom de la langue en haut, puis appuie sur Ajouter — tout est prêt.</p>'));
+          return;
+        }
+        storage.setItem(CLE_LEXIQUE, JSON.stringify(ajouterEntree(lireLexique(), paire.de, paire.a, l)));
+        sortir.appendChild(el(`<p class="savoir-msg">${esc(paire.de)} → ${esc(paire.a)}, rangé dans mon carnet.</p>`));
+        voix.parler(`${paire.de} veut dire ${paire.a}.`, 'lumineuse');
+      });
+    });
     const [inFr, inTrad] = [...ajouter.querySelectorAll('input')] as HTMLInputElement[];
-    ajouter.querySelector('button')!.addEventListener('click', () => {
+    (ajouter.querySelector('.savoir-ligne button') as HTMLElement).addEventListener('click', () => {
       const l = (langue as HTMLInputElement).value;
       if (!l.trim() || !inFr.value.trim() || !inTrad.value.trim()) return;
       const entrees = validerEntrees(storage.getItem(CLE_LEXIQUE));
@@ -495,7 +559,29 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
         sortir.appendChild(el('<p class="savoir-msg">Cette clé n’ouvre rien pour ce nom-là — vérifie le nom exact de l’organisation et la clé, bloc par bloc.</p>'));
       }
     });
-    corps.append(form, sortir);
+
+    // le kit commercial : trois chiffres, pas de surprise
+    const tarif = el(`<div class="savoir-fiche">
+      <p class="savoir-note">Nath Entreprise pour une école, une ONG, une équipe — toute l\u2019équipe habillée, un seul prix :</p>
+      <div class="savoir-ligne"><input type="number" class="ent-nb" min="1" placeholder="Nombre de personnes à équiper" aria-label="Nombre de personnes" /><button class="ent-devis">Estimer</button></div>
+      <div class="ent-devis-out"></div>
+    </div>`);
+    tarif.querySelector('.ent-devis')!.addEventListener('click', () => {
+      const n = Number((tarif.querySelector('.ent-nb') as HTMLInputElement).value);
+      const out = tarif.querySelector('.ent-devis-out') as HTMLElement;
+      out.innerHTML = '';
+      if (!Number.isFinite(n) || n <= 0) {
+        out.appendChild(el('<p class="savoir-msg">Entre d\u2019abord le nombre de personnes à équiper.</p>'));
+        return;
+      }
+      const d = devisEntreprise(n);
+      const ligne = d.mensuel === null
+        ? `<b>${esc(d.palier)}</b> — ${esc(formatFCFA(null))} : parle-nous de ton réseau, on trouvera le juste chiffre.`
+        : `<b>${esc(d.palier)}</b> — ${esc(formatFCFA(d.mensuel))} par mois pour toute l’équipe, soit environ ${Math.round(d.mensuel / n).toLocaleString('fr-FR')} F par personne. Et plus vous êtes nombreux, moins chaque tête coûte.`;
+      out.appendChild(el(`<p class="savoir-msg">${ligne}</p>`));
+      out.appendChild(el('<p class="savoir-note">Accord direct avec Nath-Tech (mobile money), puis la clé exacte de ton organisation. Le gratuit de chacun reste entier, toujours.</p>'));
+    });
+    corps.append(form, sortir, tarif);
   }
 
   habiller(lireMarque(storage));
