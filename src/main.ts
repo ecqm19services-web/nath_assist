@@ -7,7 +7,8 @@ import { createEmotionSmoother, mapEmotion } from './input/emotion';
 import { cheekLuminance, estimateBpm } from './nuage/rppg';
 import { generateAura } from './aura/aura';
 import { attachPointer, attachTilt } from './input/touch';
-import { ambientLevel, ambientMood, startAmbient } from './audio/ambient';
+import { allumerAmbient, ambientLevel, ambientMood, eteindreAmbient, startAmbient } from './audio/ambient';
+import { basculerMusique, musiqueEteintee } from './audio/reglages';
 import { createCompagneUI } from './compagne/ui';
 import { creerPanneauSavoir } from './compagne/savoirUI';
 import { probaEvenements } from './nuage/meteo';
@@ -118,11 +119,44 @@ cielBtn.addEventListener('click', () => {
 
 // Un toucher du ciel : onde lumineuse + éveil de la musique (politique autoplay).
 let reveille = false;
+
+// La musique d'aura : un choix, pas une imposition. Par défaut elle coule
+// (rien n'est bridé) ; un appui l'endort, un autre la réveille, et ce choix
+// survit au rechargement. Le bouton vit sous celui du ciel réel.
+const musiqueBtn = document.createElement('button');
+musiqueBtn.className = 'musique-btn';
+musiqueBtn.type = 'button';
+musiqueBtn.setAttribute('aria-label', 'La musique de l’aura — l’endormir ou la réveiller');
+document.body.append(musiqueBtn);
+function rendreBtnMusique(): void {
+  const dort = musiqueEteintee(localStorage);
+  musiqueBtn.textContent = dort ? '🔇' : '🎵';
+  musiqueBtn.classList.toggle('eteinte', dort);
+  musiqueBtn.classList.toggle('actif', !dort && reveille);
+  musiqueBtn.title = dort
+    ? 'La musique dort — appuie pour l’éveiller'
+    : 'La musique de l’aura — appuie pour l’endormir';
+  musiqueBtn.setAttribute('aria-pressed', String(!dort));
+}
+musiqueBtn.addEventListener('click', () => {
+  if (basculerMusique(localStorage)) {
+    eteindreAmbient();
+  } else {
+    allumerAmbient(); // le geste autorise la reprise (politique autoplay)
+    if (!reveille) reveille = startAmbient(aura.musiqueSeed);
+  }
+  rendreBtnMusique();
+});
+if (musiqueEteintee(localStorage)) eteindreAmbient(); // choix d'avant, respecté d'emblée
+rendreBtnMusique();
+
+// Un toucher du ciel réveille la source au premier geste.
 canvas.addEventListener('pointerdown', (e) => {
   const r = canvas.getBoundingClientRect();
   scene.tap((e.clientX - r.left) / r.width, 1 - (e.clientY - r.top) / r.height);
   if (!reveille) {
     reveille = startAmbient(aura.musiqueSeed);
+    rendreBtnMusique(); // le bouton prend son glow dès que la source coule
   }
 });
 
@@ -160,7 +194,9 @@ function boucle(now: number) {
   ambientLevel(state.breath);
   etat.textContent = reveille
     ? `aura : ${aura.nom} · humeur : ${state.emotion} · souffle : ${(state.breath * 100) | 0}% · pouls : ${state.bpm ? Math.round(state.bpm) : '—'}`
-    : `aura : ${aura.nom} · touche le ciel pour éveiller la musique`;
+    : musiqueEteintee(localStorage)
+      ? `aura : ${aura.nom} · la musique dort — 🎵 pour la réveiller`
+      : `aura : ${aura.nom} · touche le ciel pour éveiller la musique`;
   requestAnimationFrame(boucle);
 }
 requestAnimationFrame(boucle);

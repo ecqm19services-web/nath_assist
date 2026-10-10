@@ -9,9 +9,10 @@ let step = 0;
 let seed = 0;
 let emotion: ToneEmotion = 'calme';
 let level = 0; // souffle 0..1 → intensité
+let eteint = false; // le choix de l'utilisateur : la source se tait, jamais ne s'impose
 
 function playNote() {
-  if (!ctx || !master) return;
+  if (!ctx || !master || eteint) return;
   const n = nextNote(seed, step++, emotion);
   const t = ctx.currentTime;
   const g = ctx.createGain();
@@ -44,7 +45,7 @@ export function startAmbient(musiqueSeed: number): boolean {
     ctx = new AudioContext();
     seed = musiqueSeed >>> 0;
     master = ctx.createGain();
-    master.gain.value = 0.5;
+    master.gain.value = eteint ? 0 : 0.5;
     const lp = ctx.createBiquadFilter(); // tamis anti-brillance numérique
     lp.type = 'lowpass';
     lp.frequency.value = 1200;
@@ -65,4 +66,21 @@ export function ambientMood(e: ToneEmotion): void {
 
 export function ambientLevel(v: number): void {
   level = Math.max(0, Math.min(1, v));
+}
+
+// L'interrupteur doux : éteindre coupe le son (et gaspille zéro note),
+// rallumer la reprend où elle en était. Fonctionne même si la source
+// n'a jamais été démarrée — le simple état compte.
+export function eteindreAmbient(): void {
+  eteint = true;
+  if (master && ctx) master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);
+}
+
+export function allumerAmbient(): void {
+  eteint = false;
+  if (master && ctx) master.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.4);
+}
+
+export function ambientEteint(): boolean {
+  return eteint;
 }
