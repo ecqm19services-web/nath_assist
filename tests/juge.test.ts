@@ -4,7 +4,7 @@
 // Sans adresse réglée ou en cas d'échec, le juge se tait (null) : la vie
 // intérieure continue exactement comme avant, jamais bridée, jamais inventée.
 import { describe, expect, it } from 'vitest';
-import { choisirPaquet, etatPourJuger, garderCap, jugerSurPlace, scorerTension, trancher } from '../src/compagne/juge';
+import { choisirPaquet, choisirPensee, etatPourJuger, garderCap, jugerSurPlace, jugerTraduction, scorerTension, trancher } from '../src/compagne/juge';
 
 const ctx = { emotion: 'joie', breath: 0.62, bpm: 112, timeOfDay: 0.94 };
 
@@ -126,5 +126,90 @@ describe('choisirPaquet — l’avis du rang', () => {
     const fou = (async () => ({ ok: true, json: async () => ({ answers: { rang: { choice: 42 } } }) })) as unknown as typeof fetch;
     expect(await choisirPaquet('https://juge.test', 't', ['A'], fou)).toBeNull();
     expect(await choisirPaquet('https://juge.test', 't', [], fetch)).toBeNull();
+  });
+});
+
+describe('jugerTraduction — l’œil du juge sur le filet', () => {
+  it('valide une traduction fidèle et poste le contexte sobre', async () => {
+    let corpsVue: any;
+    const f = (async (_u: any, opt: any) => {
+      corpsVue = JSON.parse(opt.body);
+      return { ok: true, json: async () => ({ answers: { fidele: { noul: 0.8 } } }) };
+    }) as unknown as typeof fetch;
+    expect(await jugerTraduction('https://juge.test', 'biblioteca', 'library', 'anglais', f)).toBe(true);
+    expect(corpsVue.state).toContain('biblioteca');
+    expect(corpsVue.state).toContain('library');
+    expect(corpsVue.state).toContain('anglais');
+    expect(corpsVue.questions.fidele.type).toBe('noul');
+  });
+  it('une traduction jugée infidèle est retenue', async () => {
+    const f = (async () => ({ ok: true, json: async () => ({ answers: { fidele: { noul: 0.1 } } }) })) as unknown as typeof fetch;
+    expect(await jugerTraduction('https://juge.test', 'bonjour', 'xyzzy', 'anglais', f)).toBe(false);
+  });
+  it('juge muet : null — le filet garde son étiquette habituelle', async () => {
+    const f = (async () => {
+      throw new Error('réseau');
+    }) as unknown as typeof fetch;
+    expect(await jugerTraduction('https://juge.test', 'a', 'b', 'anglais', f)).toBeNull();
+  });
+});
+
+describe('choisirPensee — le juge désigne la pensée du moment', () => {
+  it('désigne la plus juste des pensées proposées', async () => {
+    let urlVue = '';
+    let corpsVue: any;
+    const candidats = ['Ton coeur court…', 'Le ciel prend son temps.', 'Je suis là.'];
+    const f = (async (url: any, opt: any) => {
+      urlVue = String(url);
+      corpsVue = JSON.parse(opt.body);
+      return { ok: true, json: async () => ({ answers: { pensee: { choice: candidats[1] } } }) };
+    }) as unknown as typeof fetch;
+    expect(await choisirPensee('https://juge.test', ctx, candidats, f)).toBe(candidats[1]);
+    expect(urlVue).toBe('https://juge.test/decider');
+    expect(corpsVue.questions.pensee.type).toBe('choice');
+    expect(Object.keys(corpsVue.questions.pensee.criteria)).toEqual(candidats);
+  });
+  it('réponse hors liste ou muette : null — le choix local garde la main', async () => {
+    const fou = (async () => ({ ok: true, json: async () => ({ answers: { pensee: { choice: 'hors jeu' } } }) })) as unknown as typeof fetch;
+    expect(await choisirPensee('https://juge.test', ctx, ['a', 'b'], fou)).toBeNull();
+    const muet = (async () => {
+      throw new Error('réseau');
+    }) as unknown as typeof fetch;
+    expect(await choisirPensee('https://juge.test', ctx, ['a', 'b'], muet)).toBeNull();
+  });
+  it('une pensée unique ne se vote pas : rendue sans requête', async () => {
+    let appelee = false;
+    const f = (async () => {
+      appelee = true;
+      return { ok: true, json: async () => ({}) };
+    }) as unknown as typeof fetch;
+    expect(await choisirPensee('https://juge.test', ctx, ['unique'], f)).toBe('unique');
+    expect(appelee).toBe(false);
+  });
+  it('liste vide : null, aucune question posée', async () => {
+    let appelee = false;
+    const f = (async () => {
+      appelee = true;
+      return { ok: true, json: async () => ({}) };
+    }) as unknown as typeof fetch;
+    expect(await choisirPensee('https://juge.test', ctx, [], f)).toBeNull();
+    expect(appelee).toBe(false);
+  });
+});
+
+describe('garderCap — deux questions en une seule volée', () => {
+  it('pose « approprie » et « sain » ensemble et croit les deux hauts', async () => {
+    let corpsVue: any;
+    const f = (async (_u: any, opt: any) => {
+      corpsVue = JSON.parse(opt.body);
+      return { ok: true, json: async () => ({ answers: { approprie: { noul: 0.9 }, sain: { noul: 0.8 } } }) };
+    }) as unknown as typeof fetch;
+    expect(await garderCap('https://juge.test', 'q', 'r', f)).toBe(true);
+    expect(corpsVue.questions.approprie.type).toBe('noul');
+    expect(corpsVue.questions.sain.type).toBe('noul');
+  });
+  it('un seul doute suffit à retenir la réponse', async () => {
+    const f = (async () => ({ ok: true, json: async () => ({ answers: { approprie: { noul: 0.9 }, sain: { noul: 0.1 } } }) })) as unknown as typeof fetch;
+    expect(await garderCap('https://juge.test', 'q', 'r', f)).toBe(false);
   });
 });

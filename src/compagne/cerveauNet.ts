@@ -83,3 +83,37 @@ export async function decider(
     return null;
   }
 }
+
+// Les langues que le filet gratuit ignore (wolof, ewondo, bulu…) : si
+// l'utilisateur a branché son propre grand modèle, il peut prêter sa plume —
+// une traduction demandée par l'élève, une réponse courte attendue. Vide,
+// démesuré ou muet → null : le carnet local reste la mémoire de référence.
+export async function traduireParCerveau(
+  endpoint: string,
+  texte: string,
+  langue: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<string | null> {
+  const t = texte.trim();
+  const l = langue.trim();
+  if (!t || !l) return null;
+  try {
+    const res = await fetchImpl(`${endpoint}/dire`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: `Traduis en ${l} le texte qui vient. Réponds uniquement avec la traduction, sans explication.` },
+          { role: 'user', content: t },
+        ],
+      }),
+    });
+    if (!res.ok) return null;
+    const o = (await res.json()) as Record<string, any>;
+    const r = o?.result?.response ?? o?.response;
+    const net = typeof r === 'string' ? r.trim() : '';
+    return net && net.length <= 500 ? net : null;
+  } catch {
+    return null;
+  }
+}

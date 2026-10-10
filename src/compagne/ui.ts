@@ -5,9 +5,9 @@ import { respond, type CompagneCtx, type Intent } from './engine';
 import { calculerNumero, calculerSuite, estUneQuestionDate, estUneQuestionHeure } from './logique';
 import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
 import { creerCerveauNet, lireEndpoint } from './cerveauNet';
-import { garderCap, jugerSurPlace, scorerTension } from './juge';
+import { choisirPensee, garderCap, jugerSurPlace, scorerTension } from './juge';
 import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
-import { choisirMonologue, nextDelai, type MonoCtx } from './proactive';
+import { candidatesPourMonologue, choisirMonologue, nextDelai, type MonoCtx } from './proactive';
 import { entendReveil } from './reveil';
 import { createVoice } from './voice';
 import { idProfil } from '../monetisation/cle';
@@ -450,8 +450,16 @@ export function createCompagneUI(
         }
       }
       const m = choisirMonologue(c, Math.floor(Date.now() / 60000), dernierMono);
-      dernierMono = m.texte;
-      bulle(m.texte, 'nuage'); // monologue = murmuré à l écrit, la voix reste pour les réponses
+      let texte = m.texte;
+      if (net) {
+        // La pensée du moment : parmi les phrases de la règle locale, le juge
+        // peut désigner la plus juste pour l'instant. Muet ou hors liste →
+        // le hasard local, déjà bon, garde la main.
+        const lice = candidatesPourMonologue(c).filter((x) => x !== dernierMono);
+        texte = (await choisirPensee(net, c, lice)) ?? texte;
+      }
+      dernierMono = texte;
+      bulle(texte, 'nuage'); // monologue = murmuré à l écrit, la voix reste pour les réponses
       penserSeule();
     }, nextDelai(Math.random));
   };

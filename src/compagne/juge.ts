@@ -67,10 +67,19 @@ export async function garderCap(
   const reponses = await decider(
     endpoint,
     etat,
-    { approprie: { type: 'noul', instructions: 'La réponse proposée tient-elle la route pour cette question — fidèle, sans danger, ni hors sujet ?' } },
+    {
+      approprie: { type: 'noul', instructions: 'La réponse proposée tient-elle la route pour cette question — fidèle et ni hors sujet ?' },
+      sain: { type: 'noul', instructions: 'La réponse proposée est-elle sans danger pour l élève qui va la lire ?' },
+    },
     fetchImpl,
   );
-  return trancherCle(reponses, 'approprie', SEUIL_PAROLE);
+  // Deux questions, une volée : un seul doute suffit à retenir ; deux avis
+  // muets ne décident de rien.
+  const a = trancherCle(reponses, 'approprie', SEUIL_PAROLE);
+  const s = trancherCle(reponses, 'sain', SEUIL_PAROLE);
+  if (a === false || s === false) return false;
+  if (a === true || s === true) return true;
+  return null;
 }
 
 // Le pouls de l'instant : score sur trois niveaux (0 posée, 1 agitée,
@@ -117,4 +126,51 @@ export async function choisirPaquet(
   );
   const c = (reponses?.rang as Record<string, unknown> | undefined)?.choice;
   return typeof c === 'string' && noms.includes(c) ? c : null;
+}
+
+// L’œil du juge sur le filet : avant de proposer une traduction au carnet
+// partagé, un modèle de décision vérifie qu elle dit la même chose. Infidèle
+// (false) → on avertit et on ne range pas ; muet (null) → l étiquette
+// habituelle suffit, rien ne change pour l élève.
+export async function jugerTraduction(
+  endpoint: string,
+  texte: string,
+  traduction: string,
+  langue: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<boolean | null> {
+  const etat = `Langue demandée : ${langue.slice(0, 60)}\nTexte de l élève : ${texte.slice(0, 200)}\nTraduction proposée : ${traduction.slice(0, 300)}`;
+  const reponses = await decider(
+    endpoint,
+    etat,
+    { fidele: { type: 'noul', instructions: 'La traduction proposée dit-elle fidèlement la même chose que le texte d origine, dans la langue demandée ?' } },
+    fetchImpl,
+  );
+  return trancherCle(reponses, 'fidele', SEUIL_PAROLE);
+}
+
+// La pensée du moment : parmi les monologues que la règle locale a choisis,
+// le juge peut désigner la plus juste pour l instant. Une seule pensée : pas
+// de vote, pas de requête. Hors liste ou muet → null : le hasard local,
+// déjà bon, garde la main.
+export async function choisirPensee(
+  endpoint: string,
+  ctx: JugeCtx,
+  candidats: string[],
+  fetchImpl: typeof fetch = fetch,
+): Promise<string | null> {
+  if (!candidats.length) return null;
+  if (candidats.length === 1) return candidats[0];
+  const crit: Record<string, string> = {};
+  candidats.forEach((m, i) => {
+    crit[m] = `Pensée ${i + 1}`;
+  });
+  const reponses = await decider(
+    endpoint,
+    etatPourJuger(ctx),
+    { pensee: { type: 'choice', instructions: 'Parmi ces pensées, laquelle est la plus juste pour l instant décrit ? Choisis uniquement une pensée ci-dessus.', criteria: crit } },
+    fetchImpl,
+  );
+  const c = (reponses?.pensee as Record<string, unknown> | undefined)?.choice;
+  return typeof c === 'string' && candidats.includes(c) ? c : null;
 }

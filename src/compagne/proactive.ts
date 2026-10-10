@@ -96,6 +96,13 @@ const nettoyer = (s: string, ctx: MonoCtx): string =>
     .replace(/,\s*\./g, '.') // « , . » orphelin quand le prénom est inconnu
     .replace(/\s{2,}/g, ' ');
 
+// Les pensées en lice pour l'instant : la règle locale décide de la famille,
+// un modèle de décision (s'il veille) peut désigner la plus juste parmi elles.
+export function candidatesPourMonologue(ctx: MonoCtx): string[] {
+  const regle = REGLES.find((r) => r.quand(ctx)) ?? REGLES[REGLES.length - 1];
+  return regle.mots.map((m) => nettoyer(m, ctx));
+}
+
 export function choisirMonologue(
   ctx: MonoCtx,
   minute: number,

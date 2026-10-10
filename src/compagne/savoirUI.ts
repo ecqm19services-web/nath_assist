@@ -40,8 +40,8 @@ import {
 import { analyserDictee, epurerDictee } from '../traduction/dictee';
 import { codeLangue, traduireEnLigne } from '../traduction/moteurNet';
 import { devisEntreprise, formatFCFA } from '../entreprise/devis';
-import { definirEndpoint, lireEndpoint } from './cerveauNet';
-import { choisirPaquet } from './juge';
+import { definirEndpoint, lireEndpoint, traduireParCerveau } from './cerveauNet';
+import { choisirPaquet, jugerTraduction } from './juge';
 
 const CLE_SAVOIR = 'nath.savoir';
 const CLE_LEXIQUE = 'nath.lexique';
@@ -509,7 +509,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
     // prêter main-forte — uniquement sur demande, et sa parole reste étiquetée.
     function proposerFilet(): void {
       const code = codeLangue((langue as HTMLInputElement).value);
-      if (!code) return; // le filet ne connaît pas cette langue : on ne fait pas semblant
+      if (!code) return proposerCerveau(); // le filet ignore cette langue : le grand cerveau, s'il est réglé, peut prêter sa plume
       const bouton = el('<div class="savoir-actions"><button class="trad-filet">Demander au filet gratuit (cette phrase sortira de l\u2019appareil)</button></div>');
       bouton.querySelector('.trad-filet')!.addEventListener('click', async () => {
         const b = bouton.querySelector('button') as HTMLButtonElement;
@@ -523,20 +523,58 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
           sortir.appendChild(el('<p class="savoir-msg">Le filet n\u2019a rien pu pour cette phrase — ton carnet reste la meilleure mémoire.</p>'));
           return;
         }
-        const carte = el(`<div class="savoir-fiche"><p class="trad-out">${esc(rep)}</p><p class="savoir-note">proposition du filet gratuit — vérifie avec ton oreille ; si c\u2019est juste, range-le : ça rendra service à tout le monde.</p></div>`);
-        const ranger = el('<button>Ranger dans mon carnet</button>');
-        ranger.addEventListener('click', () => {
-          const l = (langue as HTMLInputElement).value.trim();
-          if (!l) return;
-          storage.setItem(CLE_LEXIQUE, JSON.stringify(ajouterEntree(lireLexique(), brut, rep, l)));
-          ranger.textContent = 'Rangé 🌿';
-          (ranger as HTMLButtonElement).disabled = true;
-          voix.parler('Merci — ton carnet est un peu plus monde.', 'douce');
-        });
-        carte.appendChild(ranger);
-        sortir.appendChild(carte);
+        // L'œil du juge (muet tant qu'aucune adresse n'est réglée) : une
+        // traduction infidèle n'est pas rangée — le carnet partagé reste propre.
+        const net = lireEndpoint(storage);
+        if (net && (await jugerTraduction(net, brut, rep, (langue as HTMLInputElement).value.trim())) === false) {
+          sortir.appendChild(el('<p class="savoir-msg">Le filet a répondu, mais ça ne me semble pas fidèle à ta phrase — une proposition douteuse ne se range pas. Ton carnet ne garde que le juste.</p>'));
+          voix.parler('Cette traduction ne me semble pas juste — on ne la range pas.', 'douce');
+          return;
+        }
+        afficherProposition(rep, 'filet gratuit', brut);
       });
       sortir.appendChild(bouton);
+    }
+
+    // Les langues que le filet ignore (wolof, ewondo, bulu…) : si un grand
+    // cerveau en ligne est réglé, il peut prêter sa plume — sur demande
+    // explicite, comme pour le filet. Sans adresse, cette option n'existe pas.
+    function proposerCerveau(): void {
+      const net = lireEndpoint(storage);
+      if (!net) return;
+      const bouton = el('<div class="savoir-actions"><button class="trad-cerveau">Demander au grand cerveau en ligne (cette phrase sortira de l\u2019appareil)</button></div>');
+      bouton.querySelector('.trad-cerveau')!.addEventListener('click', async () => {
+        const b = bouton.querySelector('button') as HTMLButtonElement;
+        const brut = (phrase as HTMLTextAreaElement).value.trim();
+        if (!brut) return;
+        b.disabled = true;
+        b.textContent = 'Je demande…';
+        const rep = await traduireParCerveau(net, brut, (langue as HTMLInputElement).value.trim(), fetch);
+        bouton.remove();
+        if (!rep) {
+          sortir.appendChild(el('<p class="savoir-msg">Le grand cerveau n\u2019a rien su pour cette phrase — ton carnet reste la meilleure mémoire.</p>'));
+          return;
+        }
+        afficherProposition(rep, 'grand cerveau en ligne', brut);
+      });
+      sortir.appendChild(bouton);
+    }
+
+    // Une proposition d'ailleurs : affichée, nommée, rangeable sur un oui de
+    // l'oreille — jamais rien ne rentre dans le carnet tout le monde sans ça.
+    function afficherProposition(rep: string, source: string, brut: string): void {
+      const carte = el(`<div class="savoir-fiche"><p class="trad-out">${esc(rep)}</p><p class="savoir-note">proposition du ${source} — vérifie avec ton oreille ; si c\u2019est juste, range-le : ça rendra service à tout le monde.</p></div>`);
+      const ranger = el('<button>Ranger dans mon carnet</button>');
+      ranger.addEventListener('click', () => {
+        const l = (langue as HTMLInputElement).value.trim();
+        if (!l || !brut) return;
+        storage.setItem(CLE_LEXIQUE, JSON.stringify(ajouterEntree(lireLexique(), brut, rep, l)));
+        ranger.textContent = 'Rangé 🌿';
+        (ranger as HTMLButtonElement).disabled = true;
+        voix.parler('Merci — ton carnet est un peu plus monde.', 'douce');
+      });
+      carte.appendChild(ranger);
+      sortir.appendChild(carte);
     }
 
     // le carnet de tout le monde : se prêter de main en main, hors-ligne
