@@ -41,6 +41,7 @@ import { analyserDictee, epurerDictee } from '../traduction/dictee';
 import { codeLangue, traduireEnLigne } from '../traduction/moteurNet';
 import { devisEntreprise, formatFCFA } from '../entreprise/devis';
 import { definirEndpoint, lireEndpoint } from './cerveauNet';
+import { choisirPaquet } from './juge';
 
 const CLE_SAVOIR = 'nath.savoir';
 const CLE_LEXIQUE = 'nath.lexique';
@@ -178,7 +179,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
         return;
       }
       corps.appendChild(el('<p class="savoir-msg">J\u2019écoute… parle normalement, je retirerai les « euh » tout seul.</p>'));
-      voix.ecouter((entendu) => {
+      voix.ecouter(async (entendu) => {
         const propre = epurerDictee(entendu);
         const ancien = corps.querySelector('.savoir-msg');
         ancien?.remove();
@@ -186,7 +187,18 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
           corps.appendChild(el('<p class="savoir-msg">Je n\u2019ai rien entendu de assez net — redicte, sans te presser.</p>'));
           return;
         }
-        const cible = paquetSel ?? ajouterPaquet(storage, 'Mes cartes')?.id ?? null;
+        // L'avis du rang : si l'élève n'a rien choisi explicitement et qu'un
+        // secours est réglé, un modèle de décision indique le paquet qui colle
+        // à la dictée. Son choix à lui prime toujours ; sans avis, on range
+        // exactement comme avant.
+        let vise = paquetSel;
+        if (!vise) {
+          const net = lireEndpoint(storage);
+          const noms = lirePaquets(storage).map((p) => p.nom);
+          const avis = net && noms.length ? await choisirPaquet(net, propre, noms) : null;
+          if (avis) vise = lirePaquets(storage).find((p) => p.nom === avis)?.id ?? null;
+        }
+        const cible = vise ?? ajouterPaquet(storage, 'Mes cartes')?.id ?? null;
         if (!cible) return;
         paquetSel = cible;
         let n = 0;

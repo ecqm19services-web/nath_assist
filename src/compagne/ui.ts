@@ -5,7 +5,7 @@ import { respond, type CompagneCtx, type Intent } from './engine';
 import { calculerNumero, calculerSuite, estUneQuestionDate, estUneQuestionHeure } from './logique';
 import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
 import { creerCerveauNet, lireEndpoint } from './cerveauNet';
-import { jugerSurPlace } from './juge';
+import { garderCap, jugerSurPlace, scorerTension } from './juge';
 import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
 import { choisirMonologue, nextDelai, type MonoCtx } from './proactive';
 import { entendReveil } from './reveil';
@@ -233,8 +233,19 @@ export function createCompagneUI(
       ];
       cerveau
         .ask(messages)
-        .then((rep) => {
+        .then(async (rep) => {
           const texte = rep.replace(/!/g, '…').slice(0, 600) || '…je cherche encore mes mots.';
+          // Garde-fou (silencieux tant qu'aucun secours n'est réglé) : une
+          // réponse jugée hors cap cède la place à la réponse embarquée —
+          // ni blocage, ni invention, le muet laisse tout passer.
+          const filet = lireEndpoint(localStorage);
+          if (filet && (await garderCap(filet, q, texte)) === false) {
+            const rg = respond(q, { ...c, prenom: memoire.prenom });
+            bAttente.textContent = rg.texte;
+            histoire.push({ role: 'user', content: q }, { role: 'assistant', content: rg.texte });
+            voice.parler(rg.texte, rg.humeur);
+            return;
+          }
           bAttente.textContent = texte;
           histoire.push({ role: 'user', content: q }, { role: 'assistant', content: texte });
           voice.parler(texte, 'posee');
@@ -425,11 +436,19 @@ export function createCompagneUI(
       // Si on vient de lui parler, on repousse : elle n interrompt jamais.
       if (performance.now() - dernierEchange < 25000) return penserSeule();
       const c: MonoCtx = { ...getCtx(), prenom: memoire.prenom };
-      // Le juge d ailleurs (silencieux tant qu aucune adresse n est réglée) :
-      // si un modèle de décision trouve l instant mal choisi, elle laisse
-      // passer son tour — le nuage continue de respirer comme avant.
+      // Le juge d'ailleurs (silencieux tant qu'aucune adresse n'est réglée) :
+      // instant mal choisi → elle laisse passer son tour ; instant à apaiser
+      // → elle propose le souffle plutôt que le poème. Une bulle — respirer
+      // reste ta décision, jamais la sienne.
       const net = lireEndpoint(localStorage);
-      if (net && (await jugerSurPlace(net, c)) === false) return penserSeule();
+      if (net) {
+        if ((await jugerSurPlace(net, c)) === false) return penserSeule();
+        const tension = await scorerTension(net, c);
+        if (tension != null && tension >= 1.5) {
+          bulle('Je te sens tendu… on prend un souffle ensemble ? Touche le ciel, il redescendra avec toi.', 'nuage');
+          return penserSeule();
+        }
+      }
       const m = choisirMonologue(c, Math.floor(Date.now() / 60000), dernierMono);
       dernierMono = m.texte;
       bulle(m.texte, 'nuage'); // monologue = murmuré à l écrit, la voix reste pour les réponses

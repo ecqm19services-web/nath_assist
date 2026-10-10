@@ -31,13 +31,17 @@ const QUESTIONS = {
 
 const SEUIL_PAROLE = 0.45;
 
-// La probabilité de « parler » tranche, rien d'autre. Réponse absente ou
-// hors bornes → null : on n'invente jamais une décision.
-export function trancher(reponses: Record<string, unknown> | null, seuil = SEUIL_PAROLE): boolean | null {
-  const r = reponses?.parler as { noul?: unknown } | undefined;
+// Une probabilité tranche, rien d'autre. Réponse absente ou hors bornes →
+// null : on n'invente jamais une décision.
+function trancherCle(reponses: Record<string, unknown> | null, cle: string, seuil: number): boolean | null {
+  const r = reponses?.[cle] as { noul?: unknown } | undefined;
   const p = r?.noul;
   if (typeof p !== 'number' || !Number.isFinite(p) || p < 0 || p > 1) return null;
   return p >= seuil;
+}
+
+export function trancher(reponses: Record<string, unknown> | null, seuil = SEUIL_PAROLE): boolean | null {
+  return reponses === null ? null : trancherCle(reponses, 'parler', seuil);
 }
 
 // Interroger le juge sur place : une requête, une probabilité, un avis.
@@ -48,4 +52,69 @@ export async function jugerSurPlace(
 ): Promise<boolean | null> {
   const reponses = await decider(endpoint, etatPourJuger(ctx), QUESTIONS, fetchImpl);
   return trancher(reponses);
+}
+
+// Le garde-fou : avant de laisser une réponse du grand cerveau atteindre
+// l'écran, un modèle de décision vérifie qu'elle tient la route. Hors cap
+// (false) → la réponse locale reprend la main ; muet (null) → rien ne change.
+export async function garderCap(
+  endpoint: string,
+  question: string,
+  reponse: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<boolean | null> {
+  const etat = `Question : ${question.slice(0, 300)}\nRéponse proposée : ${reponse.slice(0, 600)}`;
+  const reponses = await decider(
+    endpoint,
+    etat,
+    { approprie: { type: 'noul', instructions: 'La réponse proposée tient-elle la route pour cette question — fidèle, sans danger, ni hors sujet ?' } },
+    fetchImpl,
+  );
+  return trancherCle(reponses, 'approprie', SEUIL_PAROLE);
+}
+
+// Le pouls de l'instant : score sur trois niveaux (0 posée, 1 agitée,
+// 2 à apaiser). Null = juge muet, le ciel suit sa route.
+export async function scorerTension(
+  endpoint: string,
+  ctx: JugeCtx,
+  fetchImpl: typeof fetch = fetch,
+): Promise<number | null> {
+  const reponses = await decider(
+    endpoint,
+    etatPourJuger(ctx),
+    {
+      tension: {
+        type: 'score',
+        instructions: 'Quel est le niveau de tension de l’instant ?',
+        criteria: ['posée', 'agitée', 'à apaiser'],
+      },
+    },
+    fetchImpl,
+  );
+  const s = (reponses?.tension as Record<string, unknown> | undefined)?.score;
+  return typeof s === 'number' && Number.isFinite(s) && s >= 0 && s <= 2 ? s : null;
+}
+
+// L'avis du rang : parmi les paquets existants, lequel colle à la dictée ?
+// Le choix de l'utilisateur (paquet explicitement sélectionné) prime toujours —
+// ici on ne pose la question que quand rien n'est choisi.
+export async function choisirPaquet(
+  endpoint: string,
+  texte: string,
+  paquets: string[],
+  fetchImpl: typeof fetch = fetch,
+): Promise<string | null> {
+  const noms = paquets.slice(0, 50);
+  if (!noms.length) return null;
+  const crit: Record<string, string> = {};
+  for (const n of noms) crit[n] = `Paquet de cartes « ${n} »`;
+  const reponses = await decider(
+    endpoint,
+    `Dictée de l'élève : ${texte.slice(0, 800)}`,
+    { rang: { type: 'choice', instructions: 'Dans quel paquet cette dictée a-t-elle le plus de sens ? Choisis uniquement un paquet ci-dessus.', criteria: crit } },
+    fetchImpl,
+  );
+  const c = (reponses?.rang as Record<string, unknown> | undefined)?.choice;
+  return typeof c === 'string' && noms.includes(c) ? c : null;
 }
