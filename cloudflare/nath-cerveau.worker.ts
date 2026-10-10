@@ -2,7 +2,7 @@
 // Un petit proxy qui garde la clé Cloudflare AU PRESSING (côté serveur, jamais
 // dans l'application) et ouvre deux portes, gratuites au-delà du seuil quotidien
 // compris dans l'offre sans carte bancaire :
-//   POST /dire     → un grand modèle de langage répond comme Nath (Qwen, maison)
+//   POST /dire     → un grand modèle de langage répond comme Nath (Llama 3.3 70B, maison)
 //   POST /decider  → un modèle de décision (Clef ou Jev — même famille, même
 //                   API System One : état + questions typées → probabilités)
 //
@@ -67,7 +67,7 @@ export default {
       if (url.pathname === '/dire') {
         const messages = Array.isArray(corps?.messages) ? corps.messages : [];
         if (!messages.length) return reponse({ error: 'messages requis' }, req, 400);
-        const r = await env.AI.run(env.MODELE_DIRE ?? '@cf/qwen/qwen3-32b', {
+        const r = await env.AI.run(env.MODELE_DIRE ?? '@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
           messages,
           max_tokens: 400,
           temperature: 0.7,

@@ -1,0 +1,11 @@
+{
+  // Le cerveau prêté — configuration de déploiement du Worker Nath-Tech.
+  // Une seule fois : `npx wrangler deploy` (avec CLOUDFLARE_API_TOKEN dans
+  // l'environnement), puis `npx wrangler secret put CLOUDFLARE_API_TOKEN`
+  // pour que le Worker puisse appeler Workers AI à l'exécution.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nath-cerveau",
+  "main": "cloudflare/nath-cerveau.worker.ts",
+  "compatibility_date": "2026-10-01",
+  "ai": { "binding": "AI" }
+}
