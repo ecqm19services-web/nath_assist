@@ -78,4 +78,62 @@ describe('levier de test caché — le témoin de modèle (jamais actionné par 
     const o = (await (await worker.fetch(req, env)).json()) as any;
     expect(o.modele_utilise).toBeUndefined();
   });
+  it('le raisonneur reçoit en plus la consigne de répondre en français', async () => {
+    let vues: any;
+    const env = {
+      AI: { run: async (_m: string, e: any) => { vues = e; return { response: 'ok' }; } },
+    } as never;
+    const req = new Request('https://worker.test/dire', {
+      method: 'POST',
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: 'why does the sky look blue' }],
+        modele: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
+      }),
+    });
+    await worker.fetch(req, env);
+    expect(vues.messages[0].role).toBe('system');
+    expect(vues.messages[0].content).toContain('français');
+    // Prouvé en live : la consigne en tête seule ne tient pas le raisonneur.
+    // Elle doit aussi être rappelée au pied de la dernière question.
+    const dern = vues.messages[vues.messages.length - 1];
+    expect(dern.content).toContain('why does the sky look blue');
+    expect(dern.content).toContain('Réponds impérativement en français');
+    expect(dern.role).toBe('user');
+  });
+  it('le rappel est ajouté à la dernière question, original préservé', async () => {
+    let vues: any;
+    const env = {
+      AI: { run: async (_m: string, e: any) => { vues = e; return { response: 'ok' }; } },
+    } as never;
+    const req = new Request('https://worker.test/dire', {
+      method: 'POST',
+      body: JSON.stringify({
+        messages: [
+          { role: 'user', content: 'première question' },
+          { role: 'assistant', content: 'réponse' },
+          { role: 'user', content: 'pourquoi le ciel est bleu' },
+        ],
+        modele: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
+      }),
+    });
+    await worker.fetch(req, env);
+    // Tête + deux messages intacts + dernière question enrichie = 4 messages.
+    expect(vues.messages.length).toBe(4);
+    expect(vues.messages[1].content).toBe('première question');
+    expect(vues.messages[2].content).toBe('réponse');
+    expect(vues.messages[3].content).toContain('pourquoi le ciel est bleu');
+    expect(vues.messages[3].content).toContain('Réponds impérativement en français');
+  });
+  it('les autres tempéraments gardent la conversation telle quelle', async () => {
+    let vues: any;
+    const env = {
+      AI: { run: async (_m: string, e: any) => { vues = e; return { response: 'ok' }; } },
+    } as never;
+    const req = new Request('https://worker.test/dire', {
+      method: 'POST',
+      body: JSON.stringify({ messages: [{ role: 'user', content: 'salut' }], modele: '@cf/qwen/qwen3-30b-a3b-fp8' }),
+    });
+    await worker.fetch(req, env);
+    expect(vues.messages.length).toBe(1);
+  });
 });
