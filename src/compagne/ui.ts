@@ -5,7 +5,7 @@ import { detectIntent, respond, type CompagneCtx, type Intent } from './engine';
 import { calculerNumero, calculerSuite, estUneQuestionDate, estUneQuestionHeure } from './logique';
 import { repondreMaths } from './maths';
 import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
-import { creerCerveauNet, lireEndpoint } from './cerveauNet';
+import { creerCerveauNet, lireEndpoint, lireTemperament } from './cerveauNet';
 import { choisirPensee, garderCap, jugerSurPlace, scorerTension } from './juge';
 import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
 import { candidatesPourMonologue, choisirMonologue, nextDelai, type MonoCtx } from './proactive';
@@ -152,7 +152,7 @@ export function createCompagneUI(
       // il prend le relais sans attendre — jamais bloquant.
       const net = lireEndpoint(localStorage);
       if (net) {
-        cerveau = creerCerveauNet(net);
+        cerveau = creerCerveauNet(net, fetch, lireTemperament(localStorage));
         bCerveau.textContent = 'Je me suis reliée à un plus grand cerveau. Demande, je réponds vite.';
         return;
       }
@@ -180,7 +180,7 @@ export function createCompagneUI(
     // (Worker Nath-Tech), il répond instantanément, sans rien télécharger.
     const net = lireEndpoint(localStorage);
     if (net) {
-      cerveau = creerCerveauNet(net);
+      cerveau = creerCerveauNet(net, fetch, lireTemperament(localStorage));
       bulle('Je suis reliée à un plus grand cerveau — demande-moi ce que tu veux.', 'nuage');
     }
   }

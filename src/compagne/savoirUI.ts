@@ -40,7 +40,7 @@ import {
 import { analyserDictee, epurerDictee } from '../traduction/dictee';
 import { codeLangue, traduireEnLigne } from '../traduction/moteurNet';
 import { devisEntreprise, formatFCFA } from '../entreprise/devis';
-import { definirEndpoint, lireEndpoint, traduireParCerveau } from './cerveauNet';
+import { definirEndpoint, definirTemperament, cleTemperamentReglee, lireEndpoint, lireTemperament, TEMPERAMENTS, traduireParCerveau } from './cerveauNet';
 import { choisirPaquet, jugerTraduction } from './juge';
 
 const CLE_SAVOIR = 'nath.savoir';
@@ -346,6 +346,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
     const cerveau = el(`<details class="savoir-import"><summary>Grand cerveau en ligne (pour les machines sages)</summary>
       <p class="savoir-note">Sur demande à Nath-Tech, une adresse de cerveau prêté peut être réglée ici : les machines sans grande carte répondent alors plus vite et plus loin. Laisser vide pour éteindre ce secours.</p>
       <div class="savoir-ligne"><input type="text" class="cerv-url" placeholder="https://… (vide pour effacer)" aria-label="Adresse du grand cerveau" /><button class="cerv-ok">Régler</button></div>
+      <div class="savoir-ligne"><select class="savoir-select cerv-allure" aria-label="Allure du grand cerveau"></select><button class="cerv-allure-ok">Allure</button></div>
       <p class="savoir-msg cerv-etat"></p></details>`);
     const champUrl = cerveau.querySelector('.cerv-url') as HTMLInputElement;
     const etatCerv = cerveau.querySelector('.cerv-etat') as HTMLElement;
@@ -359,6 +360,25 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
         champUrl.value = '';
       } else {
         etatCerv.textContent = 'Cette adresse ne convient pas — il faut du https.';
+      }
+    });
+    // L'allure du grand cerveau : chaque tempérament est un grand modèle
+    // ouvert, gratuit, choisi pour sa façon de penser — jamais pour sa marque.
+    const selectAllure = cerveau.querySelector('.cerv-allure') as HTMLSelectElement;
+    for (const t of TEMPERAMENTS) {
+      const opt = document.createElement('option');
+      opt.value = t.cle;
+      opt.textContent = t.nom;
+      selectAllure.appendChild(opt);
+    }
+    selectAllure.value = cleTemperamentReglee(storage);
+    cerveau.querySelector('.cerv-allure-ok')!.addEventListener('click', () => {
+      if (definirTemperament(storage, selectAllure.value)) {
+        etatCerv.textContent = lireTemperament(storage)
+          ? 'Son allure est réglée — la prochaine réponse la portera.'
+          : 'Elle reprend son allure ordinaire.';
+      } else {
+        etatCerv.textContent = 'Cette allure n existe pas — le choix reste entier.';
       }
     });
     corps.appendChild(cerveau);

@@ -2,7 +2,7 @@
 // Un petit proxy qui garde la clé Cloudflare AU PRESSING (côté serveur, jamais
 // dans l'application) et ouvre deux portes, gratuites au-delà du seuil quotidien
 // compris dans l'offre sans carte bancaire :
-//   POST /dire     → un grand modèle de langage répond comme Nath (Llama 3.3 70B, maison)
+//   POST /dire     → un grand modèle de langage répond comme Nath (défaut : Llama 3.3 70B)
 //   POST /decider  → un modèle de décision (Clef ou Jev — même famille, même
 //                   API System One : état + questions typées → probabilités)
 //
@@ -45,14 +45,44 @@ function texteBrut(r: any): string {
   return '';
 }
 
+// Le raisonneur (DeepSeek R1) écrit sa réflexion dans une balise de pensée
+// avant de répondre : cette réflexion reste dans le tuyau — l'élève ne voit
+// que la réponse finie. Le nom de la balise est recomposé pour que le filtre
+// de l'éditeur n'avale jamais le code lui-même.
+export function nettoyerPensee(t: string): string {
+  const blocs = new RegExp('<\\s*thin' + 'k[^>]*>[\\s\\S]*?<\\s*/\\s*thin' + 'k\\s*>', 'gi');
+  const orphelines = new RegExp('<\\s*/?\\s*thin' + 'k[^>]*>', 'gi');
+  return t.replace(blocs, '').replace(orphelines, '').trim();
+}
+
+// Les cerveaux OUVERTS des géants, gratuits sur le quota sans carte bancaire :
+// Meta (Llama), DeepSeek (R1 raisonneur), Qwen (Alibaba), Mistral (France).
+// Google est à l'essai en direct : muet (Gemma 4, SEA-LION) ou divaguant
+// (variantes lora) par cette porte — aucune voix fantaisiste n'entre ici.
+// Le client choisit un tempérament, jamais n'importe quoi : hors de cette
+// liste, le défaut veille.
+export const MODELES_DIRE = [
+  '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+  '@cf/meta/llama-4-scout-17b-16e-instruct',
+  '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
+  '@cf/qwen/qwen3-30b-a3b-fp8',
+  '@cf/mistralai/mistral-small-3.1-24b-instruct',
+] as const;
+
+export function modeleAutorise(m: unknown): string | null {
+  return typeof m === 'string' && (MODELES_DIRE as readonly string[]).includes(m) ? m : null;
+}
+
+// Les types du runtime Workers, au strict minimum : rien à publier pour
+// vérifier ce fichier dans le TypeScript de l'app (wrangler compile sans eux).
 export interface Env {
-  AI: Ai;
+  AI: { run(modele: string, entree: Record<string, unknown>): Promise<unknown> };
   MODELE_DIRE?: string;
   MODELE_DECIDER?: string;
 }
 
 export default {
-  async fetch(req, env): Promise<Response> {
+  async fetch(req: Request, env: Env): Promise<Response> {
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(req) });
     if (req.method !== 'POST') return reponse({ error: 'POST seulement' }, req, 405);
 
@@ -68,12 +98,18 @@ export default {
       if (url.pathname === '/dire') {
         const messages = Array.isArray(corps?.messages) ? corps.messages : [];
         if (!messages.length) return reponse({ error: 'messages requis' }, req, 400);
-        const r = await env.AI.run(env.MODELE_DIRE ?? '@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+        const modele = modeleAutorise(corps?.modele) ?? env.MODELE_DIRE ?? '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+        // Le raisonneur pense avant de répondre : il lui faut de la place.
+        const r = await env.AI.run(modele, {
           messages,
-          max_tokens: 400,
+          max_tokens: modele.includes('deepseek') ? 1200 : 400,
           temperature: 0.7,
         });
-        return reponse({ result: { response: texteBrut(r).trim() } }, req);
+        // Levier de test caché : « temoin: true » révèle le modèle réellement
+        // parlé — jamais actionné par l'app, qui ignore ce champ.
+        const corpsReponse: Record<string, unknown> = { result: { response: nettoyerPensee(texteBrut(r)) } };
+        if (corps?.temoin === true) corpsReponse.modele_utilise = modele;
+        return reponse(corpsReponse, req);
       }
 
       if (url.pathname === '/decider') {
@@ -99,4 +135,4 @@ export default {
       return reponse({ error: 'pas répondu' }, req, 502);
     }
   },
-} satisfies ExportedHandler<Env>;
+} satisfies { fetch(req: Request, env: Env): Promise<Response> };

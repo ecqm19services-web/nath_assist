@@ -8,6 +8,42 @@
 import type { Cerveau, Message } from './cerveau';
 
 const CLE = 'nath.cerveau';
+const CLE_MODELE = 'nath.cerveau.modele';
+
+// Les allures du grand cerveau : les modèles OUVERTS des géants (Meta, Google,
+// DeepSeek, Qwen, Mistral), un seul réglage gratuit de plus. Les noms à
+// l'écran décrivent le tempérament, jamais la machine — la liste exacte des
+// modèles est verrouillée côté Worker ; une fantaisie revient au défaut.
+export interface Temperament {
+  cle: string;
+  nom: string;
+  modele: string;
+}
+
+export const TEMPERAMENTS: Temperament[] = [
+  { cle: '', nom: 'Sage ordinaire', modele: '' },
+  { cle: 'raisonneur', nom: 'Raisonneur profond — il pense avant de répondre', modele: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b' },
+  { cle: 'encyclopedie', nom: 'Encyclopédie vive', modele: '@cf/meta/llama-3.3-70b-instruct-fp8-fast' },
+  { cle: 'polyglotte', nom: 'Polyglotte curieux de tout', modele: '@cf/qwen/qwen3-30b-a3b-fp8' },
+  { cle: 'visionnaire', nom: 'Grand regard — à l’aise avec les images', modele: '@cf/meta/llama-4-scout-17b-16e-instruct' },
+  { cle: 'clarte', nom: 'Clair et méditerranéen', modele: '@cf/mistralai/mistral-small-3.1-24b-instruct' },
+];
+
+export function definirTemperament(storage: Storage, cle: string): boolean {
+  if (!TEMPERAMENTS.some((t) => t.cle === cle)) return false;
+  storage.setItem(CLE_MODELE, cle);
+  return true;
+}
+
+export function cleTemperamentReglee(storage: Storage): string {
+  return storage.getItem(CLE_MODELE) ?? '';
+}
+
+// L'identifiant du modèle choisi — '' = laisser le Worker garder son défaut.
+export function lireTemperament(storage: Storage): string {
+  const cle = storage.getItem(CLE_MODELE) ?? '';
+  return TEMPERAMENTS.find((t) => t.cle === cle)?.modele ?? '';
+}
 
 // Seule une adresse https (ou localhost pour développer) porte la parole —
 // jamais de l'http clair, jamais de n'importe quoi.
@@ -40,15 +76,16 @@ export function lireEndpoint(storage: Storage): string {
 }
 
 // Le grand cerveau en ligne, branché sur ton Worker : la parole part, la
-// réponse arrive, et rien d'autre ne quitte l'appareil.
-export function creerCerveauNet(endpoint: string, fetchImpl: typeof fetch = fetch): Cerveau {
+// réponse arrive, et rien d'autre ne quitte l'appareil. Un tempérament
+// choisi (modèle ouvert des géants) voyage dans la requête — le Worker filtre.
+export function creerCerveauNet(endpoint: string, fetchImpl: typeof fetch = fetch, modele = ''): Cerveau {
   return {
     async ask(messages: Message[]): Promise<string> {
       try {
         const res = await fetchImpl(`${endpoint}/dire`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages }),
+          body: JSON.stringify(modele ? { messages, modele } : { messages }),
         });
         if (!res.ok) return '';
         const o = (await res.json()) as Record<string, any>;
