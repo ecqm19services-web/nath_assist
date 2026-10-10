@@ -1,8 +1,9 @@
 // L'interface de la Compagne : bulles douces en bas du ciel, micro local,
 // clavier complet (accessibilité), mémoire du prénom et vie proactive —
 // elle pense et parle toute seule, sans qu'on la sollicite.
-import { respond, type CompagneCtx, type Intent } from './engine';
+import { detectIntent, respond, type CompagneCtx, type Intent } from './engine';
 import { calculerNumero, calculerSuite, estUneQuestionDate, estUneQuestionHeure } from './logique';
+import { repondreMaths } from './maths';
 import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
 import { creerCerveauNet, lireEndpoint } from './cerveauNet';
 import { choisirPensee, garderCap, jugerSurPlace, scorerTension } from './juge';
@@ -203,10 +204,11 @@ export function createCompagneUI(
 
     const c = getCtx();
 
-    // Faits durs d'abord : calculs, suites de calcul, heure, date passent TOUJOURS
-    // par la logique embarquée — elle ne se trompe jamais, même grand cerveau éveillé.
+    // Faits durs d'abord : calculs, suites de calcul, heure, date, et ses
+    // poèmes/histoires (le quatrain embarqué est sûr, le petit modèle local
+    // à côté) passent TOUJOURS par la logique embarquée — jamais par un cerveau.
     const suitePre = memoireLoc.resultat != null ? calculerSuite(q, memoireLoc.resultat) : null;
-    if (calculerNumero(q) != null || suitePre != null || estUneQuestionHeure(q) || estUneQuestionDate(q)) {
+    if (repondreMaths(q) != null || calculerNumero(q) != null || suitePre != null || estUneQuestionHeure(q) || estUneQuestionDate(q) || detectIntent(q) === 'poeme') {
       const r = respond(q, {
         ...c,
         prenom: memoire.prenom,

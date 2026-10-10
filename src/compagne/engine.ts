@@ -6,6 +6,7 @@ import {
   calculerNumero, calculerSuite, decrireDate, decrireHeure,
   estUneQuestionDate, estUneQuestionHeure, format,
 } from './logique';
+import { repondreMaths } from './maths';
 
 export type Intent =
   | 'sommeil' | 'angoisse' | 'souffle' | 'identite' | 'poeme'
@@ -198,7 +199,10 @@ export function respond(
   const reponse = (texte: string, humeur: HumeurReponse, sujet: Intent, resultat: number | null = null) =>
     ({ texte, humeur, sujet, resultat });
 
-  // 1. Logique dure : chiffres, heure, date — réponse factuelle immédiate.
+  // 1. Logique dure : le mathématicien d'abord (équations, dérivées, pourcentages,
+  // statistiques, premiers, puissances) — il ne devine jamais, il calcule.
+  const savant = repondreMaths(question);
+  if (savant) return reponse(savant, 'posee', 'calcul');
   const num = calculerNumero(question);
   if (num != null) return reponse(`Ça fait ${format(num)}.`, 'posee', 'calcul', num);
   if (ctx.dernierResultat != null) {

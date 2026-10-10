@@ -17,7 +17,8 @@
 // Puis donner l'adresse https://…workers.dev à l'équipe : onglet 🎓 → Savoir →
 // « Grand cerveau en ligne », coller l'adresse, Régler. C'est tout.
 
-const ORIGINES = /^https:\/\/([a-z0-9-]+\.github\.io|localhost(:\d+)?)$/i;
+// Pages en ligne (https) et banc d'essai local (http://localhost:port) — rien d'autre.
+const ORIGINES = /^(https:\/\/[a-z0-9-]+\.github\.io|https?:\/\/localhost(:\d+)?)$/i;
 
 function cors(req: Request): Record<string, string> {
   const origine = req.headers.get('origin') ?? '';
