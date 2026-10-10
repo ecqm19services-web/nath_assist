@@ -5,6 +5,7 @@ import { respond, type CompagneCtx, type Intent } from './engine';
 import { calculerNumero, calculerSuite, estUneQuestionDate, estUneQuestionHeure } from './logique';
 import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
 import { creerCerveauNet, lireEndpoint } from './cerveauNet';
+import { jugerSurPlace } from './juge';
 import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
 import { choisirMonologue, nextDelai, type MonoCtx } from './proactive';
 import { entendReveil } from './reveil';
@@ -420,10 +421,15 @@ export function createCompagneUI(
 
   // La vie proactive : ses pensées arrivent seules, espacées de 40 à 105 s.
   const penserSeule = () => {
-    window.setTimeout(() => {
+    window.setTimeout(async () => {
       // Si on vient de lui parler, on repousse : elle n interrompt jamais.
       if (performance.now() - dernierEchange < 25000) return penserSeule();
       const c: MonoCtx = { ...getCtx(), prenom: memoire.prenom };
+      // Le juge d ailleurs (silencieux tant qu aucune adresse n est réglée) :
+      // si un modèle de décision trouve l instant mal choisi, elle laisse
+      // passer son tour — le nuage continue de respirer comme avant.
+      const net = lireEndpoint(localStorage);
+      if (net && (await jugerSurPlace(net, c)) === false) return penserSeule();
       const m = choisirMonologue(c, Math.floor(Date.now() / 60000), dernierMono);
       dernierMono = m.texte;
       bulle(m.texte, 'nuage'); // monologue = murmuré à l écrit, la voix reste pour les réponses

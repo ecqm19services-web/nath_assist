@@ -3,7 +3,12 @@
 // dans l'application) et ouvre deux portes, gratuites au-delà du seuil quotidien
 // compris dans l'offre sans carte bancaire :
 //   POST /dire     → un grand modèle de langage répond comme Nath (Qwen, maison)
-//   POST /decider  → Clef (Cloudflare) transforme un état + questions typées en décisions chiffrées
+//   POST /decider  → un modèle de décision (Clef ou Jev — même famille, même
+//                   API System One : état + questions typées → probabilités)
+//
+// Jev de TypeSafe, s'il est publié sur Workers AI, se branche d'un seul
+// réglage, sans toucher au code (variable d'environnement) :
+//   MODELE_DECIDER = @cf/typesafe/jev   (défaut : @cf/cloudflare/clef-flash)
 //
 // Déploiement (une seule fois, ~2 minutes) :
 //   npm i -g wrangler ; wrangler login
@@ -76,8 +81,11 @@ export default {
         if (typeof state !== 'string' || !questions || typeof questions !== 'object') {
           return reponse({ error: 'state et questions requis' }, req, 400);
         }
-        const r = await env.AI.run(env.MODELE_DECIDER ?? '@cf/cloudflare/clef-flash', {
-          model: 'clef-flash',
+        // La famille des modèles de décision (Clef, Jev) parle la même API
+        // System One — le nom dans le corps suit le modèle réglé côté serveur.
+        const modele = env.MODELE_DECIDER ?? '@cf/cloudflare/clef-flash';
+        const r = await env.AI.run(modele, {
+          model: modele.split('/').pop(),
           state,
           questions,
         });
