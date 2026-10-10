@@ -68,7 +68,7 @@ describe('compagne engine', () => {
     expect(respond('combien font 7 fois 8', ctx).texte).toContain('56');
   });
   it('résout les équations au lieu de les calculer de tête (régression : x² renvoyait -28)', () => {
-    expect(respond('x² - 5x + 6 = 0', ctx).texte).toBe('x = 2 ou x = 3.');
+    expect(respond('x² - 5x + 6 = 0', ctx).texte).toContain('x = 2 ou x = 3.');
     expect(respond('combien font 2 puissance 10', ctx).texte).toContain('1024');
     expect(respond('17 % de 350', ctx).texte).toContain('59,5');
   });

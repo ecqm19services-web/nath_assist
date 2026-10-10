@@ -105,9 +105,30 @@ function equation(question: string): string | null {
     if (degre === 0) return p[0] === 0 ? 'tout x convient (identité).' : 'aucune solution : c est une absurdité.';
     if (degre === 1) {
       if (p[1] === 0) return 'aucune solution : x disparaît de la comparaison.';
-      return `x = ${format(-p[0] / p[1])}.`;
+      // Le guide pas à pas : rassembler, isoler, conclure.
+      const a = p[1];
+      const x = -p[0] / a;
+      const etapes: string[] = [];
+      if (a === 1) etapes.push(`On rassemble les x : x = ${format(-p[0])}.`);
+      else {
+        etapes.push(`On rassemble les x d'un côté : ${format(a)}x = ${format(-p[0])}.`);
+        etapes.push(`On isole x : x = ${format(-p[0])} / ${format(a)} = ${format(x)}.`);
+      }
+      etapes.push(`La solution : x = ${format(x)}.`);
+      return etapes.join('\n');
     }
-    return `${racines(p[2], p[1], p[0]).texte}.`;
+    // Second degré : le discriminant d'abord, la formule ensuite, les racines enfin.
+    const [a2, b2, c2] = [p[2], p[1], p[0]];
+    const delta = b2 * b2 - 4 * a2 * c2;
+    const r = racines(a2, b2, c2);
+    const etapes: string[] = [
+      `On calcule le discriminant : Δ = b² - 4ac = (${format(b2)})² - 4 × (${format(a2)}) × (${format(c2)}) = ${format(delta)}.`,
+    ];
+    if (delta > 0) etapes.push(`√Δ = ${format(Math.sqrt(delta))}, puis x = (-b ± √Δ) / 2a.`);
+    else if (delta === 0) etapes.push('√Δ = 0, puis x = -b / 2a.');
+    else etapes.push('Δ est négatif : aucune racine à isoler.');
+    etapes.push(`${delta < 0 ? 'Conclusion' : 'Les solutions'} : ${r.texte}.`);
+    return etapes.join('\n');
   }
   // Pas de « = » : factorisation si les racines sont entières, sinon silence.
   const p = parsePoly(s);
@@ -119,7 +140,10 @@ function equation(question: string): string | null {
   const facteurs = r.reels
     .map((x) => (x >= 0 ? `(x - ${x})` : `(x + ${Math.abs(x)})`))
     .join('');
-  return `${ecrirePoly(p)} = ${facteurs}.`;
+  return [
+    `On cherche deux nombres dont le produit vaut ${format(p[0])} et la somme ${format(-p[1])} : ${r.reels[0]} et ${r.reels[1]}.`,
+    `${ecrirePoly(p)} = ${facteurs}.`,
+  ].join('\n');
 }
 
 // ————————————————————————————————————————————————————————————— dérivées ——
@@ -138,12 +162,15 @@ function derivee(question: string): string | null {
   const p = parsePoly(corps);
   if (!p) return null;
   const dp = p.slice(1).map((c, i) => c * (i + 1));
-  let texte = `f'(x) = ${ecrirePoly(dp)}.`;
+  const etapes: string[] = [
+    "On dérive terme à terme : la dérivée de xⁿ est n·xⁿ⁻¹, celle d'une constante est 0.",
+    `f'(x) = ${ecrirePoly(dp)}.`,
+  ];
   if (en != null) {
     const v = dp.reduce((acc, c, i) => acc + c * Math.pow(en as number, i), 0);
-    texte += ` f'(${format(en)}) = ${format(v)}.`;
+    etapes.push(`Puis on remplace x par ${format(en)} : f'(${format(en)}) = ${format(v)}.`);
   }
-  return texte;
+  return etapes.join('\n');
 }
 
 // ————————————————————————————————————————————————————————— pourcentages ——
@@ -151,11 +178,24 @@ function derivee(question: string): string | null {
 function pourcentages(question: string): string | null {
   const s = norm(question).replace(/pourcent/g, '%');
   let m = s.match(new RegExp(`(${NB})\\s*%\\s*de\\s*(${NB})`));
-  if (m) return `${format(val(m[1]))} % de ${format(val(m[2]))} = ${format((val(m[1]) * val(m[2])) / 100)}.`;
+  if (m) {
+    return [
+      `On calcule ${format(val(m[2]))} × ${format(val(m[1]))} / 100.`,
+      `${format(val(m[1]))} % de ${format(val(m[2]))} = ${format((val(m[1]) * val(m[2])) / 100)}.`,
+    ].join('\n');
+  }
   m = s.match(new RegExp(`(?:augmente|augmenter|majorer)\\s+(${NB})\\s+de\\s+(${NB})\\s*%`));
-  if (m) return `${format(val(m[1]))} augmenté de ${format(val(m[2]))} % = ${format(val(m[1]) * (1 + val(m[2]) / 100))}.`;
+  if (m)
+    return [
+      `On multiplie par 1 + ${format(val(m[2]))} / 100 = ${format(1 + val(m[2]) / 100)}.`,
+      `${format(val(m[1]))} augmenté de ${format(val(m[2]))} % = ${format(val(m[1]) * (1 + val(m[2]) / 100))}.`,
+    ].join('\n');
   m = s.match(new RegExp(`(?:diminue|diminuer|reduire)\\s+(${NB})\\s+(?:de\\s+)?(${NB})\\s*%`));
-  if (m) return `${format(val(m[1]))} diminué de ${format(val(m[2]))} % = ${format(val(m[1]) * (1 - val(m[2]) / 100))}.`;
+  if (m)
+    return [
+      `On multiplie par 1 - ${format(val(m[2]))} / 100 = ${format(1 - val(m[2]) / 100)}.`,
+      `${format(val(m[1]))} diminué de ${format(val(m[2]))} % = ${format(val(m[1]) * (1 - val(m[2]) / 100))}.`,
+    ].join('\n');
   return null;
 }
 
@@ -169,22 +209,63 @@ function statistiques(question: string): string | null {
   if (liste.length < 2) return null;
   const somme = liste.reduce((a, b) => a + b, 0);
   const moy = somme / liste.length;
+  const sommeTxt = liste.map(format).join(' + ');
   switch (m[1]) {
-    case 'somme': return `La somme est ${format(somme)}.`;
-    case 'moyenne': return `La moyenne est ${format(moy)}.`;
+    case 'somme':
+      return [`On additionne toutes les valeurs : ${sommeTxt} = ${format(somme)}.`, `La somme est ${format(somme)}.`].join('\n');
+    case 'moyenne':
+      return [
+        `On additionne les valeurs : ${sommeTxt} = ${format(somme)}.`,
+        `On divise par le nombre de valeurs (${liste.length}) : ${format(somme)} / ${liste.length} = ${format(moy)}.`,
+        `La moyenne est ${format(moy)}.`,
+      ].join('\n');
     case 'mediane': {
       const tri = [...liste].sort((a, b) => a - b);
       const mid = Math.floor(tri.length / 2);
-      return `La médiane est ${format(tri.length % 2 ? tri[mid] : (tri[mid - 1] + tri[mid]) / 2)}.`;
+      if (tri.length % 2)
+        return [
+          `On trie les valeurs : ${tri.map(format).join(', ')}.`,
+          `Comme il y a ${tri.length} valeurs (impair), on prend celle du milieu.`,
+          `La médiane est ${format(tri[mid])}.`,
+        ].join('\n');
+      return [
+        `On trie les valeurs : ${tri.map(format).join(', ')}.`,
+        `Comme il y a ${tri.length} valeurs (pair), on moyenne les deux du milieu : (${format(tri[mid - 1])} + ${format(tri[mid])}) / 2.`,
+        `La médiane est ${format((tri[mid - 1] + tri[mid]) / 2)}.`,
+      ].join('\n');
     }
-    case 'variance': return `La variance est ${format(liste.reduce((a, b) => a + (b - moy) ** 2, 0) / liste.length)}.`;
-    default: return `L'écart-type est ${format(Math.sqrt(liste.reduce((a, b) => a + (b - moy) ** 2, 0) / liste.length))}.`;
+    case 'variance':
+      return [
+        `La moyenne d'abord : ${format(moy)}, puis la moyenne des écarts au carré (valeur - moyenne)².`,
+        `La variance est ${format(liste.reduce((a, b) => a + (b - moy) ** 2, 0) / liste.length)}.`,
+      ].join('\n');
+    default:
+      return [
+        `La moyenne d'abord : ${format(moy)} ; on moyenne les écarts au carré, puis on prend la racine.`,
+        `L'écart-type est ${format(Math.sqrt(liste.reduce((a, b) => a + (b - moy) ** 2, 0) / liste.length))}.`,
+      ].join('\n');
   }
 }
 
 // ———————————————————————————————————————————————— premiers, PGCD, diviseurs ——
 
 const pgcd = (a: number, b: number): number => (b === 0 ? a : pgcd(b, a % b));
+
+// La division euclidienne se montre pas à pas : à chaque ligne, un reste qui
+// diminue ; le dernier reste non nul est le PGCD — c'est la leçon entière.
+function traceEuclide(a: number, b: number): { etapes: string[]; g: number } {
+  let u = Math.max(a, b);
+  let v = Math.min(a, b);
+  const etapes: string[] = [];
+  while (v > 0) {
+    const q = Math.floor(u / v);
+    const r = u - q * v;
+    etapes.push(`${u} = ${q} × ${v} + ${r}`);
+    u = v;
+    v = r;
+  }
+  return { etapes, g: u };
+}
 
 function premiers(question: string): string | null {
   const s = norm(question);
@@ -199,24 +280,44 @@ function premiers(question: string): string | null {
         break;
       }
     }
-    return div ? `${n} n'est pas premier : ${n} = ${div} × ${n / div}.` : `${n} est premier.`;
+    if (div)
+      return [
+        `On teste les diviseurs de 2 jusqu'à √${n} : ${div} divise ${n} sans reste.`,
+        `${n} n'est pas premier : ${n} = ${div} × ${n / div}.`,
+      ].join('\n');
+    return [
+      `On teste les diviseurs de 2 jusqu'à √${n} : aucun ne divise ${n} sans reste.`,
+      `${n} est premier.`,
+    ].join('\n');
   }
   m = s.match(new RegExp(`pgcd de (${NB}) et (${NB})`));
   if (m) {
     const [a, b] = [Math.round(val(m[1])), Math.round(val(m[2]))];
-    return `Le PGCD de ${a} et ${b} est ${pgcd(a, b)}.`;
+    const e = traceEuclide(a, b);
+    const etapes = e.etapes.length
+      ? [`Division d'Euclide : ${e.etapes.join(', puis ')}.`, `Le dernier reste non nul, ${e.g}, est le PGCD.`]
+      : [];
+    etapes.push(`Le PGCD de ${a} et ${b} est ${e.g}.`);
+    return etapes.join('\n');
   }
   m = s.match(new RegExp(`ppcm de (${NB}) et (${NB})`));
   if (m) {
     const [a, b] = [Math.round(val(m[1])), Math.round(val(m[2]))];
-    return `Le PPCM de ${a} et ${b} est ${(a * b) / pgcd(a, b)}.`;
+    const g = pgcd(a, b);
+    return [
+      `On s'appuie sur le PGCD (${g}) : ${a} × ${b} / ${g}.`,
+      `Le PPCM de ${a} et ${b} est ${(a * b) / g}.`,
+    ].join('\n');
   }
   m = s.match(new RegExp(`diviseurs de (${NB})`));
   if (m) {
     const n = Math.round(val(m[1]));
     const ds: number[] = [];
     for (let d = 1; d <= n; d++) if (n % d === 0) ds.push(d);
-    return `Les diviseurs de ${n} : ${ds.join(', ')}.`;
+    return [
+      `On teste la division de ${n} par tous les nombres de 1 à ${n} ; ceux qui tombent juste sont retenus.`,
+      `Les diviseurs de ${n} : ${ds.join(', ')}.`,
+    ].join('\n');
   }
   m = s.match(new RegExp(`factorielle de (${NB})`));
   if (m) {
@@ -224,7 +325,9 @@ function premiers(question: string): string | null {
     if (n < 0 || n > 20) return null;
     let f = 1;
     for (let k = 2; k <= n; k++) f *= k;
-    return `${n}! = ${f}.`;
+    if (n < 2) return `${n}! = ${f}.`;
+    const produit = n <= 12 ? Array.from({ length: n }, (_, i) => i + 1).join(' × ') : `1 × 2 × ... × ${n}`;
+    return [`On multiplie tous les entiers de 1 à ${n} : ${produit}.`, `${n}! = ${f}.`].join('\n');
   }
   return null;
 }

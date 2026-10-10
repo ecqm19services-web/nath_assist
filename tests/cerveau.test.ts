@@ -19,7 +19,20 @@ vi.mock('@mlc-ai/web-llm', () => ({
   }),
 }));
 
-import { sondeGPU, creerCerveau } from '../src/compagne/cerveau';
+import { sondeGPU, creerCerveau, persona } from '../src/compagne/cerveau';
+
+describe('âme : Nath est un guide, pas une réponse toute faite', () => {
+  const ctx = { prenom: null, emotion: 'calme', bpm: 70, breath: 0.5, night: 0 };
+  it('le persona ordonne le guidage pas à pas', () => {
+    expect(persona(ctx)).toContain('pas à pas');
+  });
+  it('le persona interdit la réponse nue', () => {
+    expect(persona(ctx)).toMatch(/jamais la réponse (nue|seule|directe)/i);
+  });
+  it('le persona autorise les étapes (la règle des listes est assouplie)', () => {
+    expect(persona(ctx)).toContain('listes à puces');
+  });
+});
 
 // Stub du navigateur : on simule les trois états de machine possibles.
 const stubGPU = (adapter: unknown): void => {
