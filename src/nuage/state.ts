@@ -1,4 +1,6 @@
 // Machine à états du Nuage : capteurs bruts → paramètres de scène.
+import type { CielReel } from './cielReel';
+
 export type Emotion = 'calme' | 'joie' | 'tristesse' | 'tension';
 
 export interface NuageState {
@@ -7,6 +9,7 @@ export interface NuageState {
   emotion: Emotion;
   timeOfDay: number;       // 0..1 cycle jour/nuit
   seed: string;            // graine d'aura de l'utilisateur
+  cielReel?: CielReel | null; // le temps vrai, une fois que la personne l'a demandé
 }
 
 export interface SceneParams {
@@ -44,13 +47,18 @@ export function computeSceneParams(s: NuageState): SceneParams {
   // Nuit dérivée de l'heure locale : plein jour à midi (t=0.5), nuit pleine dès minuit,
   // crépuscule franc à partir de ~19 h (seuil 0,25 → 0,2 pour que le ciel "bascule" le soir).
   const night = Math.min(1, Math.max(0, (Math.abs(s.timeOfDay - 0.5) - 0.2) * 5));
+  const reel = s.cielReel ?? null;
   return {
     altitude: Math.min(1, emBase.alt + s.breath * 0.35),
-    luminosite: Math.min(1, emBase.lum + s.breath * 0.2),
-    turbulence: Math.min(1, emBase.turb + s.breath * 0.1),
+    luminosite: reel
+      ? Math.min(1, reel.luminosite + s.breath * 0.2)
+      : Math.min(1, emBase.lum + s.breath * 0.2),
+    turbulence: reel
+      ? Math.min(1, Math.max(emBase.turb, reel.turbulence) + s.breath * 0.1)
+      : Math.min(1, emBase.turb + s.breath * 0.1),
     night,
     aurora: emBase.aur,
-    pluie: emBase.pluie,
+    pluie: reel ? Math.max(emBase.pluie, reel.pluie) : emBase.pluie,
     palette: PALETTES[s.emotion],
   };
 }

@@ -11,6 +11,7 @@ export interface Savoir {
   titre: string;
   resume: string;
   url: string; // la source, pour la curiosité
+  image?: string; // l'illustration du sujet, si l'encyclopédie en offre une
   ramene_a: number; // quand on l'a mis dans la base
 }
 
@@ -18,6 +19,7 @@ export interface ResumeWeb {
   titre: string;
   resume: string;
   url: string;
+  image: string; // '' si rien de sûr à montrer
 }
 
 export function trouverDansBase(base: readonly Savoir[], sujet: string): Savoir | null {
@@ -43,6 +45,7 @@ export function enregistrerSavoir(base: readonly Savoir[], s: Savoir): Savoir[] 
     titre: (s.titre || '').trim() || sujet,
     resume,
     url: typeof s.url === 'string' ? s.url : '',
+    image: typeof s.image === 'string' ? s.image : '',
     ramene_a: Number.isFinite(s.ramene_a) ? s.ramene_a : Date.now(),
   };
   return [...base.filter((x) => normaliser(x.sujet) !== n), propre];
@@ -50,6 +53,15 @@ export function enregistrerSavoir(base: readonly Savoir[], s: Savoir): Savoir[] 
 
 // Puiser un résumé dans l'encyclopédie libre. Le fetch est injecté : c'est
 // l'appelant qui décide du moment (après accord explicite), jamais ce module.
+// Une image d'encyclopédie, façon Encarta : la grande si elle existe, sinon la
+// vignette. Toute adresse qui ne commence pas par http n'entre pas dans la maison.
+function imageSûre(o: Record<string, any>): string {
+  for (const c of [o?.originalimage?.source, o?.thumbnail?.source]) {
+    if (typeof c === 'string' && /^https?:\/\//.test(c)) return c;
+  }
+  return '';
+}
+
 async function resumeDepuisTitre(
   titre: string,
   fetchImpl: typeof fetch,
@@ -66,6 +78,7 @@ async function resumeDepuisTitre(
       titre: typeof o.title === 'string' && o.title ? o.title : titre.trim(),
       resume,
       url: o?.content_urls?.desktop?.page ?? '',
+      image: imageSûre(o),
     };
   } catch {
     return null;

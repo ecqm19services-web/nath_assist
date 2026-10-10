@@ -11,6 +11,7 @@ import { ambientLevel, ambientMood, startAmbient } from './audio/ambient';
 import { createCompagneUI } from './compagne/ui';
 import { creerPanneauSavoir } from './compagne/savoirUI';
 import { probaEvenements } from './nuage/meteo';
+import { chargerCielReel } from './nuage/cielReel';
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const scene = createScene(canvas);
@@ -69,9 +70,51 @@ creerPanneauSavoir(localStorage);
 // selon l'humeur et l'heure — personne ne lui a rien demandé.
 setInterval(() => {
   const p = probaEvenements(state.emotion, computeSceneParams(state).night);
-  if (Math.random() < p.eclair) scene.eclair();
+  // Un vrai orage dehors : le ciel a le droit de gronder encore plus fort.
+  const orageReel = state.cielReel?.orage && Math.random() < 0.4;
+  if (orageReel || Math.random() < p.eclair) scene.eclair();
   if (Math.random() < p.filer) scene.filer(0.08 + Math.random() * 0.75, 0.7 + Math.random() * 0.25);
 }, 15000);
+
+// Le ciel réel : un seul bouton, un seul consentement (la demande de position
+// du navigateur), une seule source gratuite. Rien n'est stocké, rien ne sort
+// à part deux nombres — et seulement quand la personne l'a voulu.
+const cielBtn = document.createElement('button');
+cielBtn.className = 'ciel-btn';
+cielBtn.type = 'button';
+cielBtn.textContent = '⛅';
+cielBtn.title = 'Le ciel réel — laisser respirer au nuage le temps de chez toi';
+cielBtn.setAttribute('aria-label', 'Laisser au nuage le temps réel de chez toi');
+document.body.append(cielBtn);
+let cielTimer = 0;
+async function respirerLeCiel(lat: number, lon: number): Promise<void> {
+  const ciel = await chargerCielReel(lat, lon, fetch);
+  if (ciel) {
+    state.cielReel = ciel;
+    cielBtn.classList.add('actif');
+    cielBtn.title = `Dehors, ${ciel.libelle} — le nuage respire avec lui`;
+  }
+}
+cielBtn.addEventListener('click', () => {
+  if (cielTimer) {
+    // deuxième appui : on rend au ciel sa vie intérieure
+    window.clearInterval(cielTimer);
+    cielTimer = 0;
+    state.cielReel = null;
+    cielBtn.classList.remove('actif');
+    cielBtn.title = 'Le ciel réel — laisser respirer au nuage le temps de chez toi';
+    return;
+  }
+  if (!navigator.geolocation) return; // pas d'oreille pour la position : on n'imite pas
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      void respirerLeCiel(pos.coords.latitude, pos.coords.longitude);
+      cielTimer = window.setInterval(() => void respirerLeCiel(pos.coords.latitude, pos.coords.longitude), 600000);
+    },
+    () => { cielBtn.classList.remove('actif'); }, // refus ou silence : on ne force rien
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
+  );
+});
 
 // Un toucher du ciel : onde lumineuse + éveil de la musique (politique autoplay).
 let reveille = false;

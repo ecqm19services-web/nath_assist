@@ -35,4 +35,16 @@ describe('NuageState', () => {
     expect(computeSceneParams({ ...createInitialState(), emotion: 'tristesse' }).pluie).toBeGreaterThanOrEqual(0.6);
     expect(computeSceneParams({ ...createInitialState(), emotion: 'joie' }).pluie).toBe(0);
   });
+
+  it('le ciel réel prend les commandes quand il est là, sans rien brusquer', () => {
+    const reel = { pluie: 0.8, turbulence: 0.5, luminosite: 0.3, orage: true, libelle: 'orage' };
+    const p = computeSceneParams({ ...createInitialState(), emotion: 'joie', cielReel: reel });
+    // La joie intérieure ne peut pas empêcher la vraie pluie de tomber…
+    expect(p.pluie).toBe(0.8);
+    // …et le ciel sombre du dehors éteint la lumière, souffle ou pas.
+    expect(p.luminosite).toBeLessThan(0.6);
+    expect(p.turbulence).toBeGreaterThanOrEqual(0.5);
+    // Sans ciel réel, le monde d'avant continue, intact.
+    expect(computeSceneParams({ ...createInitialState(), emotion: 'joie' }).pluie).toBe(0);
+  });
 });

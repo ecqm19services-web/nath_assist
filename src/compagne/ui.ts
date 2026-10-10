@@ -4,6 +4,7 @@
 import { respond, type CompagneCtx, type Intent } from './engine';
 import { calculerNumero, calculerSuite, estUneQuestionDate, estUneQuestionHeure } from './logique';
 import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
+import { creerCerveauNet, lireEndpoint } from './cerveauNet';
 import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
 import { choisirMonologue, nextDelai, type MonoCtx } from './proactive';
 import { entendReveil } from './reveil';
@@ -145,6 +146,14 @@ export function createCompagneUI(
         bCerveau.textContent = 'Mon cerveau est arrivé. Dis les phrases les plus tordues, je suivrai.';
         return;
       }
+      // Le local n'a pas pu atterrir : si un grand cerveau en ligne est réglé,
+      // il prend le relais sans attendre — jamais bloquant.
+      const net = lireEndpoint(localStorage);
+      if (net) {
+        cerveau = creerCerveauNet(net);
+        bCerveau.textContent = 'Je me suis reliée à un plus grand cerveau. Demande, je réponds vite.';
+        return;
+      }
       bCerveau.textContent = raison === 'reseau'
         ? 'Un hic du réseau empêche mon gros cerveau d atterrir... je reste attentive avec mon petit moteur.'
         : raison === 'machine'
@@ -164,6 +173,15 @@ export function createCompagneUI(
     });
   }
   if (gpuDisponible()) chargerCerveau();
+  else {
+    // Pas de gros cerveau local ici : si un grand cerveau en ligne est réglé
+    // (Worker Nath-Tech), il répond instantanément, sans rien télécharger.
+    const net = lireEndpoint(localStorage);
+    if (net) {
+      cerveau = creerCerveauNet(net);
+      bulle('Je suis reliée à un plus grand cerveau — demande-moi ce que tu veux.', 'nuage');
+    }
+  }
 
   function traiter(question: string) {
     const q = question.trim();

@@ -41,15 +41,38 @@ describe('savoir : le puisage sur le net (injecté, jamais caché)', () => {
     return { ok, status: ok ? 200 : 404, json: async () => corps };
   };
 
-  it('extrait titre, résumé et lien depuis l\u2019encyclopédie gratuite', async () => {
+  it('extrait titre, résumé et lien depuis l’encyclopédie gratuite', async () => {
     const f = fauxFetch({
       title: 'Mitose',
       extract: 'La mitose est la division cellulaire.',
       content_urls: { desktop: { page: 'https://fr.wikipedia.org/wiki/Mitose' } },
     });
     const r = await chargerDepuisLeNet('la mitose', f as unknown as typeof fetch);
-    expect(r).toEqual({ titre: 'Mitose', resume: 'La mitose est la division cellulaire.', url: 'https://fr.wikipedia.org/wiki/Mitose' });
+    expect(r).toEqual({ titre: 'Mitose', resume: 'La mitose est la division cellulaire.', url: 'https://fr.wikipedia.org/wiki/Mitose', image: '' });
     expect((fauxFetch as any).derniereUrl).toContain('rest_v1');
+  });
+  
+  it('une image d’encyclopédie accompagne le savoir (façon Encarta)', async () => {
+    const f = fauxFetch({
+      title: 'Lion',
+      extract: 'Le lion est un grand félin.',
+      thumbnail: { source: 'https://upload.wikimedia.org/lion.jpg' },
+      content_urls: { desktop: { page: 'https://fr.wikipedia.org/wiki/Lion' } },
+    });
+    const r = await chargerDepuisLeNet('lion', f as unknown as typeof fetch);
+    expect(r?.image).toBe('https://upload.wikimedia.org/lion.jpg');
+  });
+  
+  it('image folle (pas une http) = pas d’image, mais le savoir passe', async () => {
+    const f = fauxFetch({
+      title: 'X',
+      extract: 'Résumé.',
+      thumbnail: { source: 'javascript:alert(1)' },
+      content_urls: { desktop: { page: 'u' } },
+    });
+    const r = await chargerDepuisLeNet('x', f as unknown as typeof fetch);
+    expect(r?.image).toBe('');
+    expect(r?.resume).toBe('Résumé.');
   });
 
   it('refus réseau ou page muette = rien, proprement', async () => {
@@ -95,7 +118,7 @@ describe('savoir : la recherche par titre, façon Encarta', () => {
       return { ok: false, status: 404, json: async () => ({}) };
     };
     const r = await chargerDepuisLeNet('la mitose', f as unknown as typeof fetch);
-    expect(r).toEqual({ titre: 'Mitose', resume: 'Division cellulaire qui conserve le patrimoine génétique.', url: 'https://fr.wikipedia.org/wiki/Mitose' });
+    expect(r).toEqual({ titre: 'Mitose', resume: 'Division cellulaire qui conserve le patrimoine génétique.', url: 'https://fr.wikipedia.org/wiki/Mitose', image: '' });
     expect(urls.length).toBe(3); // titre demandé → recherche → vrai titre
   });
 

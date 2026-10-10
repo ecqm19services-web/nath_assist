@@ -38,7 +38,9 @@ import {
   type Marque,
 } from '../entreprise/marque';
 import { analyserDictee, epurerDictee } from '../traduction/dictee';
+import { codeLangue, traduireEnLigne } from '../traduction/moteurNet';
 import { devisEntreprise, formatFCFA } from '../entreprise/devis';
+import { definirEndpoint, lireEndpoint } from './cerveauNet';
 
 const CLE_SAVOIR = 'nath.savoir';
 const CLE_LEXIQUE = 'nath.lexique';
@@ -326,11 +328,44 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
       else proposerRecherche(sujet, resultat);
     }
     corps.append(ligne, resultat);
+
+    // le grand cerveau en ligne, pour les machines sans gros moteur local :
+    // une adresse de Worker Nath-Tech, réglée une fois, jamais obligatoire.
+    const cerveau = el(`<details class="savoir-import"><summary>Grand cerveau en ligne (pour les machines sages)</summary>
+      <p class="savoir-note">Sur demande à Nath-Tech, une adresse de cerveau prêté peut être réglée ici : les machines sans grande carte répondent alors plus vite et plus loin. Laisser vide pour éteindre ce secours.</p>
+      <div class="savoir-ligne"><input type="text" class="cerv-url" placeholder="https://… (vide pour effacer)" aria-label="Adresse du grand cerveau" /><button class="cerv-ok">Régler</button></div>
+      <p class="savoir-msg cerv-etat"></p></details>`);
+    const champUrl = cerveau.querySelector('.cerv-url') as HTMLInputElement;
+    const etatCerv = cerveau.querySelector('.cerv-etat') as HTMLElement;
+    const regle = lireEndpoint(storage);
+    etatCerv.textContent = regle ? 'Le secours est réglé et veille.' : 'Aucun secours réglé — le cerveau local et le petit moteur suffisent.';
+    cerveau.querySelector('.cerv-ok')!.addEventListener('click', () => {
+      if (definirEndpoint(storage, champUrl.value)) {
+        etatCerv.textContent = lireEndpoint(storage)
+          ? 'Le secours est réglé — il répondra dès la prochaine ouverture.'
+          : 'Secours éteint. Le ciel reste vivant, sans lui.';
+        champUrl.value = '';
+      } else {
+        etatCerv.textContent = 'Cette adresse ne convient pas — il faut du https.';
+      }
+    });
+    corps.appendChild(cerveau);
   }
 
   function afficherSavoir(s: Savoir, dans: HTMLElement): void {
     dans.innerHTML = '';
-    const bloc = el(`<div class="savoir-fiche"><h4>${esc(s.titre)}</h4><p>${esc(s.resume)}</p></div>`);
+    const bloc = el(`<div class="savoir-fiche"><h4>${esc(s.titre)}</h4></div>`);
+    // Une image d'encyclopédie, façon Encarta — si elle est saine (http only).
+    if (s.image && /^https?:\/\//.test(s.image)) {
+      const img = document.createElement('img');
+      img.className = 'savoir-img';
+      img.src = s.image;
+      img.alt = '';
+      img.loading = 'lazy';
+      bloc.appendChild(img);
+    }
+    const texte = el(`<p>${esc(s.resume)}</p>`);
+    bloc.appendChild(texte);
     const actions = el('<div class="savoir-actions"></div>');
     const enFiches = el('<button>En faire des cartes</button>');
     enFiches.addEventListener('click', () => {
@@ -364,7 +399,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
         dans.appendChild(el('<p class="savoir-msg">Pas de réponse du net pour l\u2019instant — ou le sujet est trop précis. Réessaie, ou dicte-moi tes propres notes.</p>'));
         return;
       }
-      const s: Savoir = { sujet, titre: web.titre, resume: web.resume, url: web.url, ramene_a: Date.now() };
+      const s: Savoir = { sujet, titre: web.titre, resume: web.resume, url: web.url, image: web.image, ramene_a: Date.now() };
       storage.setItem(CLE_SAVOIR, JSON.stringify(enregistrerSavoir(lireSavoir(), s)));
       dans.innerHTML = '';
       afficherSavoir(s, dans);
@@ -432,7 +467,10 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
         ecouter.addEventListener('click', () => voix.parler(r.resultat as string, 'posee'));
         b.appendChild(ecouter);
         sortir.appendChild(b);
-        if (r.manques.length) sortir.appendChild(el(`<p class="savoir-note">mots que je ne connais pas encore : ${esc(r.manques.join(', '))} — ajoute-les ci-dessous, ton lexique grandit pour toujours.</p>`));
+        if (r.manques.length) {
+          sortir.appendChild(el(`<p class="savoir-note">mots que je ne connais pas encore : ${esc(r.manques.join(', '))} — ajoute-les ci-dessous, ton lexique grandit pour toujours.</p>`));
+          proposerFilet();
+        }
       } else {
         const socle = lexiqueDepart(l);
         if (socle.length) {
@@ -451,8 +489,43 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
         } else {
           sortir.appendChild(el('<p class="savoir-msg">Je ne connais encore aucun mot dans cette langue. Sème ton lexique une entrée à la fois, ou colle le carnet d\u2019un autre plus bas — ensemble on traduit tout le monde.</p>'));
         }
+        proposerFilet();
       }
     });
+
+    // le filet gratuit : quand le carnet ne sait pas, un moteur libre peut
+    // prêter main-forte — uniquement sur demande, et sa parole reste étiquetée.
+    function proposerFilet(): void {
+      const code = codeLangue((langue as HTMLInputElement).value);
+      if (!code) return; // le filet ne connaît pas cette langue : on ne fait pas semblant
+      const bouton = el('<div class="savoir-actions"><button class="trad-filet">Demander au filet gratuit (cette phrase sortira de l\u2019appareil)</button></div>');
+      bouton.querySelector('.trad-filet')!.addEventListener('click', async () => {
+        const b = bouton.querySelector('button') as HTMLButtonElement;
+        const brut = (phrase as HTMLTextAreaElement).value.trim();
+        if (!brut) return;
+        b.disabled = true;
+        b.textContent = 'Je demande…';
+        const rep = await traduireEnLigne(brut, 'fr', code, fetch);
+        bouton.remove();
+        if (!rep) {
+          sortir.appendChild(el('<p class="savoir-msg">Le filet n\u2019a rien pu pour cette phrase — ton carnet reste la meilleure mémoire.</p>'));
+          return;
+        }
+        const carte = el(`<div class="savoir-fiche"><p class="trad-out">${esc(rep)}</p><p class="savoir-note">proposition du filet gratuit — vérifie avec ton oreille ; si c\u2019est juste, range-le : ça rendra service à tout le monde.</p></div>`);
+        const ranger = el('<button>Ranger dans mon carnet</button>');
+        ranger.addEventListener('click', () => {
+          const l = (langue as HTMLInputElement).value.trim();
+          if (!l) return;
+          storage.setItem(CLE_LEXIQUE, JSON.stringify(ajouterEntree(lireLexique(), brut, rep, l)));
+          ranger.textContent = 'Rangé 🌿';
+          (ranger as HTMLButtonElement).disabled = true;
+          voix.parler('Merci — ton carnet est un peu plus monde.', 'douce');
+        });
+        carte.appendChild(ranger);
+        sortir.appendChild(carte);
+      });
+      sortir.appendChild(bouton);
+    }
 
     // le carnet de tout le monde : se prêter de main en main, hors-ligne
     const carnet = el(`<details class="savoir-import"><summary>Mon carnet complet — le prêter, ou emprunter celui d\u2019un autre</summary>
