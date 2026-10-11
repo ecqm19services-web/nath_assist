@@ -131,3 +131,28 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
 .pro-form-cle button, .pro-form-nom button { padding: 8px 14px; border-radius: 11px; cursor: pointer; font: inherit;
                        border: 1px solid rgba(255, 224, 150, .4); background: rgba(46, 38, 14, .6); color: #ffe9b8; }
 .compagne-pro-paneau .pro-etat { color: #d9c98f; min-height: 1.2em; }
+
+/* ——— Encyclopédie : l'étagère vivante (grille, étoiles, liens) ——— */
+.enc-tete .enc-champ { flex: 1; }
+.enc-fav { padding: 8px 12px; border-radius: 11px; cursor: pointer; font: inherit;
+           border: 1px solid rgba(159, 216, 255, .3); background: rgba(14, 22, 42, .5); color: #9fd8ff; }
+.enc-fav .enc-fav-n { font-weight: 600; }
+.enc-fav.actif { border-color: rgba(255, 224, 150, .6); background: rgba(46, 38, 14, .6); color: #ffe9b8; }
+.enc-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 8px 0; }
+.enc-carte { position: relative; padding: 9px 10px 8px; border-radius: 12px; cursor: pointer;
+             background: rgba(14, 22, 42, .55); border: 1px solid rgba(159, 216, 255, .14); transition: border-color .3s; }
+.enc-carte:hover, .enc-carte:focus-visible { border-color: rgba(159, 216, 255, .5); outline: none; }
+.enc-carte h5 { margin: 0 22px 2px 0; color: var(--teinte, #9fd8ff); font-size: .95em; }
+.enc-domaine { margin: 0 0 4px; color: #7fa8c9; font-size: .78em; letter-spacing: .04em; text-transform: uppercase; }
+.enc-resume { margin: 0; font-size: .82em; color: #cfe3f5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.enc-etoile { position: absolute; top: 6px; right: 6px; border: none; background: none; cursor: pointer;
+              color: #7fa8c9; font-size: 1.05em; padding: 2px 4px; line-height: 1; }
+.enc-etoile.mise { color: #ffe0a0; }
+.enc-liens { margin: 8px 0; }
+.enc-lien { margin: 2px 6px 2px 0; padding: 5px 11px; border-radius: 999px; cursor: pointer; font: inherit; font-size: .84em;
+            border: 1px solid rgba(159, 216, 255, .25); background: rgba(14, 22, 42, .5); color: #bfe3ff; }
+.enc-lien:hover { border-color: rgba(159, 216, 255, .55); }
+.enc-retour { padding: 6px 12px; border-radius: 11px; cursor: pointer; font: inherit;
+              border: 1px solid rgba(159, 216, 255, .25); background: rgba(14, 22, 42, .5); color: #9fd8ff; }
+.savoir-ligne .enc-etoile { position: static; color: #9fd8ff; border: 1px solid rgba(159, 216, 255, .25);
+              border-radius: 11px; background: rgba(14, 22, 42, .5); padding: 6px 12px; font: inherit; }

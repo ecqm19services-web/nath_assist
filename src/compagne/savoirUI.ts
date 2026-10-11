@@ -39,6 +39,17 @@ import {
 } from '../entreprise/marque';
 import { analyserDictee, epurerDictee } from '../traduction/dictee';
 import { codeLangue, traduireEnLigne } from '../traduction/moteurNet';
+import {
+  approfondirParCerveau,
+  basculerFavori,
+  filtrerFavoris,
+  filtrerNotices,
+  noticesDepuisSavoir,
+  noticesLiees,
+  paginer,
+  SOCLE,
+  type Notice,
+} from '../etudes/encyclo';
 import { devisEntreprise, formatFCFA } from '../entreprise/devis';
 import { definirEndpoint, definirTemperament, cleTemperamentReglee, lireEndpoint, lireTemperament, TEMPERAMENTS, traduireParCerveau } from './cerveauNet';
 import { choisirPaquet, jugerTraduction } from './juge';
@@ -66,6 +77,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
         <div class="savoir-onglets">
           <button data-on="reviser" class="actif">Réviser</button>
           <button data-on="savoir">Savoir</button>
+          <button data-on="encyclo">Encyclopédie</button>
           <button data-on="traduire">Traduire</button>
           <button data-on="entreprise">Entreprise</button>
         </div>
@@ -83,11 +95,16 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
   paneau.querySelector('.savoir-fermer')!.addEventListener('click', () => (paneau.hidden = true));
 
   // ——— état ———
-  let active: 'reviser' | 'savoir' | 'traduire' | 'entreprise' = 'reviser';
+  let active: 'reviser' | 'savoir' | 'encyclo' | 'traduire' | 'entreprise' = 'reviser';
   let paquetSel: string | null = null; // null = tous
   let file: Fiche[] = [];
   let vueRevue: 'carte' | 'dette' | 'fin' = 'fin';
   let quiz: { questions: Question[]; index: number; reponses: number[]; fini: boolean } | null = null;
+  // L'encyclopédie garde sa place entre deux ouvertures d'onglet.
+  let encReq = '';
+  let encFavOnly = false;
+  let encVus = 0;
+  let encNotice: Notice | null = null;
 
   const lireSavoir = (): Savoir[] => {
     try {
@@ -115,6 +132,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
     corps.innerHTML = '';
     if (o === 'reviser') rendreReviser();
     else if (o === 'savoir') rendreSavoir();
+    else if (o === 'encyclo') rendreEncyclo();
     else if (o === 'entreprise') rendreEntreprise();
     else rendreTraduire();
   }
@@ -438,6 +456,130 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
       voix.parler('J\u2019ai ramené de quoi apprendre.', 'lumineuse');
     });
     dans.appendChild(q);
+  }
+
+  // ——— Encyclopédie (l’étagère vivante) ———
+  const toutesLesNotices = (): Notice[] => [...SOCLE, ...noticesDepuisSavoir(lireSavoir())];
+
+  function rendreEncyclo(): void {
+    if (encNotice) { rendreEncycloNotice(encNotice); return; }
+    const toutes = toutesLesNotices();
+    const favs = new Set(filtrerFavoris(toutes, storage).map((n) => n.id));
+    const tete = el(`<div class="savoir-ligne enc-tete"><input type="text" class="enc-champ" placeholder="Cherche un sujet (ex. geometrie, espace…)" aria-label="Recherche encyclopédie" /><button class="enc-fav" title="Mes favoris">★ <span class="enc-fav-n">${favs.size}</span></button></div>`);
+    const champ = tete.querySelector('.enc-champ') as HTMLInputElement;
+    champ.value = encReq;
+    const btnFav = tete.querySelector('.enc-fav') as HTMLElement;
+    btnFav.classList.toggle('actif', encFavOnly);
+    champ.addEventListener('input', () => {
+      encReq = champ.value; encVus = 0; rendreEncyclo();
+      // le champ perd le focus au re-rendu : on le lui rend, avec le curseur au bout.
+      const c = corps.querySelector('.enc-champ') as HTMLInputElement | null;
+      if (c) { c.focus(); c.setSelectionRange(c.value.length, c.value.length); }
+    });
+    btnFav.addEventListener('click', () => { encFavOnly = !encFavOnly; encVus = 0; rendreEncyclo(); });
+    corps.appendChild(tete);
+
+    let filtrees = filtrerNotices(toutes, encReq);
+    if (encFavOnly) filtrees = filtrees.filter((n) => favs.has(n.id));
+    const page = paginer(filtrees, encVus);
+    const grille = el('<div class="enc-grille"></div>');
+    for (const n of page.visibles) {
+      const carte = el(`<div class="enc-carte" role="button" tabindex="0">
+        <button class="enc-etoile${favs.has(n.id) ? ' mise' : ''}" aria-label="Favori">${favs.has(n.id) ? '★' : '☆'}</button>
+        <h5>${esc(n.titre)}</h5><p class="enc-domaine">${esc(n.domaine)}</p><p class="enc-resume">${esc(n.resume)}</p></div>`);
+      carte.querySelector('.enc-etoile')!.addEventListener('click', (e) => {
+        e.stopPropagation();
+        basculerFavori(storage, n.id);
+        rendreEncyclo();
+      });
+      carte.addEventListener('click', () => { encNotice = n; rendreEncyclo(); });
+      carte.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { encNotice = n; rendreEncyclo(); }
+      });
+      grille.appendChild(carte);
+    }
+    corps.appendChild(grille);
+    if (!page.visibles.length) {
+      corps.appendChild(el(`<p class="savoir-msg">${encFavOnly ? 'Aucune étoile ici pour l’instant — clique sur ☆ d’une carte pour la garder.' : 'Rien sous ce nom — Essaie un mot plus simple, ou va le chercher dans l’onglet Savoir.'}</p>`));
+    }
+    if (page.reste > 0) {
+      const plus = el(`<div class="savoir-actions"><button>Afficher plus (${page.reste})</button></div>`);
+      plus.querySelector('button')!.addEventListener('click', () => {
+        encVus = page.visibles.length;
+        rendreEncyclo();
+      });
+      corps.appendChild(plus);
+    } else if (page.visibles.length) {
+      corps.appendChild(el(`<p class="savoir-note">${page.visibles.length} notices sur l’étagère.</p>`));
+    }
+  }
+
+  function rendreEncycloNotice(n: Notice): void {
+    const toutes = toutesLesNotices();
+    const mise = filtrerFavoris([n], storage).length > 0;
+    const tete = el(`<div class="savoir-ligne"><button class="enc-retour">← Étagère</button><button class="enc-etoile${mise ? ' mise' : ''}">${mise ? '★ Favori' : '☆ Mettre en favori'}</button></div>`);
+    tete.querySelector('.enc-retour')!.addEventListener('click', () => { encNotice = null; rendreEncyclo(); });
+    tete.querySelector('.enc-etoile')!.addEventListener('click', () => {
+      basculerFavori(storage, n.id);
+      rendreEncycloNotice(n);
+    });
+    corps.appendChild(tete);
+    const fiche = el(`<div class="savoir-fiche"><h4>${esc(n.titre)} <small class="enc-domaine">${esc(n.domaine)}</small></h4></div>`);
+    if (n.image && /^https?:\/\//.test(n.image)) {
+      const img = document.createElement('img');
+      img.className = 'savoir-img';
+      img.src = n.image;
+      img.alt = '';
+      img.loading = 'lazy';
+      fiche.appendChild(img);
+    }
+    fiche.appendChild(el(`<p>${esc(n.resume)}</p>`));
+    corps.appendChild(fiche);
+
+    // Les liens extraordinaires : deux sujets qui se parlent.
+    const liees = noticesLiees(n, toutes);
+    if (liees.length) {
+      const bloc = el('<div class="enc-liens"><p class="savoir-note">Liens extraordinaires</p></div>');
+      for (const l of liees) {
+        const puce = el(`<button class="enc-lien">${esc(l.titre)}</button>`);
+        puce.addEventListener('click', () => { encNotice = l; rendreEncyclo(); });
+        bloc.appendChild(puce);
+      }
+      corps.appendChild(bloc);
+    }
+
+    const actions = el('<div class="savoir-actions"></div>');
+    const enFiches = el('<button>En faire des cartes</button>');
+    enFiches.addEventListener('click', () => {
+      const carte = paquetCourant() ?? ajouterPaquet(storage, n.titre);
+      if (!carte) return;
+      paquetSel = carte.id;
+      let k = 0;
+      for (const f of fichesDepuisTexte(n.resume)) {
+        if (ajouterFiche(storage, carte.id, f.verso, f.recto)) k++;
+      }
+      corps.appendChild(el(`<p class="savoir-msg">${k} cartes rangées dans « ${esc(carte.nom)} » — onglet Réviser pour les travailler.</p>`));
+      voix.parler(`${k} cartes rangées.`, 'lumineuse');
+    });
+    actions.appendChild(enFiches);
+    // Approfondir : seulement si le grand cerveau est réglé — sinon, silence.
+    const net = lireEndpoint(storage);
+    if (net) {
+      const creuser = el('<button>Approfondir avec le grand cerveau</button>') as HTMLButtonElement;
+      creuser.addEventListener('click', async () => {
+        creuser.disabled = true;
+        const attente = el('<p class="savoir-msg">Je consulte le grand cerveau…</p>');
+        corps.appendChild(attente);
+        const suite = await approfondirParCerveau(net, n.titre, fetch, lireTemperament(storage));
+        attente.remove();
+        creuser.disabled = false;
+        corps.appendChild(el(`<p class="savoir-msg">${suite ? esc(suite) : 'Le grand cerveau ne répond pas pour l’instant — elle reviendra, plus tard.'}</p>`));
+      });
+      actions.appendChild(creuser);
+    }
+    const sure = n.url && /^https?:\/\//.test(n.url) ? n.url : '';
+    if (sure) actions.appendChild(el(`<a class="savoir-lien" href="${esc(sure)}" target="_blank" rel="noopener noreferrer">Voir la source</a>`));
+    corps.appendChild(actions);
   }
 
   // ——— Traduire (le lexique de tout le monde) ———
