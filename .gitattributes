@@ -1,0 +1,7 @@
+# Une seule fin de ligne pour tout le monde : le LF.
+#
+# Sans cette règle, git (autocrlf sur Windows) réécrit les fins de ligne à chaque
+# checkout : les bundles publiés changent d'octets sans changer de sens, et un
+# fichier copié depuis dist peut se retrouver CRLF dans le worktree de publication.
+# Les textes, le JS, le CSS et le manifeste se valent partout en LF.
+* text=auto eol=lf

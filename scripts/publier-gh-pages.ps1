@@ -27,6 +27,11 @@ if ($branche -ne 'gh-pages') {
 if (-not (Test-Path (Join-Path $dist 'index.html'))) {
   throw 'dist/index.html absent — lancer « npm.cmd run build » avant de publier.'
 }
+# Le Service Worker est la promesse du hors-ligne. Un build tue avant la fin
+# produit une coquille sans sw.js : la publier volerait l'offline aux visiteurs.
+if (-not (Test-Path (Join-Path $dist 'sw.js'))) {
+  throw "dist/sw.js absent — le build n'a pas genere de Service Worker. Refuser de publier un site sans hors-ligne."
+}
 
 # 1. Tout part, sauf le dépôt git et les bundles déjà publiés.
 Get-ChildItem $deploy -Force | Where-Object { $_.Name -ne '.git' -and $_.Name -ne 'assets' } |
