@@ -498,8 +498,9 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
     const domaines = el('<div class="enc-domaines"></div>');
     const pures: { nom: string; val: string }[] = [{ nom: 'Tous', val: '' }, ...listerDomaines(toutes).map((d) => ({ nom: d, val: d }))];
     for (const d of pures) {
-      const p = el(`<button class="enc-dom${encDom === d.val ? ' actif' : ''}">${esc(d.nom)}</button>`);
-      p.addEventListener('click', () => { encDom = d.val; encVus = 0; rendreEncyclo(); });
+      // Le filtre ★ est un autre tiroir : quand il est actif, aucune pastille ne doit sembler choisie.
+      const p = el(`<button class="enc-dom${!encFavOnly && encDom === d.val ? ' actif' : ''}">${esc(d.nom)}</button>`);
+      p.addEventListener('click', () => { encFavOnly = false; encDom = d.val; encVus = 0; rendreEncyclo(); });
       domaines.appendChild(p);
     }
     corps.appendChild(domaines);
