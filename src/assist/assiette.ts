@@ -113,9 +113,9 @@ export function decrireAssiette(texte: string): Assiette {
 export type Equilibre = 'leger' | 'correct' | 'copieux';
 
 const MOTS: Record<Equilibre, string> = {
-  leger: 'Peu de choses sur l assiette : ajoute un féculent ou une poignée de légumineuses pour tenir la journée.',
-  correct: 'Bel équilibre. Pense à la verdure et à l eau avant de quitter la table.',
-  copieux: 'Beaucoup d énergie d un coup : marche vingt minutes et garde le reste pour le prochain repas.',
+  leger: "Peu de choses sur l’assiette : ajoute un féculent ou une poignée de légumineuses pour tenir la journée.",
+  correct: 'Bel équilibre. Pense à la verdure et à l’eau avant de quitter la table.',
+  copieux: "Beaucoup d’énergie d’un coup : marche vingt minutes et garde le reste pour le prochain repas.",
 };
 
 // Trois marches, lisibles par tout le monde, sans promettre un diagnostic.

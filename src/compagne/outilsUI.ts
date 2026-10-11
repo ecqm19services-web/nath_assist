@@ -306,14 +306,14 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     corps.innerHTML = `
       <div class="oi-carte">
         <label class="oi-libelle" for="oi-tut">Ma question, mon énoncé</label>
-        <textarea id="oi-tut" class="oi-champ" rows="3" placeholder="Résoudre 3x + 5 = 20 — ou recopier l énoncé ligne par ligne.">${esc(tuteurQ)}</textarea>
+        <textarea id="oi-tut" class="oi-champ" rows="3" placeholder="Résoudre 3x + 5 = 20 — ou recopier l’énoncé ligne par ligne.">${esc(tuteurQ)}</textarea>
         <div class="oi-actions">
           <button data-act="plan">Le plan, stylo en main</button>
           ${voix.sttDisponible ? '<button data-act="micro" data-cible="tut">🎤 Dictater</button>' : ''}
           ${voix.ttsDisponible ? '<button data-act="lire">🔊 Me lire le plan</button>' : ''}
           ${cerveauRegle() ? '<button data-act="cereau">Faire résoudre</button>' : ''}
         </div>
-        ${decoupe.questions.length ? `<p class="oi-note">Ce qu on te demande : ${decoupe.questions.map(esc).join(' · ')}</p>` : ''}
+        ${decoupe.questions.length ? `<p class="oi-note">Ce qu’on te demande : ${decoupe.questions.map(esc).join(' · ')}</p>` : ''}
         <div data-zone>${tuteurR ? `<p class="oi-reponse">${esc(tuteurR)}</p>` : ''}</div>
       </div>${horsLigne()}`;
     const champ = corps.querySelector('#oi-tut') as HTMLTextAreaElement;
@@ -339,7 +339,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
       tuteurR = r;
       zone.innerHTML = r
         ? `<p class="oi-titre2">Résolution</p><p class="oi-reponse">${esc(r)}</p>`
-        : '<p class="oi-note">Rien n est revenu — le plan hors-ligne fonctionne quand même.</p>';
+        : '<p class="oi-note">Rien n’est revenu — le plan hors-ligne fonctionne quand même.</p>';
       b.disabled = false;
       b.textContent = 'Faire résoudre';
     });
@@ -349,10 +349,15 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
   function rendreSouffle(): void {
     const reg = lireSouffle(storage);
     const total = dureeCycle(souffleRythme);
+    // On ne dit pas « 1 minute » pour 36 secondes : les secondes se disent tant qu'elles parlent.
+    const minutes = Math.round(reg.secondes / 60);
+    const respire = reg.secondes < 60
+      ? `${reg.secondes} seconde${reg.secondes > 1 ? 's' : ''}`
+      : `${minutes} minute${minutes > 1 ? 's' : ''}`;
     corps.innerHTML = `
       <div class="oi-carte">
         <p class="oi-titre">Respirer à ${souffleRythme === RYTHME_478 ? '4-7-8' : 'au carré'} · ${souffleCycles} cycles · ${total * souffleCycles} s</p>
-        <div class="oi-souffle"><i></i><span data-phase="">{souffleTimer === null ? 'Prêt' : ''}</span></div>
+        <div class="oi-souffle"><i></i><span data-phase="">${souffleTimer === null ? 'Prêt' : ''}</span></div>
         <div class="oi-actions">
           <button data-ry="478"${souffleRythme === RYTHME_478 ? ' class="actif"' : ''}>4-7-8</button>
           <button data-ry="carre"${souffleRythme === RYTHME_CARRE ? ' class="actif"' : ''}>Carré</button>
@@ -361,7 +366,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
           <button data-cy="8"${souffleCycles === 8 ? ' class="actif"' : ''}>8</button>
           <button data-act="go">${souffleTimer === null ? 'Commencer' : 'Arrêter'}</button>
         </div>
-        <p class="oi-note">${reg.sessions} séance${reg.sessions > 1 ? 's' : ''} au repos · ${Math.round(reg.secondes / 60)} minute${reg.secondes >= 120 ? 's' : ''} respirées.</p>
+        <p class="oi-note">${reg.sessions} séance${reg.sessions > 1 ? 's' : ''} au repos · ${respire} respirées.</p>
         <p class="oi-note">Le minuteur tourne dans l’appareil, sans son obligatoire : tu peux fermer les yeux.</p>
       </div>${horsLigne()}`;
     corps.querySelectorAll<HTMLElement>('[data-ry]').forEach((b) =>
@@ -384,6 +389,8 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
         return;
       }
       souffleDepart = Date.now();
+      const go = corps.querySelector('[data-act="go"]') as HTMLButtonElement;
+      go.textContent = 'Arrêter'; // le geste doit se voir tout de suite, pas au prochain rendu
       souffleTimer = window.setInterval(() => {
         const a = progression(Date.now() - souffleDepart, souffleRythme, souffleCycles);
         if (a.fini) {
@@ -404,7 +411,8 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     if (souffleTimer !== null) window.clearInterval(souffleTimer);
     souffleTimer = null;
     const secondes = tient ? Math.min(dureeCycle(souffleRythme) * souffleCycles, Math.round((Date.now() - souffleDepart) / 1000)) : 0;
-    ajouterSession(storage, { secondes });
+    // Sous trois secondes, ce n'est pas une séance : on ne gonfle pas le compteur.
+    if (secondes >= 3) ajouterSession(storage, { secondes });
     rendreSouffle();
   }
 
@@ -444,7 +452,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
       resumeR = r ? r.split(/\n+/).map((x) => x.replace(/^[-•*]\s*/, '').trim()).filter(Boolean) : [];
       zone.innerHTML = resumeR.length
         ? `<ol class="oi-pas">${resumeR.map((p) => `<li>${esc(p)}</li>`).join('')}</ol>`
-        : '<p class="oi-note">Rien n est revenu — le bouton « Résumer ici » marche sans réseau.</p>';
+        : '<p class="oi-note">Rien n’est revenu — le bouton « Résumer ici » marche sans réseau.</p>';
       b.disabled = false;
       b.textContent = 'Résumer avec le grand cerveau';
     });

@@ -18,6 +18,11 @@ export default defineConfig({
       ],
     },
     workbox: {
+      // Le nouveau Service Worker prend la main immédiatement : un bundle périmé
+      // n'existe plus sur la branche publiée, laisser l'ancien servir son cache
+      // reviendrait à offrir un écran blanc sur un 404.
+      skipWaiting: true,
+      clientsClaim: true,
       globPatterns: ['**/*.{js,css,html,webmanifest,png}'],
       // Le cerveau Qwen (chunk WebLLM ~6 Mo) doit être pré-cache pour fonctionner hors-ligne.
       maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,

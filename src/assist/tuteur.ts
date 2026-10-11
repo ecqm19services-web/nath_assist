@@ -30,10 +30,10 @@ export function etapesHorsLigne(question: string): string[] {
   const cible = q ? ` « ${q} »` : '';
   return [
     `Relis la question${cible} une première fois, puis souligne exactement ce qui est demandé.`,
-    'Écris à part toutes les données utiles, avec leurs unités : ce que l énoncé donne, rien de plus.',
+    'Écris à part toutes les données utiles, avec leurs unités : ce que l’énoncé donne, rien de plus.',
     'Choisis la règle, la formule ou le principe qui relie ces données à ce que tu cherches.',
     'Fais le calcul une ligne par opération, sans rien sauter : une ligne, un signe, un résultat.',
-    'Vérifie : l unité attendue est-elle là, l ordre de grandeur est-il raisonnable, le sens de la réponse tient-il ?',
+    'Vérifie : l’unité attendue est-elle là, l’ordre de grandeur est-il raisonnable, le sens de la réponse tient-il ?',
     'Rédige une réponse complète en une phrase, et garde la trace pour la refaire dans trois jours.',
   ];
 }

@@ -175,7 +175,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
       (a, b) => ({ total: a.total + b.total, aRevoir: a.aRevoir + b.aRevoir, revisees: a.revisees + b.revisees }),
       { total: 0, aRevoir: 0, revisees: 0 },
     );
-    corps.appendChild(el(`<p class="savoir-stats">${stats.total} cartes · <b>${stats.aRevoir} à revoir</b> · ${stats.revisees} travaillées</p>`));
+    corps.appendChild(el(`<p class="savoir-stats">${stats.total} carte${stats.total > 1 ? 's' : ''} · <b>${stats.aRevoir} à revoir</b> · ${stats.revisees} travaillée${stats.revisees > 1 ? 's' : ''}</p>`));
 
     const importe = el(`<details class="savoir-import"><summary>Coller des cartes (une par ligne : question :: réponse)</summary><textarea rows="4" placeholder="Capitale du Cameroun :: Yaoundé&#10;2 + 2 :: 4"></textarea><button>Importer</button></details>`);
     const zone = importe.querySelector('textarea') as HTMLTextAreaElement;
@@ -231,7 +231,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
         }
         rendreReviser();
         const mot = n
-          ? el(`<p class="savoir-msg">${n} cartes nées de ta voix, rangées dans « ${esc(paquetCourant()?.nom ?? 'Mes cartes')} ». Révise quand tu veux.</p>`)
+          ? el(`<p class="savoir-msg">${n} carte${n > 1 ? 's' : ''} née${n > 1 ? 's' : ''} de ta voix, rangée${n > 1 ? 's' : ''} dans « ${esc(paquetCourant()?.nom ?? 'Mes cartes')} ». Révise quand tu veux.</p>`)
           : el('<p class="savoir-msg">Trop court pour faire des cartes — dicte-moi des phrases complètes, une idée par phrase.</p>');
         corps.insertBefore(mot, corps.firstChild);
         if (n) voix.parler(`${n} cartes nées de ta dictée.`, 'lumineuse');
@@ -434,7 +434,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
       for (const f of fichesDepuisTexte(s.resume)) {
         if (ajouterFiche(storage, carte.id, f.verso, f.recto)) n++;
       }
-      dans.appendChild(el(`<p class="savoir-msg">${n} cartes rangées dans « ${esc(carte.nom)} » — onglet Réviser pour les travailler.</p>`));
+      dans.appendChild(el(`<p class="savoir-msg">${n} carte${n > 1 ? 's' : ''} rangée${n > 1 ? 's' : ''} dans « ${esc(carte.nom)} » — onglet Réviser pour les travailler.</p>`));
       voix.parler(`${n} cartes rangées.`, 'lumineuse');
     });
     actions.appendChild(enFiches);
@@ -597,7 +597,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
       for (const f of fichesDepuisTexte(n.resume)) {
         if (ajouterFiche(storage, carte.id, f.verso, f.recto)) k++;
       }
-      corps.appendChild(el(`<p class="savoir-msg">${k} cartes rangées dans « ${esc(carte.nom)} » — onglet Réviser pour les travailler.</p>`));
+      corps.appendChild(el(`<p class="savoir-msg">${k} carte${k > 1 ? 's' : ''} rangée${k > 1 ? 's' : ''} dans « ${esc(carte.nom)} » — onglet Réviser pour les travailler.</p>`));
       voix.parler(`${k} cartes rangées.`, 'lumineuse');
     });
     actions.appendChild(enFiches);
