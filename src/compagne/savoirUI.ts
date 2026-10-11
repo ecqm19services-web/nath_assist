@@ -462,6 +462,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
   const toutesLesNotices = (): Notice[] => [...SOCLE, ...noticesDepuisSavoir(lireSavoir())];
 
   function rendreEncyclo(): void {
+    corps.innerHTML = '';
     if (encNotice) { rendreEncycloNotice(encNotice); return; }
     const toutes = toutesLesNotices();
     const favs = new Set(filtrerFavoris(toutes, storage).map((n) => n.id));
@@ -515,6 +516,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
   }
 
   function rendreEncycloNotice(n: Notice): void {
+    corps.innerHTML = '';
     const toutes = toutesLesNotices();
     const mise = filtrerFavoris([n], storage).length > 0;
     const tete = el(`<div class="savoir-ligne"><button class="enc-retour">← Étagère</button><button class="enc-etoile${mise ? ' mise' : ''}">${mise ? '★ Favori' : '☆ Mettre en favori'}</button></div>`);
