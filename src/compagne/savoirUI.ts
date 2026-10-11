@@ -536,7 +536,8 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
       });
       corps.appendChild(plus);
     } else if (page.visibles.length) {
-      corps.appendChild(el(`<p class="savoir-note">${page.visibles.length} notices sur l’étagère.</p>`));
+      const mot = page.visibles.length > 1 ? 'notices' : 'notice';
+      corps.appendChild(el(`<p class="savoir-note">${page.visibles.length} ${mot} sur l’étagère.</p>`));
     }
   }
 

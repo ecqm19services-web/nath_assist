@@ -145,8 +145,10 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
 .enc-dom.actif { border-color: rgba(159, 216, 255, .6); background: rgba(30, 52, 84, .7); color: #dff1ff; }
 .enc-jour { display: block; width: 100%; text-align: left; margin: 2px 0 8px; padding: 8px 12px; cursor: pointer; font: inherit;
             border-radius: 12px; border: 1px solid rgba(255, 224, 150, .35); background: rgba(24, 20, 8, .4); color: #ffe9b8; }
+.savoir-corps .enc-jour, .savoir-corps button.enc-jour { color: #ffe9b8; background: rgba(24, 20, 8, .4); border: 1px solid rgba(255, 224, 150, .35); }
 .enc-jour small { color: #b7a877; font-size: .8em; letter-spacing: .04em; }
-.enc-jour:hover { border-color: rgba(255, 224, 150, .6); }
+.savoir-corps .enc-jour small { color: #b7a877; }
+.enc-jour:hover, .savoir-corps .enc-jour:hover { border-color: rgba(255, 224, 150, .6); color: #fff3d0; }
 .enc-carte { position: relative; padding: 9px 10px 8px; border-radius: 12px; cursor: pointer;
              background: rgba(14, 22, 42, .55); border: 1px solid rgba(159, 216, 255, .14); transition: border-color .3s; }
 .enc-carte:hover, .enc-carte:focus-visible { border-color: rgba(159, 216, 255, .5); outline: none; }

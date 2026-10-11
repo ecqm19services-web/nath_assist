@@ -56,9 +56,11 @@ describe('domaines : le rang des tiroirs', () => {
     { id: '1', titre: 'A', domaine: 'Sciences', resume: 'x', tags: [] },
     { id: '2', titre: 'B', domaine: 'Maths', resume: 'x', tags: [] },
     { id: '3', titre: 'C', domaine: 'Sciences', resume: 'x', tags: [] },
+    { id: '4', titre: 'D', domaine: 'Énergie', resume: 'x', tags: [] },
   ];
-  it('listerDomaines donne la liste propre, triée, sans doublon', () => {
-    expect(listerDomaines(B)).toEqual(['Maths', 'Sciences']);
+  it('listerDomaines donne la liste propre, triée à la française (avec les accents), sans doublon', () => {
+    // Ordre du dictionnaire français : Énergie (E) avant Maths (M) avant Sciences (S).
+    expect(listerDomaines(B)).toEqual(['Énergie', 'Maths', 'Sciences']);
   });
   it('filtrerParDomaine : vide = tout, sinon le tiroirs seul', () => {
     expect(filtrerParDomaine(B, '')).toEqual(B);

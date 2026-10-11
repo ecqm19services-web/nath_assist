@@ -100,7 +100,7 @@ export function filtrerNotices<T extends Notice>(notices: readonly T[], requete:
 
 // ——— Les tiroirs du rang : les domaines, pour ranger et filtrer. ———
 export function listerDomaines<T extends Notice>(notices: readonly T[]): string[] {
-  return [...new Set(notices.map((n) => n.domaine))].sort();
+  return [...new Set(notices.map((n) => n.domaine))].sort((a, b) => a.localeCompare(b, 'fr'));
 }
 
 export function filtrerParDomaine<T extends Notice>(notices: readonly T[], domaine: string): T[] {
