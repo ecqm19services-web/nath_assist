@@ -139,6 +139,14 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
 .enc-fav .enc-fav-n { font-weight: 600; }
 .enc-fav.actif { border-color: rgba(255, 224, 150, .6); background: rgba(46, 38, 14, .6); color: #ffe9b8; }
 .enc-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 8px 0; }
+.enc-domaines { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.enc-dom { padding: 4px 11px; border-radius: 999px; cursor: pointer; font: inherit; font-size: .8em;
+           border: 1px solid rgba(159, 216, 255, .2); background: rgba(14, 22, 42, .45); color: #9fc3dd; }
+.enc-dom.actif { border-color: rgba(159, 216, 255, .6); background: rgba(30, 52, 84, .7); color: #dff1ff; }
+.enc-jour { display: block; width: 100%; text-align: left; margin: 2px 0 8px; padding: 8px 12px; cursor: pointer; font: inherit;
+            border-radius: 12px; border: 1px solid rgba(255, 224, 150, .35); background: rgba(24, 20, 8, .4); color: #ffe9b8; }
+.enc-jour small { color: #b7a877; font-size: .8em; letter-spacing: .04em; }
+.enc-jour:hover { border-color: rgba(255, 224, 150, .6); }
 .enc-carte { position: relative; padding: 9px 10px 8px; border-radius: 12px; cursor: pointer;
              background: rgba(14, 22, 42, .55); border: 1px solid rgba(159, 216, 255, .14); transition: border-color .3s; }
 .enc-carte:hover, .enc-carte:focus-visible { border-color: rgba(159, 216, 255, .5); outline: none; }

@@ -8,7 +8,10 @@ import {
   CLE_FAVORI,
   filtrerFavoris,
   filtrerNotices,
+  filtrerParDomaine,
   GRILLE_PAGE,
+  listerDomaines,
+  noticeDuJour,
   noticesDepuisSavoir,
   noticesLiees,
   paginer,
@@ -41,6 +44,46 @@ describe('socle : l’étagère de départ, gratuite et tenue', () => {
       expect(n.domaine.length).toBeGreaterThan(0);
       expect(n.tags.length).toBeGreaterThanOrEqual(2);
     }
+  });
+  it('l’étagère est assez haute et assez large : 50 notices, 10 domaines au moins', () => {
+    expect(SOCLE.length).toBeGreaterThanOrEqual(50);
+    expect(listerDomaines(SOCLE).length).toBeGreaterThanOrEqual(10);
+  });
+});
+
+describe('domaines : le rang des tiroirs', () => {
+  const B = [
+    { id: '1', titre: 'A', domaine: 'Sciences', resume: 'x', tags: [] },
+    { id: '2', titre: 'B', domaine: 'Maths', resume: 'x', tags: [] },
+    { id: '3', titre: 'C', domaine: 'Sciences', resume: 'x', tags: [] },
+  ];
+  it('listerDomaines donne la liste propre, triée, sans doublon', () => {
+    expect(listerDomaines(B)).toEqual(['Maths', 'Sciences']);
+  });
+  it('filtrerParDomaine : vide = tout, sinon le tiroirs seul', () => {
+    expect(filtrerParDomaine(B, '')).toEqual(B);
+    expect(filtrerParDomaine(B, 'Sciences').map((n) => n.id)).toEqual(['1', '3']);
+  });
+});
+
+describe('noticeDuJour — la découverte que le jour choisit', () => {
+  const B = [
+    { id: '1', titre: 'A', domaine: 'd', resume: 'x', tags: [] },
+    { id: '2', titre: 'B', domaine: 'd', resume: 'x', tags: [] },
+    { id: '3', titre: 'C', domaine: 'd', resume: 'x', tags: [] },
+  ];
+  it('même jour = même notice ; jour suivant = notice suivante, en boucle', () => {
+    const j = 1000;
+    expect(noticeDuJour(B, j)).toBe(noticeDuJour(B, j));
+    const premiere = noticeDuJour(B, j);
+    const suivante = noticeDuJour(B, j + 1);
+    expect(premiere).not.toBeNull();
+    expect(suivante?.id === premiere?.id).toBe(false);
+    // Trois notices : au bout de trois jours, on retombe sur la première.
+    expect(noticeDuJour(B, j + 3)).toBe(premiere);
+  });
+  it('étagère vide = null, jamais de fausse découverte', () => {
+    expect(noticeDuJour([], 5)).toBeNull();
   });
 });
 

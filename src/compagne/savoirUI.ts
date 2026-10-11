@@ -44,6 +44,9 @@ import {
   basculerFavori,
   filtrerFavoris,
   filtrerNotices,
+  filtrerParDomaine,
+  listerDomaines,
+  noticeDuJour,
   noticesDepuisSavoir,
   noticesLiees,
   paginer,
@@ -104,6 +107,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
   let encReq = '';
   let encFavOnly = false;
   let encVus = 0;
+  let encDom = '';
   let encNotice: Notice | null = null;
 
   const lireSavoir = (): Savoir[] => {
@@ -480,8 +484,29 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
     btnFav.addEventListener('click', () => { encFavOnly = !encFavOnly; encVus = 0; rendreEncyclo(); });
     corps.appendChild(tete);
 
+    // La découverte du jour : le calendrier choisit une notice, pas l'humeur.
+    if (!encReq && !encFavOnly && !encDom) {
+      const duJour = noticeDuJour(toutes);
+      if (duJour) {
+        const band = el(`<button class="enc-jour">✨ Découverte du jour · ${esc(duJour.titre)}<small> ${esc(duJour.domaine)}</small></button>`);
+        band.addEventListener('click', () => { encNotice = duJour; rendreEncyclo(); });
+        corps.appendChild(band);
+      }
+    }
+
+    // Les tiroirs du rang : une pastille par domaine, « Tous » pour tout ouvrir.
+    const domaines = el('<div class="enc-domaines"></div>');
+    const pures: { nom: string; val: string }[] = [{ nom: 'Tous', val: '' }, ...listerDomaines(toutes).map((d) => ({ nom: d, val: d }))];
+    for (const d of pures) {
+      const p = el(`<button class="enc-dom${encDom === d.val ? ' actif' : ''}">${esc(d.nom)}</button>`);
+      p.addEventListener('click', () => { encDom = d.val; encVus = 0; rendreEncyclo(); });
+      domaines.appendChild(p);
+    }
+    corps.appendChild(domaines);
+
     let filtrees = filtrerNotices(toutes, encReq);
     if (encFavOnly) filtrees = filtrees.filter((n) => favs.has(n.id));
+    filtrees = filtrerParDomaine(filtrees, encDom);
     const page = paginer(filtrees, encVus);
     const grille = el('<div class="enc-grille"></div>');
     for (const n of page.visibles) {

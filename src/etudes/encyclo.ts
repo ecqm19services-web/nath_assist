@@ -33,6 +33,8 @@ export const SOCLE: Notice[] = [
   { id: 'mno', titre: 'Magnétisme', domaine: 'Sciences', resume: 'Aimants et courants électriques créent un champ invisible ; la Terre elle-même est un aimant géant qui guide les boussoles.', tags: ['aimant', 'énergie', 'physique'] },
   { id: 'lum', titre: 'Lumière', domaine: 'Sciences', resume: 'Onde électromagnétique à 300 000 km/s ; sa diffusion dans l air rend le ciel bleu et son arc-en-ciel cache toutes les couleurs.', tags: ['ondes', 'couleur', 'physique'] },
   { id: 'son', titre: 'Son', domaine: 'Sciences', resume: 'Des vibrations qui voyagent dans l air, l eau ou les solides ; sans support matériel, le son n existe pas : le silence de l espace est total.', tags: ['ondes', 'vibration', 'physique'] },
+  { id: 'mat', titre: 'États de la matière', domaine: 'Sciences', resume: 'Solide, liquide, gaz : la même eau change d humeur selon la température, et la chaleur cachée du changement d état règle nos pluies.', tags: ['eau', 'énergie', 'physique'] },
+  { id: 'atm', titre: 'Atmosphère', domaine: 'Sciences', resume: 'Une coquille de gaz de cent kilomètres, la première moitié pesée au ras du sol : elle respire, protège et tient la planète au chaud.', tags: ['air', 'terre', 'climat'] },
   { id: 'ele', titre: 'Électricité', domaine: 'Technique', resume: 'Le déplacement organisé des électrons dans un conducteur ; tout notre monde numérique n est que de l électricité mise en scène.', tags: ['énergie', 'courant', 'technique'] },
   { id: 'inf', titre: 'Informatique', domaine: 'Technique', resume: 'Des portes logiques faites de transistors, des millions de zéros et des uns, et naissent textes, images et intelligences.', tags: ['calcul', 'données', 'technique'] },
   { id: 'ia', titre: 'Intelligence artificielle', domaine: 'Technique', resume: 'Des réseaux de neurones entraînés sur d énormes quantités de texte ou d images savent reconnaître, traduire et converser.', tags: ['calcul', 'données', 'cerveau'] },
@@ -55,6 +57,22 @@ export const SOCLE: Notice[] = [
   { id: 'cin', titre: 'Cinéma', domaine: 'Arts', resume: 'Vingt-quatre images par seconde suffisent à l œil pour croire au mouvement : le cinéma est une illusion partagée devenue art majeur.', tags: ['image', 'art', 'technique'] },
   { id: 'lng', titre: 'Langues du monde', domaine: 'Langue', resume: 'Plus de sept mille langues parlées ; chacune découpe le réel à sa façon et en perdre une, c est perdre une manière de penser.', tags: ['parole', 'culture', 'mémoire'] },
   { id: 'ecr', titre: 'Écriture', domaine: 'Langue', resume: 'Née à Sumer pour compter les greniers, l écriture a étendu la mémoire humaine au-delà des individus et des siècles.', tags: ['symbole', 'histoire', 'mémoire'] },
+  { id: 'bio', titre: 'Biodiversité', domaine: 'Environnement', resume: 'Des millions d espèces liées dans un réseau vivant ; chaque disparité retire un maillon que rien ne remplace.', tags: ['vie', 'nature', 'équilibre'] },
+  { id: 'for', titre: 'Forêts', domaine: 'Environnement', resume: 'Elles respirent pour la planète, abritent la plupart des espèces terrestres et régulent la pluie des continents.', tags: ['arbres', 'climat', 'nature'] },
+  { id: 'rlf', titre: 'Récifs coralliens', domaine: 'Environnement', resume: 'Des villes vivantes bâties par de petits animaux : moins de un pour cent de l océan, un quart de la vie marine.', tags: ['mer', 'vie', 'équilibre'] },
+  { id: 'dch', titre: 'Déchets et recyclage', domaine: 'Environnement', resume: 'Rien dans la nature ne jette : nos déchets sont des matières qui attendent le bon geste, ou polluent longtemps.', tags: ['matière', 'équilibre', 'société'] },
+  { id: 'slt', titre: 'Solaire photovoltaïque', domaine: 'Énergie', resume: 'La lumière du soleil devient électricité dans une galette de silicium : la Terre reçoit en une heure de soleil de quoi alimenter un an.', tags: ['énergie', 'soleil', 'technique'] },
+  { id: 'eol', titre: 'Éolien', domaine: 'Énergie', resume: 'Le vent est une énergie solaire corrigée par la rotation de la Terre ; ses pales captent ce mouvement devenu courant.', tags: ['énergie', 'vent', 'technique'] },
+  { id: 'nucl', titre: 'Nucléaire', domaine: 'Énergie', resume: 'Fissionner l uranium libère une énergie immense sans fumée ; la question reste la gestion des déchets et le risque.', tags: ['énergie', 'atome', 'débat'] },
+  { id: 'bat', titre: 'Batteries', domaine: 'Énergie', resume: 'Stockées chimiquement, les électrons attendent leur heure : sans batterie, le solaire et l éolien ne pourraient suivre la nuit.', tags: ['énergie', 'stockage', 'technique'] },
+  { id: 'urb', titre: 'Villes', domaine: 'Société', resume: 'Nées de greniers et de carrefours, elles logent aujourd hui plus de la moitié de l humanité et dessinent son avenir.', tags: ['habiter', 'société', 'histoire'] },
+  { id: 'mon', titre: 'Monnaie', domaine: 'Société', resume: 'Du coquillage au chiffre : la monnaie n a de valeur que celle de la confiance partagée, et l économie tout entière s appuie dessus.', tags: ['échange', 'confiance', 'société'] },
+  { id: 'trv', titre: 'Travail', domaine: 'Société', resume: 'Chaque métier est une réponse à un besoin des autres ; l automatisation déplace le travail plus qu il ne le fait disparaître.', tags: ['métier', 'société', 'technique'] },
+  { id: 'edu', titre: 'Éducation', domaine: 'Société', resume: 'Transmettre sans remplacer : apprendre, c est ajouter à l élève ce qu il découvrira seul avec de l aide.', tags: ['école', 'apprendre', 'société'] },
+  { id: 'ntn', titre: 'Internet', domaine: 'Société', resume: 'Des câbles sous-marins et des routeurs d abord : le nuage numérique est en réalité un réseau très physique autour de la Terre.', tags: ['réseau', 'données', 'société'] },
+  { id: 'vac', titre: 'Vaccins', domaine: 'Médecine', resume: 'Montrer au corps le ennemi sans le danger : il en garde la mémoire et répond plus vite la fois suivante.', tags: ['corps', 'médecine', 'mémoire'] },
+  { id: 'ant', titre: 'Antibiotiques', domaine: 'Médecine', resume: 'Des moisissures devenues médicaments : elles tuent les bactéries, et le surusage fabrique des bactéries devenues résistantes.', tags: ['médecine', 'bactérie', 'équilibre'] },
+  { id: 'dgst', titre: 'Digestion', domaine: 'Corps humain', resume: 'Du bol alimentaire à l énergie, un voyage de trente mètres où chaque organe joue son rôle à l heure.', tags: ['corps', 'énergie', 'vie'] },
 ];
 
 // ——— La recherche instantanée : sourde aux accents, insensible à la casse. ———
@@ -78,6 +96,24 @@ export function filtrerNotices<T extends Notice>(notices: readonly T[], requete:
     .filter((x) => x.s > 0)
     .sort((a, b) => b.s - a.s || a.i - b.i);
   return marques.map((x) => x.n);
+}
+
+// ——— Les tiroirs du rang : les domaines, pour ranger et filtrer. ———
+export function listerDomaines<T extends Notice>(notices: readonly T[]): string[] {
+  return [...new Set(notices.map((n) => n.domaine))].sort();
+}
+
+export function filtrerParDomaine<T extends Notice>(notices: readonly T[], domaine: string): T[] {
+  return domaine ? notices.filter((n) => n.domaine === domaine) : notices.slice();
+}
+
+// ——— La découverte du jour : le calendrier choisit, pas l humeur. ———
+// jour = nombre de jours depuis l époque (déterministe) ; on tourne dans
+// l étagère, jamais de doublon dans la même journée, jamais de vide inventé.
+export function noticeDuJour<T extends Notice>(notices: readonly T[], jour = Math.floor(Date.now() / 86_400_000)): T | null {
+  if (!notices.length) return null;
+  const j = Math.abs(Math.trunc(jour));
+  return notices[j % notices.length];
 }
 
 // ——— Les liens extraordinaires : deux sujets qui se parlent. ———
