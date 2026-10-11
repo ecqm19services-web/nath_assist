@@ -215,8 +215,8 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
 .oi-ligne { display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
             padding: 5px 0; border-bottom: 1px dashed rgba(159, 216, 255, .12); }
 .oi-ligne small { color: #7e93b5; font-size: .8em; }
-.oi-ligne .oi-pet { margin: 0; }
-.oi-pet { color: #aeb8cf; font-size: .84em; margin: 0 0 4px; }
+/* Le texte d'une note du journal est le frere de sa ligne, pas son enfant. */
+.oi-pet { color: #aeb8cf; font-size: .84em; margin: 2px 0 8px; }
 .oi-liste { display: flex; flex-direction: column; }
 .oi-liste [data-act="del"] { border: none; background: none; color: #7e93b5; cursor: pointer;
             font-size: 1.05em; padding: 0 6px; line-height: 1; }

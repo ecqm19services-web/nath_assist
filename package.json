@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "publier": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publier-gh-pages.ps1"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.21",

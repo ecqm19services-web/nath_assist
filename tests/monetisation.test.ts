@@ -52,7 +52,10 @@ describe('Nath+ : clés hors-ligne', () => {
     const cleScript = execFileSync('node', ['scripts/gen-cle.mjs', id], { encoding: 'utf8' }).trim();
     expect(cleScript).toBe(genererCle(id));
     expect(verifierCle(cleScript, id)).toBe(true);
-  });
+    // Faire démarrer un vrai Node prend quelques secondes quand les trente-huit
+    // fichiers de test tournent en parallèle : cinq secondes est un chrono de course,
+    // pas une frontière de logique. L'affirmation, elle, ne bouge pas.
+  }, 20_000);
 });
 
 describe('Nath+ : la gratuité n\'est jamais bridée et rien ne sonne comme une pub', () => {

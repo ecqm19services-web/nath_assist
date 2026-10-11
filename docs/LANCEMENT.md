@@ -15,10 +15,20 @@ Durée totale estimée : ~90 minutes, 0 € de frais fixes.
 
 ## 2. Déployer
 
+Le site est servi par **GitHub Pages** (branche `gh-pages`, travailleur git locale dans
+`.deploy`) ; le gros cerveau est un **Worker Cloudflare** séparé.
+
 ```powershell
-npm run build
-# puis : Cloudflare Pages → connecter ce dépôt git → dossier de sortie "dist"
+npm.cmd run build                     # tsc --noEmit puis vite build
+scripts\publier-gh-pages.ps1 -Message "deploy: ..."   # stage + commit dans .deploy
+git -C .deploy push origin gh-pages   # la poussée reste un geste explicite
+npx.cmd wrangler deploy               # seulement si cloudflare/nath-cerveau.worker.ts change
 ```
+
+Le script de publication remplace la coquille (index.html, sw.js, manifest) mais **conserve
+les cinq derniers bundles** dans `assets/` : un visiteur qui n'a pas rechargé tient encore
+en main la version de la veille, et un fichier effacé est pour lui un écran blanc. Le Service
+Worker est réglé sur `skipWaiting` + `clientsClaim` pour reprendre la main sans attendre.
 
 ## 3. Marque (avant toute communication)
 

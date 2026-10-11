@@ -264,6 +264,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
               <p class="oi-pet">${esc(e.texte)}</p>`,
           )
           .join('') || '<p class="oi-note">Rien pour l’instant — la prochaine découverte tient sur deux lignes.</p>'}</div>
+        <div data-zone></div>
       </div>${horsLigne()}`;
     const req = corps.querySelector('#oi-jreq') as HTMLInputElement;
     req.addEventListener('input', () => {
@@ -284,7 +285,8 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     corps.querySelector('[data-act="cartes"]')!.addEventListener('click', () => {
       const cartes = cartesDepuisJournal(filtrerJournal(lireJournal(storage), journalReq));
       const nombre = versCartes('Mon journal', cartes);
-      corps.insertAdjacentHTML(
+      // Le mot reste dans la carte, comme partout ailleurs : jamais collé sous le panneau.
+      (corps.querySelector('[data-zone]') as HTMLElement).insertAdjacentHTML(
         'beforeend',
         `<p class="oi-reponse">${nombre ? `${nombre} carte${nombre > 1 ? 's' : ''} ajoutée${nombre > 1 ? 's' : ''} au paquet « Mon journal » — révise-les dans le coin d’études.` : 'Rien à cartographier : écris au moins une note.'}</p>`,
       );
