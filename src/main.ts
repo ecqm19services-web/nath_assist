@@ -11,6 +11,7 @@ import { allumerAmbient, ambientLevel, ambientMood, eteindreAmbient, startAmbien
 import { basculerMusique, musiqueEteintee } from './audio/reglages';
 import { createCompagneUI } from './compagne/ui';
 import { creerPanneauSavoir } from './compagne/savoirUI';
+import { creerPanneauOutils } from './compagne/outilsUI';
 import { probaEvenements } from './nuage/meteo';
 import { chargerCielReel } from './nuage/cielReel';
 
@@ -66,6 +67,10 @@ createCompagneUI(() => ({
 // Le coin d'études (🎓) : réviser des fiches, apprendre un sujet (base locale,
 // puis connexion proposée sur accord), traduire avec un lexique de tout le monde.
 creerPanneauSavoir(localStorage);
+
+// La boîte à outils (🧰) : huit assistants du quotidien dont chaque moteur tourne
+// sans réseau — flamme, frigo, assiette, journal, tuteur, souffle, résumé, carte.
+creerPanneauOutils(localStorage);
 
 // Le ciel vit seul : toutes les 15 s, il décide d'un éclair ou d'une filante
 // selon l'humeur et l'heure — personne ne lui a rien demandé.

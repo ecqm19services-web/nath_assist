@@ -54,6 +54,8 @@ import {
   type Notice,
 } from '../etudes/encyclo';
 import { devisEntreprise, formatFCFA } from '../entreprise/devis';
+import { ajouterXp } from '../assist/flamme';
+import { noterEntree } from '../assist/journal';
 import { definirEndpoint, definirTemperament, cleTemperamentReglee, lireEndpoint, lireTemperament, TEMPERAMENTS, traduireParCerveau } from './cerveauNet';
 import { choisirPaquet, jugerTraduction } from './juge';
 
@@ -294,6 +296,8 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
       b.addEventListener('click', () => {
         const cible = paquetSel ?? cartePaquetId(carte.id);
         if (cible) revoirFiche(storage, cible, carte.id, b.dataset.n as Note);
+        // Une fiche revue est du travail fait : la flamme le sait, toute seule.
+        ajouterXp(storage, 5);
         rendreSession();
       }));
     corps.appendChild(s);
@@ -546,8 +550,14 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
     corps.innerHTML = '';
     const toutes = toutesLesNotices();
     const mise = filtrerFavoris([n], storage).length > 0;
-    const tete = el(`<div class="savoir-ligne"><button class="enc-retour">← Étagère</button><button class="enc-etoile${mise ? ' mise' : ''}">${mise ? '★ Favori' : '☆ Mettre en favori'}</button></div>`);
+    const tete = el(`<div class="savoir-ligne"><button class="enc-retour">← Étagère</button><button class="enc-etoile${mise ? ' mise' : ''}">${mise ? '★ Favori' : '☆ Mettre en favori'}</button><button class="enc-journal">✎ Garder au journal</button></div>`);
     tete.querySelector('.enc-retour')!.addEventListener('click', () => { encNotice = null; rendreEncyclo(); });
+    tete.querySelector('.enc-journal')!.addEventListener('click', (ev) => {
+      noterEntree(storage, { titre: n.titre, texte: n.resume, origine: 'encyclo' });
+      const b = ev.currentTarget as HTMLButtonElement;
+      b.textContent = '✓ Gardé';
+      b.disabled = true;
+    });
     tete.querySelector('.enc-etoile')!.addEventListener('click', () => {
       basculerFavori(storage, n.id);
       rendreEncycloNotice(n);
