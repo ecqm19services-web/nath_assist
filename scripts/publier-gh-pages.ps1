@@ -16,7 +16,8 @@ $racine = Split-Path -Parent $PSScriptRoot
 $deploy = Join-Path $racine '.deploy'
 $dist = Join-Path $racine 'dist'
 
-# Les trois garde-fous : un worktree intact, sur la bonne branche, avec un vrai build.
+# Les quatre garde-fous : un worktree intact, sur la bonne branche, avec un vrai
+# build complet — Service Worker compris.
 if (-not (Test-Path (Join-Path $deploy '.git'))) {
   throw 'Le worktree .deploy est absent ou sans .git — refuser de toucher à gh-pages.'
 }
@@ -30,7 +31,7 @@ if (-not (Test-Path (Join-Path $dist 'index.html'))) {
 # Le Service Worker est la promesse du hors-ligne. Un build tue avant la fin
 # produit une coquille sans sw.js : la publier volerait l'offline aux visiteurs.
 if (-not (Test-Path (Join-Path $dist 'sw.js'))) {
-  throw "dist/sw.js absent — le build n'a pas genere de Service Worker. Refuser de publier un site sans hors-ligne."
+  throw "dist/sw.js absent — le build n'a pas généré de Service Worker. Refuser de publier un site sans hors-ligne."
 }
 
 # 1. Tout part, sauf le dépôt git et les bundles déjà publiés.
