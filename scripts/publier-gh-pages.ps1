@@ -48,7 +48,13 @@ foreach ($motif in @('index-*.js', 'index-*.css')) {
     Sort-Object LastWriteTime -Descending | Select-Object -Skip 5 | Remove-Item -Force
 }
 
-# 4. Le commit seulement — la poussée reste un geste à part, vérifié en conscience.
+# 4. Paix des fins de ligne : sans ce fichier, le travailleur réclame un CRLF à
+# chaque publication et finit par signer des « modifications » fantômes.
+# Écriture en LF direct : Set-Content y mettrait des CRLF, et le fichier qui
+# édicte la règle serait le premier à l'enfreindre.
+[System.IO.File]::WriteAllText((Join-Path $deploy '.gitattributes'), "* text=auto eol=lf`n")
+
+# 5. Le commit seulement — la poussée reste un geste à part, vérifié en conscience.
 git -C $deploy add -A
 $modifications = (git -C $deploy status --porcelain | Measure-Object).Count
 if ($modifications -gt 0) {

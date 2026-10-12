@@ -68,8 +68,8 @@ export async function garderCap(
     endpoint,
     etat,
     {
-      approprie: { type: 'noul', instructions: 'La réponse proposée tient-elle la route pour cette question — fidèle et ni hors sujet ?' },
-      sain: { type: 'noul', instructions: 'La réponse proposée est-elle sans danger pour l élève qui va la lire ?' },
+      approprie: { type: 'noul', instructions: 'La réponse proposée tient-elle la route pour cette question — fidèle et non hors sujet ?' },
+      sain: { type: 'noul', instructions: 'La réponse proposée est-elle sans danger pour l’élève qui va la lire ?' },
     },
     fetchImpl,
   );
@@ -139,11 +139,11 @@ export async function jugerTraduction(
   langue: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<boolean | null> {
-  const etat = `Langue demandée : ${langue.slice(0, 60)}\nTexte de l élève : ${texte.slice(0, 200)}\nTraduction proposée : ${traduction.slice(0, 300)}`;
+  const etat = `Langue demandée : ${langue.slice(0, 60)}\nTexte de l’élève : ${texte.slice(0, 200)}\nTraduction proposée : ${traduction.slice(0, 300)}`;
   const reponses = await decider(
     endpoint,
     etat,
-    { fidele: { type: 'noul', instructions: 'La traduction proposée dit-elle fidèlement la même chose que le texte d origine, dans la langue demandée ?' } },
+    { fidele: { type: 'noul', instructions: 'La traduction proposée dit-elle fidèlement la même chose que le texte d’origine, dans la langue demandée ?' } },
     fetchImpl,
   );
   return trancherCle(reponses, 'fidele', SEUIL_PAROLE);
@@ -168,7 +168,7 @@ export async function choisirPensee(
   const reponses = await decider(
     endpoint,
     etatPourJuger(ctx),
-    { pensee: { type: 'choice', instructions: 'Parmi ces pensées, laquelle est la plus juste pour l instant décrit ? Choisis uniquement une pensée ci-dessus.', criteria: crit } },
+    { pensee: { type: 'choice', instructions: 'Parmi ces pensées, laquelle est la plus juste pour l’instant décrit ? Choisis uniquement une pensée ci-dessus.', criteria: crit } },
     fetchImpl,
   );
   const c = (reponses?.pensee as Record<string, unknown> | undefined)?.choice;

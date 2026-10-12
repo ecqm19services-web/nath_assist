@@ -50,8 +50,8 @@ export const SOCLE: Notice[] = [
   { id: 'imp', titre: 'Empires d’Afrique', domaine: 'Histoire', resume: 'Ghana, Mali, Songhaï, Grande-Zimbabwe : de grands empires ont prospéré sur l’or, le sel, le commerce et l’urbanisme bien avant la colonisation.', tags: ['afrique', 'commerce', 'or'] },
   { id: 'mer', titre: 'Mer et océans', domaine: 'Géographie', resume: 'L’eau salée couvre plus de 70 % de la planète, régule le climat et abrite une vie que nous cartographions moins bien que la Lune.', tags: ['eau', 'terre', 'climat'] },
   { id: 'clm', titre: 'Climat', domaine: 'Géographie', resume: 'Le climat est une moyenne de la météo sur trente ans ; le golfe du Mexique, le Sahara et nos saisons en dépendent comme d’une horloge.', tags: ['terre', 'air', 'sciences'] },
-  { id: 'cor', titre: 'Cœur', domaine: 'Corps humain', resume: 'Une pompe muscle de 300 grammes qui bat cent mille fois par jour et irrigue chaque cellule de sang oxygéné.', tags: ['sang', 'vie', 'organe'] },
-  { id: 'cer', titre: 'Cerveau', domaine: 'Corps humain', resume: 'Quatre-vingt-six milliards de neurones en réseau : penser, sentir et bouger ne sont que des courants et des chimies orchestres.', tags: ['neurone', 'vie', 'sens'] },
+  { id: 'cor', titre: 'Cœur', domaine: 'Corps humain', resume: 'Une pompe-muscle de 300 grammes qui bat cent mille fois par jour et irrigue chaque cellule de sang oxygéné.', tags: ['sang', 'vie', 'organe'] },
+  { id: 'cer', titre: 'Cerveau', domaine: 'Corps humain', resume: 'Quatre-vingt-six milliards de neurones en réseau : penser, sentir et bouger ne sont que des courants et des chimies orchestrées.', tags: ['neurone', 'vie', 'sens'] },
   { id: 'som', titre: 'Sommeil', domaine: 'Corps humain', resume: 'Chaque nuit le cerveau range la journée, consolide la mémoire et répare le corps ; dormir peu, c’est apprendre moins.', tags: ['cerveau', 'mémoire', 'vie'] },
   { id: 'mus', titre: 'Musique', domaine: 'Arts', resume: 'Des fréquences organisées dans le temps : rythmes et gammes varient selon les cultures mais le plaisir d’écouter est universel.', tags: ['son', 'art', 'culture'] },
   { id: 'cin', titre: 'Cinéma', domaine: 'Arts', resume: 'Vingt-quatre images par seconde suffisent à l’œil pour croire au mouvement : le cinéma est une illusion partagée devenue art majeur.', tags: ['image', 'art', 'technique'] },
@@ -70,8 +70,8 @@ export const SOCLE: Notice[] = [
   { id: 'trv', titre: 'Travail', domaine: 'Société', resume: 'Chaque métier est une réponse à un besoin des autres ; l’automatisation déplace le travail plus qu’il ne le fait disparaître.', tags: ['métier', 'société', 'technique'] },
   { id: 'edu', titre: 'Éducation', domaine: 'Société', resume: 'Transmettre sans remplacer : apprendre, c’est ajouter à l’élève ce qu’il découvrira seul avec de l’aide.', tags: ['école', 'apprendre', 'société'] },
   { id: 'ntn', titre: 'Internet', domaine: 'Société', resume: 'Des câbles sous-marins et des routeurs d’abord : le nuage numérique est en réalité un réseau très physique autour de la Terre.', tags: ['réseau', 'données', 'société'] },
-  { id: 'vac', titre: 'Vaccins', domaine: 'Médecine', resume: 'Montrer au corps le ennemi sans le danger : il en garde la mémoire et répond plus vite la fois suivante.', tags: ['corps', 'médecine', 'mémoire'] },
-  { id: 'ant', titre: 'Antibiotiques', domaine: 'Médecine', resume: 'Des moisissures devenues médicaments : elles tuent les bactéries, et le surusage fabrique des bactéries devenues résistantes.', tags: ['médecine', 'bactérie', 'équilibre'] },
+  { id: 'vac', titre: 'Vaccins', domaine: 'Médecine', resume: 'Montrer au corps l’ennemi sans le danger : il en garde la mémoire et répond plus vite la fois suivante.', tags: ['corps', 'médecine', 'mémoire'] },
+  { id: 'ant', titre: 'Antibiotiques', domaine: 'Médecine', resume: 'Des moisissures devenues médicaments : elles tuent les bactéries, et leur usage excessif fabrique des bactéries devenues résistantes.', tags: ['médecine', 'bactérie', 'équilibre'] },
   { id: 'dgst', titre: 'Digestion', domaine: 'Corps humain', resume: 'Du bol alimentaire à l’énergie, un voyage de trente mètres où chaque organe joue son rôle à l’heure.', tags: ['corps', 'énergie', 'vie'] },
 ];
 

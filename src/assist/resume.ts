@@ -70,7 +70,7 @@ export async function resumerParCerveau(
     max: 900,
     consigne:
       'Tu résumes en français, en 4 ou 5 puces courtes commençant par « - », ' +
-      'uniquement ce que le texte affirme. Pas d introduction, pas de conclusion, pas d inventaire de ce que tu as fait.',
+      'uniquement ce que le texte affirme. Pas d’introduction, pas de conclusion, pas d’inventaire de ce que tu as fait.',
     question: t.slice(0, 6000),
   });
 }

@@ -108,7 +108,7 @@ export async function ideesParCerveau(
     max: 800,
     consigne:
       'Tu es cuisinier et honnête. En français, en trois idées courtes, propose ce que ces ingrédients ' +
-      'permettent de faire, avec le temps de cuisson et une astuce d assaisonnement. N invente pas d ingrédient absent.',
+      'permettent de faire, avec le temps de cuisson et une astuce d’assaisonnement. N’invente pas d’ingrédient absent.',
     question: decouperListe(ingredients.join(', ')).join(', '),
   });
 }

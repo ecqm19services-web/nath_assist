@@ -5,8 +5,9 @@ Durée totale estimée : ~90 minutes, 0 € de frais fixes.
 
 ## 1. Créer les comptes (gratuits)
 
-- [ ] **GitHub** — déjà configuré localement ; push only on explicit order.
-- [ ] **Cloudflare** — Pages (hébergement du site) + R2 (10 Go gratuits, distribution des packs).
+- [ ] **GitHub** — déjà configuré localement ; la poussée ne se fait que sur ordre explicite.
+- [ ] **Cloudflare** — le Worker du gros cerveau (`wrangler deploy`) ; R2 (10 Go gratuits) seulement
+      si des packs de fichiers doivent être distribués. L'hébergement du site, lui, est sur GitHub Pages.
 - [ ] **Google** — un seul compte ouvre : AdSense (pub récompensée), YouTube Data API (usine sommeil), Gemini API (palier gratuit).
 - [ ] **Mistral « La Plateforme »** — palier gratuit pour l'assistance connectée optionnelle.
 - [ ] **F-Droid** — soumission gratuite de l'APK (alternative à Google Play, 0 €).
