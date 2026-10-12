@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { choisirVignette, vignetteManquante } from '../src/etudes/encyclo';
+import { choisirVignette, pageTournee, vignetteManquante } from '../src/etudes/encyclo';
 
 // Les cinquante notices de l'éthère sont du texte brut : aucune image. Pour les
 // illustrer sans inventer d'adresse, on demande au réseau l'image de l'article
@@ -44,6 +44,15 @@ describe("vignette d'une notice", () => {
     expect(
       choisirVignette({ image: 'https://x/p.png', titre: 'Chlorophylle' }, 'La photosynthèse', 'La photosynthèse'),
     ).toBe('');
+  });
+
+  it('la page tournée se reconnaît — et elle interdit de parler', () => {
+    expect(pageTournee('Mitose', 'Mitose')).toBe(false);
+    // Même sujet, un article en trop : ce n'est pas une page tournée.
+    expect(pageTournee('La photosynthèse', 'Photosynthèse')).toBe(false);
+    expect(pageTournee(null, 'Mitose')).toBe(true);  // retourné à l'étagère
+    expect(pageTournee('', 'Mitose')).toBe(true);    // pareil
+    expect(pageTournee('Meiose', 'Mitose')).toBe(true); // autre article ouvert
   });
 
   it('le bon article, toujours affiché, donne sa vignette', () => {

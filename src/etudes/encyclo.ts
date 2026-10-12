@@ -247,8 +247,17 @@ export function choisirVignette(
   // Le réseau a rendu autre chose que demandé : une image hors sujet.
   if (venue.titre && racine(venue.titre) !== racine(demandée)) return '';
   // On a tourné la page pendant l'aller-retour.
-  if (racine(affiché) !== racine(demandée)) return '';
+  if (pageTournee(affiché, demandée)) return '';
   return venue.image;
+}
+
+// La page a-t-elle tourné depuis la demande ? Réponse oui dès que l'article
+// affiché n'est plus le bon — auquel cas personne n'a le droit de parler :
+// ni de poser une image, ni d'annoncer une absence d'image. Une réponse en
+// retard qui sème un « pas d'image pour ce sujet » sur l'étagère est un
+// mensonge, pas une nuance.
+export function pageTournee(affiché: string | null, demandée: string): boolean {
+  return !affiché || racine(affiché) !== racine(demandée);
 }
 
 // « La photosynthèse » et « Photosynthèse » sont le même sujet : l'encyclopédie

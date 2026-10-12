@@ -50,6 +50,7 @@ import {
   noticeDuJour,
   noticesDepuisSavoir,
   noticesLiees,
+  pageTournee,
   paginer,
   vignetteManquante,
   SOCLE,
@@ -611,7 +612,11 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
         illustrer.disabled = true;
         illustrer.textContent = 'Je regarde…';
         const web = await chargerDepuisLeNet(n.titre, fetch);
-        // La décision est ailleurs : hors sujet, page tournée, adresse douteuse.
+        // La page a tourné pendant l'aller-retour : cette réponse n'a plus le
+        // droit de dessiner ni de parler — un « pas d'image » posé sur un autre
+        // article serait un mensonge.
+        if (pageTournee(encNotice?.titre ?? null, n.titre)) return;
+        // Le reste de la décision est ailleurs : hors sujet, adresse douteuse.
         const adresse = choisirVignette(web, encNotice?.titre ?? '', n.titre);
         const vue = corps.querySelector('.savoir-fiche');
         if (adresse && vue && !vue.querySelector('img')) {
