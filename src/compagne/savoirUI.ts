@@ -42,6 +42,7 @@ import { codeLangue, traduireEnLigne } from '../traduction/moteurNet';
 import {
   approfondirParCerveau,
   basculerFavori,
+  choisirVignette,
   filtrerFavoris,
   filtrerNotices,
   filtrerParDomaine,
@@ -50,6 +51,7 @@ import {
   noticesDepuisSavoir,
   noticesLiees,
   paginer,
+  vignetteManquante,
   SOCLE,
   type Notice,
 } from '../etudes/encyclo';
@@ -601,6 +603,35 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
       voix.parler(`${k} cartes rangées.`, 'lumineuse');
     });
     actions.appendChild(enFiches);
+    // Une illustration, façon encyclopédie illustrée. Le geste est demandé, comme
+    // pour la recherche : rien ne sort de l'appareil sans un oui explicite.
+    if (vignetteManquante(n)) {
+      const illustrer = el('<button>Chercher une illustration</button>') as HTMLButtonElement;
+      illustrer.addEventListener('click', async () => {
+        illustrer.disabled = true;
+        illustrer.textContent = 'Je regarde…';
+        const web = await chargerDepuisLeNet(n.titre, fetch);
+        // La décision est ailleurs : hors sujet, page tournée, adresse douteuse.
+        const adresse = choisirVignette(web, encNotice?.titre ?? '', n.titre);
+        const vue = corps.querySelector('.savoir-fiche');
+        if (adresse && vue && !vue.querySelector('img')) {
+          const img = document.createElement('img');
+          img.className = 'savoir-img';
+          img.src = adresse;
+          img.alt = '';
+          img.loading = 'lazy';
+          img.onerror = () => img.remove();
+          const titre = vue.querySelector('h4');
+          vue.insertBefore(img, titre ? titre.nextSibling : null);
+          illustrer.remove();
+        } else {
+          illustrer.disabled = false;
+          illustrer.textContent = 'Chercher une illustration';
+          corps.appendChild(el('<p class="savoir-msg">Le net n’a pas d’image pour ce sujet — ou bien ce n’est pas le bon.</p>'));
+        }
+      });
+      actions.appendChild(illustrer);
+    }
     // Approfondir : seulement si le grand cerveau est réglé — sinon, silence.
     const net = lireEndpoint(storage);
     if (net) {

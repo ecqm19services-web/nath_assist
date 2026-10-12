@@ -227,3 +227,38 @@ export async function approfondirParCerveau(
     return null;
   }
 }
+
+// Les notices embarquées sont du texte : aucune illustration. Pour les montrer
+// sans inventer d'adresse, l'UI demande au réseau l'image de l'article et ne
+// publie que ce que cette décision autorise.
+export function vignetteManquante(n: { image?: string }): boolean {
+  return !n.image;
+}
+
+// `affiché` : le titre de la notice vraiment à l'écran (nul si on est sorti de
+// l'étagère). `demandée` : celle pour laquelle la demande est partie.
+export function choisirVignette(
+  venue: { image?: string; titre?: string } | null,
+  affiché: string | null,
+  demandée: string,
+): string {
+  if (!venue || !venue.image || !affiché) return '';
+  if (!/^https?:\/\//.test(venue.image)) return '';
+  // Le réseau a rendu autre chose que demandé : une image hors sujet.
+  if (venue.titre && racine(venue.titre) !== racine(demandée)) return '';
+  // On a tourné la page pendant l'aller-retour.
+  if (racine(affiché) !== racine(demandée)) return '';
+  return venue.image;
+}
+
+// « La photosynthèse » et « Photosynthèse » sont le même sujet : l'encyclopédie
+// écrit sans l'article, et parfois sans le pluriel. Un sujet voisin (Chlorophylle)
+// reste à l'écart — la souplesse s'arrête à l'article et au « s ».
+function racine(t: string): string {
+  return normaliser(t)
+    .replace(/['’]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^(?:la |le |les |l |un |une |des |du |de |d )/, '')
+    .replace(/s$/, '');
+}
