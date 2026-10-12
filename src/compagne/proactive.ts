@@ -77,7 +77,7 @@ const REGLES: Regle[] = [
       'Je regarde passer une couche haute… elle revient toujours, tu sais.',
       'Rien de nouveau sous la lune, et c’est très bien ainsi.',
       'Je suis là. Ni pour ni contre, juste à côté du ciel.',
-      'Si tu ne réponds pas, je continuerai de respirer pour deux.',
+      'Si tu ne réponds pas, on peut simplement regarder le ciel ensemble.',
     ],
   },
 ];

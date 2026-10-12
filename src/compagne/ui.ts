@@ -7,7 +7,7 @@ import { repondreMaths } from './maths';
 import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
 import { creerCerveauNet, lireEndpoint, lireTemperament } from './cerveauNet';
 import { choisirPensee, garderCap, jugerSurPlace, scorerTension } from './juge';
-import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
+import { ecrireMemoire, extrairePrenom, lireMemoire, saluerRetour } from './memoire';
 import { humeurVoix, rappelLangue, separerLecture } from './comprehension';
 import { candidatesPourMonologue, choisirMonologue, nextDelai, type MonoCtx } from './proactive';
 import { entendReveil } from './reveil';
@@ -446,7 +446,7 @@ export function createCompagneUI(
   // Premier mot : selon qu'elle vous connaît déjà ou non.
   setTimeout(() => {
     if (memoire.prenom) {
-      dire(`Rebonjour ${memoire.prenom}… je gardais ta place dans le ciel.`, 'lumineuse');
+      dire(saluerRetour(memoire.prenom), 'lumineuse');
     } else {
       bulle('Je suis là… touche le ciel, écris-moi, ou appelle-moi « Hey Nath » (bouton oreille). On a toute la nuit.', 'nuage');
       // Curieuse une seule fois : elle demande qui vous êtes. Mais jamais pendant

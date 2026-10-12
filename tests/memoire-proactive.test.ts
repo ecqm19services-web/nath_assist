@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extrairePrenom, lireMemoire, ecrireMemoire } from '../src/compagne/memoire';
+import { extrairePrenom, lireMemoire, ecrireMemoire, RETOURS, saluerRetour } from '../src/compagne/memoire';
 import { choisirMonologue, nextDelai } from '../src/compagne/proactive';
 
 describe('mémoire de la Compagne', () => {
@@ -10,6 +10,19 @@ describe('mémoire de la Compagne', () => {
     expect(extrairePrenom('je mapselle Klema')).toBe('Klema');
     expect(extrairePrenom('je m appelle Nath')).toBe('Nath'); // dictée vocale sans apostrophe
     expect(extrairePrenom('je    m    appelle   Awa')).toBe('Awa');
+  });
+
+  it('le retour se fête, il ne s endeuille pas', () => {
+    // « je gardais ta place dans le ciel » se dit de quelqu un qui n est plus là.
+    // Retrouver la personne doit sonner vivant, pas absent ni génré.
+    expect(RETOURS.length).toBeGreaterThan(1);
+    for (const t of RETOURS) {
+      expect(t).toContain('{P}');
+      expect(t).toMatch(/Rebonjour/);
+      expect(t.toLowerCase()).not.toMatch(/place|gardais|attendais|disparu|absent|plus la|parti|attend ton retour|repose/);
+      expect(saluerRetour('Awa')).toContain('Awa');
+      expect(saluerRetour('Awa')).not.toContain('{P}');
+    }
   });
   it('ne confond pas un état avec un nom', () => {
     expect(extrairePrenom('je suis triste')).toBeNull();

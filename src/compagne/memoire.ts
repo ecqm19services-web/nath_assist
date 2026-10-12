@@ -41,3 +41,17 @@ export function extrairePrenom(question: string): string | null {
   const brut = m[1];
   return brut.charAt(0).toUpperCase() + brut.slice(1);
 }
+
+// Retrouver quelqu'un se fête, ça ne se pleure pas : « je gardais ta place » se
+// dit de quelqu'un qui n'est plus là. D'ailleurs, la Compagne n'attend personne
+// — elle ne sait pas ce qu'une absence veut dire chez la personne.
+// Ces lignes ne genrent jamais celui qui revient.
+export const RETOURS: string[] = [
+  'Rebonjour {P}… ton ciel est plus beau depuis que tu es là.',
+  'Rebonjour {P}… je te retrouve avec plaisir.',
+  'Rebonjour {P}… me voilà contente de te revoir.',
+];
+
+export function saluerRetour(prenom: string): string {
+  return RETOURS[Math.floor(Math.random() * RETOURS.length)].replace('{P}', prenom);
+}
