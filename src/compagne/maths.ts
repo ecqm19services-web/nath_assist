@@ -102,7 +102,7 @@ function equation(question: string): string | null {
     while (p.length > 1 && p[p.length - 1] === 0) p.pop();
     const degre = p.length - 1;
     if (degre > 2) return null; // trop haut : le grand cerveau prend le relais
-    if (degre === 0) return p[0] === 0 ? 'tout x convient (identité).' : 'aucune solution : c est une absurdité.';
+    if (degre === 0) return p[0] === 0 ? 'tout x convient (identité).' : 'aucune solution : c’est une absurdité.';
     if (degre === 1) {
       if (p[1] === 0) return 'aucune solution : x disparaît de la comparaison.';
       // Le guide pas à pas : rassembler, isoler, conclure.

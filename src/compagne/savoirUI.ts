@@ -404,7 +404,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
           ? 'Son allure est réglée — la prochaine réponse la portera.'
           : 'Elle reprend son allure ordinaire.';
       } else {
-        etatCerv.textContent = 'Cette allure n existe pas — le choix reste entier.';
+        etatCerv.textContent = 'Cette allure n’existe pas — le choix reste entier.';
       }
     });
     corps.appendChild(cerveau);

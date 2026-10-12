@@ -157,9 +157,9 @@ export function createCompagneUI(
         return;
       }
       bCerveau.textContent = raison === 'reseau'
-        ? 'Un hic du réseau empêche mon gros cerveau d atterrir... je reste attentive avec mon petit moteur.'
+        ? 'Un hic du réseau empêche mon gros cerveau d’atterrir... je reste attentive avec mon petit moteur.'
         : raison === 'machine'
-          ? 'Ma carte graphique refuse ce cerveau, trop costaud pour elle... mon petit moteur suffit, et le ciel n en est pas moins vivant.'
+          ? 'Ma carte graphique refuse ce cerveau, trop costaud pour elle... mon petit moteur suffit, et le ciel n’en est pas moins vivant.'
           : 'Le gros cerveau n’a pas pu atterrir ici... je reste attentive avec mon petit moteur.';
       // Jamais bloquant, jamais sans recours : une reprise est toujours possible
       // (les fragments déjà téléchargés restent en cache, la reprise repart plus loin).
@@ -197,7 +197,7 @@ export function createCompagneUI(
       if (p) {
         memoire = { prenom: p, dejaVu: true };
         ecrireMemoire(localStorage, memoire);
-        setTimeout(() => dire(`${p}… c est une belle adresse pour une étoile. Je la garde.`, 'lumineuse'), 700);
+        setTimeout(() => dire(`${p}… c’est une belle adresse pour une étoile. Je la garde.`, 'lumineuse'), 700);
         return;
       }
     }
@@ -427,7 +427,7 @@ export function createCompagneUI(
       bulle('Je suis là… touche le ciel, écris-moi, ou appelle-moi « Hey Nath » (bouton oreille). On a toute la nuit.', 'nuage');
       // Curieuse une seule fois : elle demande qui vous êtes.
       setTimeout(() => {
-        if (!memoire.prenom) bulle('Au fait… comment tu t appelles ?', 'nuage');
+        if (!memoire.prenom) bulle('Au fait… comment tu t’appelles ?', 'nuage');
       }, 12000);
     }
   }, 1500);

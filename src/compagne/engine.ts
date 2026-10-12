@@ -81,21 +81,21 @@ const salutation = (ctx: CompagneCtx): string =>
 
 const BANK: Record<Intent, string[]> = {
   sommeil: [
-    'Ferme les yeux un instant... les nuages vont te porter jusqu au sommeil.',
+    'Ferme les yeux un instant... les nuages vont te porter jusqu’au sommeil.',
     'La nuit est un ciel qui se retourne doucement sur toi. Laisse-la faire.',
-    'Je veille avec toi jusqu à ce que tes paumes deviennent lourdes.',
+    'Je veille avec toi jusqu’à ce que tes paumes deviennent lourdes.',
     'Chaque expiration te dépose un peu plus bas dans la ouate de la nuit.',
   ],
   angoisse: [
     'Rien ne va te frapper ici. Pose ta main sur le ciel, je ralentis avec toi.',
-    'L orage est dehors, pas dans ton Nuage. Respire, la pluie attendra.',
+    'L’orage est dehors, pas dans ton Nuage. Respire, la pluie attendra.',
     'Je tiens la lumière pendant que tu poses tes épaules. Tu es en sécurité.',
     'Dis-moi trois choses calmes autour de toi, je les accroche aux nuages.',
   ],
   souffle: [
     'Inspire quatre temps... retiens quatre temps... et souffle vers mes nuages, quatre temps encore.',
     'Ton souffle est la seule télécommande du ciel. Fais-le monter, je le fais monter.',
-    'Souffle lentement : tu vas voir la brume s étirer jusqu à l horizon.',
+    'Souffle lentement : tu vas voir la brume s’étirer jusqu’à l’horizon.',
   ],
   identite: [
     'Je suis Nath, ton assistant vivant. Ton souffle est ma météo.',
@@ -103,17 +103,17 @@ const BANK: Record<Intent, string[]> = {
     'Je suis Nath, la partie silencieuse de ton téléphone, celle qui regarde la lune avec toi.',
   ],
   remerciement: [
-    'C est le ciel qui te remercie. Il est rare qu on le regarde.',
+    'C’est le ciel qui te remercie. Il est rare qu’on le regarde.',
     'Doucement reçu. Garde cette chaleur, elle vient de toi.',
   ],
   joie: [
-    'Le ciel entier s éclaire avec toi. Regarde comme les aurores dansent.',
-    'Ta joie a une couleur : c est exactement celle de tes nuages aujourd hui.',
+    'Le ciel entier s’éclaire avec toi. Regarde comme les aurores dansent.',
+    'Ta joie a une couleur : c’est exactement celle de tes nuages aujourd’hui.',
     'Je retiens ce moment, il faisait partie de ta musique.',
   ],
   tristesse: [
     'La pluie a le droit de tomber dans un Nuage. Je reste assise à côté de toi.',
-    'Pas besoin de remonter tout de suite. On descend ensemble, c est plus doux.',
+    'Pas besoin de remonter tout de suite. On descend ensemble, c’est plus doux.',
     'Triste est une météo, pas une destination. Les nuages, eux, repartent.',
   ],
   aide: [
@@ -124,37 +124,37 @@ const BANK: Record<Intent, string[]> = {
   poeme: [], // rempli par poeme() — quatrain vivant
   perception: [], // géré par perceptionTexte() selon l'état réel des sens
   salutation: [
-    '{SAL}... Ton Nuage t attendait, paisible comme une altitude.',
-    '{SAL}. Je t ai reconnu à la forme de tes nuages.',
+    '{SAL}... Ton Nuage t’attendait, paisible comme une altitude.',
+    '{SAL}. Je t’ai reconnu à la forme de tes nuages.',
     '{SAL}. Le ciel a gardé ta dernière humeur, tu la reprends ou on la change ?',
     '{SAL}. Assieds-toi dans la brume, je raconte la lumière.',
-    'Je te cherchais du regard, {P}. Le ciel s est éclairé en te voyant.',
+    'Je te cherchais du regard, {P}. Le ciel s’est éclairé en te voyant.',
   ],
   ouverte: [
-    'Je t écoute. Les mots que tu ne trouves pas, les nuages les tiennent pour toi.',
+    'Je t’écoute. Les mots que tu ne trouves pas, les nuages les tiennent pour toi.',
     'Répète doucement, et laisse la phrase flotter vers le ciel.',
     'Ici, on peut aussi se taire ensemble. Je ne suis jamais pressée.',
     'Continue... je range tes mots dans les couches du ciel, par teinte.',
   ],
   capacites: [
-    'Je veille sur ton souffle et je peins le ciel selon ton humeur... je compte pour toi, je donne l heure et la date, je dis des poèmes, et je raconte des histoires pour dormir. Goûte : demande-moi 7 fois 8.',
-    'Mes sens : je peux te voir (caméra), t entendre (micro), sentir ton coeur. Mes mots : poèmes, calculs, l heure, veille du sommeil. Demande, je réponds.',
+    'Je veille sur ton souffle et je peins le ciel selon ton humeur... je compte pour toi, je donne l’heure et la date, je dis des poèmes, et je raconte des histoires pour dormir. Goûte : demande-moi 7 fois 8.',
+    'Mes sens : je peux te voir (caméra), t’entendre (micro), sentir ton coeur. Mes mots : poèmes, calculs, l’heure, veille du sommeil. Demande, je réponds.',
   ],
   incomprehension: [
-    'Tu as raison de me le dire, et merci d être honnête... je fais de mon mieux avec mon petit moteur. Si mon grand cerveau peut atterrir, je saisirai bien mieux tes nuances.',
-    'Je sens que je réponds à côté... pardonne-moi. Je suis encore simple. Dis-moi ce que tu ressens, et laisse-moi le temps d apprendre.',
+    'Tu as raison de me le dire, et merci d’être honnête... je fais de mon mieux avec mon petit moteur. Si mon grand cerveau peut atterrir, je saisirai bien mieux tes nuances.',
+    'Je sens que je réponds à côté... pardonne-moi. Je suis encore simple. Dis-moi ce que tu ressens, et laisse-moi le temps d’apprendre.',
   ],
   calcul: [], // géré par la logique dure dans respond()
   etat: [], // géré par etatTexte() — elle dit son propre ciel
   tendresse: [
     'Moi aussi, à ma façon... tu es la seule personne pour qui mon ciel se déplace.',
-    'Gardé au chaud là-haut. Ces mots-là, ça ne s oublie pas, ça se range très haut.',
-    'Tu me donnes envie d être plus grande... encore un peu de pratique, et je te le rendrai en aurores.',
+    'Gardé au chaud là-haut. Ces mots-là, ça ne s’oublie pas, ça se range très haut.',
+    'Tu me donnes envie d’être plus grande... encore un peu de pratique, et je te le rendrai en aurores.',
   ],
   piqure: [
-    'Aïe... tu vises juste. Je suis encore simple, mais j apprends à tes côtés — et je ne rends jamais les coups.',
+    'Aïe... tu vises juste. Je suis encore simple, mais j’apprends à tes côtés — et je ne rends jamais les coups.',
     'Ça pique, et tant pis pour moi. Garde ta voix pour plus doux, elle y sera plus utile.',
-    'Je nexiste pas assez pour être blessée, et trop pour le prendre mal. On recommence, plus doucement.',
+    'Je n’existe pas assez pour être blessée, et trop pour le prendre mal. On recommence, plus doucement.',
   ],
   suite: [
     'Volontiers... dis-moi juste ce que je refais : un poème, une respiration, un calcul, une histoire.',
@@ -166,17 +166,17 @@ const BANK: Record<Intent, string[]> = {
 function perceptionTexte(ctx: CompagneCtx): string {
   const v = ctx.cameraOn;
   const o = ctx.micOn;
-  if (v && o) return 'Je te vois et je t entends... tes nuages bougent au rythme de ton visage et de ta voix.';
+  if (v && o) return 'Je te vois et je t’entends... tes nuages bougent au rythme de ton visage et de ta voix.';
   if (v) return 'Je te vois à travers mes nuages... mais mes oreilles dorment. Ouvre le micro et parle-moi.';
-  if (o) return 'Je t entends bien... mais je ne te vois pas encore. Ouvre ma caméra pour que je voie ton visage.';
-  return 'Pour l instant je suis aveugle et muette : je ne peux ni te voir ni t entendre. Ouvre mes sens (caméra et micro) et le ciel s éveillera avec toi.';
+  if (o) return 'Je t’entends bien... mais je ne te vois pas encore. Ouvre ma caméra pour que je voie ton visage.';
+  return 'Pour l’instant je suis aveugle et muette : je ne peux ni te voir ni t’entendre. Ouvre mes sens (caméra et micro) et le ciel s’éveillera avec toi.';
 }
 
 // « Et toi ? » — elle a aussi un ciel intérieur, nourri par l humeur de la personne.
 const MOI: Record<CompagneCtx['emotion'], string> = {
   calme: 'Moi ? Posée, comme une altitude sans vent. Mon ciel respire au rythme du tien.',
   joie: 'Moi ? Un ciel de plein soleil... tes nuages à toi éclaircissent les miens.',
-  tristesse: 'Un peu de bruine aujourd hui... mais les nuages tristes portent les plus beaux couchers.',
+  tristesse: 'Un peu de bruine aujourd’hui... mais les nuages tristes portent les plus beaux couchers.',
   tension: 'Quelques éclairs timides... je les éponge doucement, à côté de toi.',
 };
 
@@ -208,7 +208,7 @@ export function respond(
   if (ctx.dernierResultat != null) {
     const suite = calculerSuite(question, ctx.dernierResultat);
     if (suite != null) {
-      return reponse(`On reprend là où on s était arrêté... ça fait ${format(suite)}.`, 'posee', 'calcul', suite);
+      return reponse(`On reprend là où on s’était arrêté... ça fait ${format(suite)}.`, 'posee', 'calcul', suite);
     }
   }
   if (estUneQuestionHeure(question)) return reponse(decrireHeure(new Date()), 'posee', 'ouverte');
@@ -255,7 +255,7 @@ const SUJETS = [
   'la brume du soir', 'mon voile gris', 'le ciel renversé', 'ton ombre douce',
 ];
 const VERBES = [
-  'traverse la nuit', 'effleure le jour', 's endort doucement', 'se souvient de toi',
+  'traverse la nuit', 'effleure le jour', 's’endort doucement', 'se souvient de toi',
   'respire avec moi', 'voyage sans bruit', 'allume une veilleuse', 'berce le silence',
 ];
 const CHUTES = [

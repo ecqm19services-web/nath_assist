@@ -38,7 +38,7 @@ export function effetMiroir(face: Face): boolean {
 // Le texte de consentement, prononcé AVANT toute demande d'accès système.
 // Il dit la vérité : rien n'est stocké, rien n'est envoyé, on peut éteindre.
 export function messageConsentement(): string {
-  return "Je vais allumer ma caméra pour te voir et réagir avec toi. Rien n'est enregistré ni envoyé : tout reste dans ton appareil. Tu peux l'éteindre quand tu veux.";
+  return "Je vais allumer ma caméra pour te voir et réagir avec toi. Rien n’est enregistré ni envoyé : tout reste dans ton appareil. Tu peux l’éteindre quand tu veux.";
 }
 
 const CLE_FACE = 'nath.camera.face';

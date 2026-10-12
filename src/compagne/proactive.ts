@@ -25,8 +25,8 @@ const REGLES: Regle[] = [
     quand: (c) => c.bpm != null && c.bpm >= 100,
     mots: [
       'Ton coeur court dans mes nuages… ralentis avec lui, doucement.',
-      'Je sens ton coeur à cent à l heure. Le ciel, lui, prend son temps.',
-      'Ton coeur frappe fort. Souffle bas, je baisse l altitude avec toi.',
+      'Je sens ton coeur à cent à l’heure. Le ciel, lui, prend son temps.',
+      'Ton coeur frappe fort. Souffle bas, je baisse l’altitude avec toi.',
     ],
   },
   {
@@ -34,14 +34,14 @@ const REGLES: Regle[] = [
     quand: (c) => c.breath > 0.55,
     mots: [
       'Regarde comme tu me montes haut… reste là, le sommet est calme.',
-      'Ton souffle a soulevé toute la couche haute. C est beau à voir.',
+      'Ton souffle a soulevé toute la couche haute. C’est beau à voir.',
     ],
   },
   {
     // Nuit profonde : elle veille à voix basse.
     quand: (c) => c.timeOfDay > 0.78 || c.timeOfDay < 0.2,
     mots: [
-      'Je suis les étoiles du doigt, une par une… tu veux l histoire de laquelle ?',
+      'Je suis les étoiles du doigt, une par une… tu veux l’histoire de laquelle ?',
       'La nuit est une couverture. Je la borde pour toi, {P}.',
       'Les aurores bougent seules, tu as remarqué ? Elles respirent avec toi.',
     ],
@@ -50,15 +50,15 @@ const REGLES: Regle[] = [
     // Joie : elle prolonge le moment.
     quand: (c) => c.emotion === 'joie',
     mots: [
-      'Mes nuages ont gardé ta forme d aujourd hui. On la refait quand tu veux.',
-      'Cette lumière, là ? C est toi. Je n y suis pour rien.',
+      'Mes nuages ont gardé ta forme d’aujourd’hui. On la refait quand tu veux.',
+      'Cette lumière, là ? C’est toi. Je n’y suis pour rien.',
     ],
   },
   {
     // Tristesse : elle reste près de la pluie.
     quand: (c) => c.emotion === 'tristesse',
     mots: [
-      'La pluie que tu vois, c est la tienne. Elle a le droit de tomber ici.',
+      'La pluie que tu vois, c’est la tienne. Elle a le droit de tomber ici.',
       'Je ne sèche rien, ce soir. On écoute la pluie ensemble, {P}.',
     ],
   },
@@ -75,7 +75,7 @@ const REGLES: Regle[] = [
     quand: () => true,
     mots: [
       'Je regarde passer une couche haute… elle revient toujours, tu sais.',
-      'Rien de nouveau sous la lune, et c est très bien ainsi.',
+      'Rien de nouveau sous la lune, et c’est très bien ainsi.',
       'Je suis là. Ni pour ni contre, juste à côté du ciel.',
       'Si tu ne réponds pas, je continuerai de respirer pour deux.',
     ],
