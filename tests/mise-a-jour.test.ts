@@ -9,7 +9,14 @@
 // comparaison ne verrait jamais la nouveauté.
 import { describe, expect, it } from 'vitest';
 
-import { nomDuBundle, servicePlusRecent, verifierMiseAJour } from '../src/compagne/miseAJour';
+import { ecarter, estEcartee, nomDuBundle, servicePlusRecent, verifierMiseAJour } from '../src/compagne/miseAJour';
+
+/** Le faux magasin de session, pour voir ce que la puce retient. */
+class Store {
+  private dues = new Map<string, string>();
+  getItem(k: string): string | null { return this.dues.get(k) ?? null; }
+  setItem(k: string, v: string): void { this.dues.set(k, v); }
+}
 
 describe('nomDuBundle — lire la coquille', () => {
   it('extrait le nom du bundle annoncé par la page', () => {
@@ -35,6 +42,28 @@ describe('servicePlusRecent — la comparaison honnête', () => {
   it('dit faux quand le serveur n’a rien répondu', () => {
     // Une page illisible n’est pas une nouveauté : jamais de fausse alerte.
     expect(servicePlusRecent(null, 'index-AAAaaa.js')).toBe(false);
+  });
+});
+
+describe('estEcartee — la puce ne revient pas hanter', () => {
+  it('garde la fermeture pour la version concernée', () => {
+    const store = new Store();
+    expect(estEcartee(store, 'index-NEUF.js')).toBe(false);
+    ecarter(store, 'index-NEUF.js');
+    expect(estEcartee(store, 'index-NEUF.js')).toBe(true);
+  });
+
+  it('propose de nouveau quand une version plus neuve arrive', () => {
+    // Le visiteur a refusé CELLE-là ; une nouveauté après reste à dire.
+    const store = new Store();
+    ecarter(store, 'index-VIEUX.js');
+    expect(estEcartee(store, 'index-NEUF.js')).toBe(false);
+  });
+
+  it('tient sur un magasin muet (navigation privée, quota plein)', () => {
+    const muet = { getItem: () => null, setItem: () => { throw new Error('quota'); } };
+    expect(() => ecarter(muet, 'index-A.js')).not.toThrow();
+    expect(estEcartee(muet, 'index-A.js')).toBe(false);
   });
 });
 
