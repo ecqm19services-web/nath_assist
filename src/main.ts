@@ -14,6 +14,7 @@ import { creerPanneauSavoir } from './compagne/savoirUI';
 import { creerPanneauOutils } from './compagne/outilsUI';
 import { probaEvenements } from './nuage/meteo';
 import { chargerCielReel } from './nuage/cielReel';
+import { surveillerMiseAJour } from './compagne/miseAJour';
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const scene = createScene(canvas);
@@ -206,3 +207,8 @@ function boucle(now: number) {
 }
 requestAnimationFrame(boucle);
 console.log('Nath Assist v1-alpha — ICF·Future by Nath-Tech');
+
+// Un visiteur qui revient avec son Service Worker tient la version d'avant.
+// On le lui dit quand le réseau a vraiment du neuf — on ne recharge jamais à sa
+// place, par-dessus une phrase en train d'être dite.
+surveillerMiseAJour(fetch);
