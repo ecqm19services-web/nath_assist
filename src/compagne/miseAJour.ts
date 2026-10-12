@@ -76,6 +76,17 @@ export function bundleCourant(): string {
 function creerPuce(bundle: string, store: Magasin): void {
   const poche = document.createElement('div');
   poche.className = 'maj-puce visible';
+  // Une annonce vive, pas un cambriolage : le lecteur d’écran la dit, le focus
+  // reste où le visiteur en était. Échap, quand le focus y est, la referme.
+  poche.setAttribute('role', 'status');
+  poche.setAttribute('aria-live', 'polite');
+  const ecarterLaPoche = (): void => {
+    ecarter(store, bundle);
+    poche.remove();
+  };
+  poche.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Escape') ecarterLaPoche();
+  });
 
   const agir = document.createElement('button');
   agir.type = 'button';
@@ -90,10 +101,7 @@ function creerPuce(bundle: string, store: Magasin): void {
   refus.textContent = '×';
   refus.setAttribute('aria-label', 'Ne pas recharger maintenant');
   refus.title = 'Pour cette version-là, on n’y revient plus';
-  refus.addEventListener('click', () => {
-    ecarter(store, bundle);
-    poche.remove();
-  });
+  refus.addEventListener('click', ecarterLaPoche);
 
   poche.append(agir, refus);
   document.body.append(poche);
