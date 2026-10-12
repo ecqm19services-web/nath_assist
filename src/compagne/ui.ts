@@ -8,6 +8,7 @@ import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from
 import { creerCerveauNet, lireEndpoint, lireTemperament } from './cerveauNet';
 import { choisirPensee, garderCap, jugerSurPlace, scorerTension } from './juge';
 import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
+import { humeurVoix, separerLecture } from './comprehension';
 import { candidatesPourMonologue, choisirMonologue, nextDelai, type MonoCtx } from './proactive';
 import { entendReveil } from './reveil';
 import { createVoice } from './voice';
@@ -236,7 +237,15 @@ export function createCompagneUI(
       cerveau
         .ask(messages)
         .then(async (rep) => {
-          const texte = rep.replace(/!/g, '…').slice(0, 600) || '…je cherche encore mes mots.';
+          const lue = separerLecture(rep);
+          const texte = lue.texte.replace(/!/g, '…').slice(0, 600) || '…je cherche encore mes mots.';
+          // Le cerveau a compris la langue : un prénom reçu en wolof, en anglais ou
+          // dans une phrase bancale entre dans la mémoire comme par la règle française.
+          if (lue.prenom && !memoire.prenom) {
+            memoire = { prenom: lue.prenom, dejaVu: true };
+            ecrireMemoire(localStorage, memoire);
+          }
+          const ton = humeurVoix(lue.humeur);
           // Garde-fou (silencieux tant qu'aucun secours n'est réglé) : une
           // réponse jugée hors cap cède la place à la réponse embarquée —
           // ni blocage, ni invention, le muet laisse tout passer.
@@ -250,7 +259,7 @@ export function createCompagneUI(
           }
           bAttente.textContent = texte;
           histoire.push({ role: 'user', content: q }, { role: 'assistant', content: texte });
-          voice.parler(texte, 'posee');
+          voice.parler(texte, ton);
         })
         .catch(() => {
           const r = respond(q, { ...c, prenom: memoire.prenom });

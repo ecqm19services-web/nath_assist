@@ -60,10 +60,65 @@ const KEYWORDS: [Intent, string[]][] = [
 
 export function detectIntent(question: string): Intent {
   const q = norm(question).replace(/'/g, ' ');
+  // Un salut rendu dans la langue reçue passe avant tout le reste : c'est le
+  // premier mot, et il ne doit jamais finir dans le pool du silence.
+  if (salutationEtrangere(question)) return 'salutation';
   for (const [intent, mots] of KEYWORDS) {
     if (mots.some((m) => q.includes(m))) return intent;
   }
   return 'ouverte';
+}
+
+// Les salutations d'ailleurs. Formes écrites déjà normalisées (minuscules, sans
+// accent), parce que la comparaison se fait sur norm(). Le retour est la vraie
+// réponse d'usage dans la langue, pas une transcription approximative.
+interface Salut {
+  formes: string[];
+  retour: string;
+}
+
+const SALUTS: Salut[] = [
+  { formes: ['nanga', 'nagseet', 'nanga def'], retour: 'Nanga def' }, // wolof
+  { formes: ['sannu'], retour: 'Sannu' }, // haoussa
+  { formes: ['mbote'], retour: 'Mbote' }, // lingala
+  { formes: ['bonjou'], retour: 'Bonjou' }, // créole
+  { formes: ['jambo', 'hujambo', 'habari', 'shikamo'], retour: 'Jambo' }, // swahili
+  { formes: ['salaam', 'salam', 'salaam alaykum', 'assalam alaykum', 'salam alaykoum'], retour: 'Wa alaykum salaam' }, // arabe
+  { formes: ['marhaba', 'ahlan'], retour: 'Ahlan' }, // arabe, neutre
+  { formes: ['hola', 'buenos dias', 'buenas tardes', 'que tal'], retour: 'Hola' },
+  { formes: ['ciao', 'buongiorno', 'buonasera'], retour: 'Ciao' },
+  { formes: ['ola', 'bom dia', 'boa noite', 'tudo bem'], retour: 'Olá' },
+  { formes: ['hallo', 'guten tag', 'guten morgen', 'moin'], retour: 'Hallo' },
+  { formes: ['hello', 'hi', 'hey', 'good morning', 'good evening', 'howdy'], retour: 'Hello' },
+  { formes: ['ni hao', 'nihao', '你好'], retour: 'Nǐ hǎo' },
+  { formes: ['konnichiwa', 'konbanwa', 'ohayou'], retour: 'Konnichiwa' },
+  { formes: ['namaste', 'namaskar'], retour: 'Namaste' },
+  { formes: ['privet', 'zdravstvuyte', 'zdraste'], retour: 'Привет' },
+  { formes: ['merhaba', 'selam'], retour: 'Merhaba' },
+  { formes: ['xin chao', 'chao'], retour: 'Xin chào' },
+];
+
+// La suite française, pour que personne ne reste devant une formule exotique.
+const SUITES_SALUT = [
+  ', {P} ! Ici, on répond aussi dans ta langue.',
+  ', {P} ! Ton ciel me parle dans toutes les langues.',
+  ', {P}. Je te salue comme tu m’as saluée.',
+];
+
+// Mot entier : « jambon » n'est pas « jambo », « hibou » n'est pas « hi ».
+const echapper = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const motPlein = (forme: string, q: string): boolean =>
+  new RegExp(`(?:^|[^\\p{L}\\p{N}])${echapper(forme)}(?:$|[^\\p{L}\\p{N}])`, 'u').test(q);
+
+// La banque de réponses d'un salut reçu hors français, ou null si ce n'en est pas.
+export function salutationEtrangere(question: string): string[] | null {
+  const q = norm(question).replace(/'/g, ' ');
+  for (const s of SALUTS) {
+    if (s.formes.some((f) => motPlein(f, q))) {
+      return SUITES_SALUT.map((suite) => `${s.retour}${suite}`);
+    }
+  }
+  return null;
 }
 
 // Hachage léger déterministe (question + graine de l'aura) → variant de réponse.
@@ -236,12 +291,14 @@ export function respond(
     }
     return reponse(BANK.suite[choose(q, ctx.seed, BANK.suite.length)], humeurPour(ctx.emotion), 'suite');
   } else {
-    const bank = BANK[intent];
+    // Un salut d'ailleurs se rend dans la langue reçue ; le français garde sa banque.
+    const bank =
+      intent === 'salutation' ? salutationEtrangere(question) ?? BANK.salutation : BANK[intent];
     texte = bank[choose(norm(question), ctx.seed, bank.length)];
     texte = texte
       .replace(SAL_T, salutation(ctx))
       .replace(/\{P\}/g, ctx.prenom ? ` ${ctx.prenom}` : '')
-      .replace(/,\s*\./g, '.') // « , . » résiduel quand le prénom est inconnu
+      .replace(/,\s*([.?!])/g, (_, p) => (p === '.' ? '.' : ' ' + p)) // virgule orpheline, espace français gardé
       .replace(/\s{2,}/g, ' ');
   }
   const humeur = intent === 'tendresse' ? 'lumineuse' : intent === 'piqure' ? 'posee' : humeurPour(ctx.emotion);
