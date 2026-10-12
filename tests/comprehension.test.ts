@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { consigneLecture, separerLecture, humeurVoix, HUMEURS } from '../src/compagne/comprehension';
+import { consigneLecture, separerLecture, humeurVoix, rappelLangue, HUMEURS } from '../src/compagne/comprehension';
 
 // Le grand cerveau comprend déjà le wolof, l'anglais, une phrase bancale. Mais il
 // ne rendait que du texte : le prénom dit dans une autre langue restait aux
@@ -64,6 +64,32 @@ describe('la lecture d une réponse du cerveau', () => {
     for (const h of HUMEURS) expect(c).toContain(h);
     // Jamais un nom de technologie dans ce qui est soufflé au modèle.
     expect(c.toLowerCase()).not.toContain('json');
+  });
+
+  it('la consigne de langue se rappelle au pied du message', () => {
+    // Prouvé avec le raisonneur : une consigne seulement en tête de conversation
+    // ne tient pas sur la durée. Elle doit être lue au bas du dernier message.
+    const messages = [
+      { role: 'system', content: 'persona' },
+      { role: 'user', content: 'bonjour' },
+      { role: 'assistant', content: 'salut' },
+      { role: 'user', content: 'how are you?' },
+    ];
+    const envoye = rappelLangue(messages);
+    expect(envoye[3].content).toContain('how are you?');
+    expect(envoye[3].content).toMatch(/langue de ce message/);
+    // Ce qui n est pas le dernier message reste intact, et le tableau original
+    // aussi : l historique affiche et mémorise les mots vrais, pas la consigne.
+    expect(envoye[0].content).toBe('persona');
+    expect(envoye[1].content).toBe('bonjour');
+    expect(envoye[2].content).toBe('salut');
+    expect(messages[3].content).toBe('how are you?');
+  });
+
+  it('un message vide ou un systeme en dernier ne recoit rien', () => {
+    expect(rappelLangue([])).toEqual([]);
+    const seul = [{ role: 'system', content: 'x' }];
+    expect(rappelLangue(seul)[0].content).toBe('x');
   });
 
   it('l humeur comprise ne touche que la voix, jamais le ciel', () => {

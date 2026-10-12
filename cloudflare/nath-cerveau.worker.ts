@@ -100,16 +100,16 @@ export default {
         if (!messagesRecus.length) return reponse({ error: 'messages requis' }, req, 400);
         const modele = modeleAutorise(corps?.modele) ?? env.MODELE_DIRE ?? '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
         // Le raisonneur pense volontiers en anglais : lui rappeler la langue
-        // de Nath, en tête ET au pied de la dernière question — la tête seule
-        // ne le tient pas (prouvé en live), jamais ailleurs que pour lui.
+        // où l'on écrit, en tête ET au pied de la dernière question — la tête
+        // seule ne le tient pas (prouvé en live), jamais ailleurs que pour lui.
         const raisonneur = modele.includes('deepseek');
         let messages = messagesRecus;
         if (raisonneur) {
           const i = messagesRecus.length - 1;
           messages = [
-            { role: 'system', content: 'Tu réponds toujours en français, dans la langue de la question.' },
+            { role: 'system', content: 'Tu réponds toujours dans la langue de la question — wolof, anglais, français — jamais dans une autre.' },
             ...messagesRecus.map((m: any, k: number) => (k === i
-              ? { ...m, content: `${m.content}\n\n(Réponds impérativement en français.)` }
+              ? { ...m, content: `${m.content}\n\n(Réponds impérativement dans la langue de ce message.)` }
               : m)),
           ];
         }

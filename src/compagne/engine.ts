@@ -60,12 +60,12 @@ const KEYWORDS: [Intent, string[]][] = [
 
 export function detectIntent(question: string): Intent {
   const q = norm(question).replace(/'/g, ' ');
-  // Un salut rendu dans la langue reçue passe avant tout le reste : c'est le
-  // premier mot, et il ne doit jamais finir dans le pool du silence.
-  if (salutationEtrangere(question)) return 'salutation';
   for (const [intent, mots] of KEYWORDS) {
     if (mots.some((m) => q.includes(m))) return intent;
   }
+  // Un salut d'ailleurs n'est retenu que si rien d'autre n'est demandé :
+  // « hello, peux-tu m aider ? » est une demande, pas un salut.
+  if (salutationEtrangere(question)) return 'salutation';
   return 'ouverte';
 }
 

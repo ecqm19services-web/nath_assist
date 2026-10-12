@@ -72,6 +72,17 @@ function humeurValide(v: string | null): HumeurLue | null {
   return (HUMEURS as readonly string[]).includes(c) ? (c as HumeurLue) : null;
 }
 
+// Une consigne de langue lue seulement en tête de conversation ne tient pas sur
+// la durée (prouvé avec le raisonneur) : on la rappelle au pied du dernier
+// message. Le tableau d'origine reste intact — l'historique garde les mots vrais.
+export function rappelLangue<T extends { role: string; content: string }>(messages: T[]): T[] {
+  if (!messages.length) return messages;
+  const i = messages.length - 1;
+  if (messages[i].role !== 'user') return messages;
+  return messages.map((m, k) =>
+    (k === i ? { ...m, content: `${m.content}\n\n(Réponds dans la langue de ce message, puis termine par la ligne @@.)` } : m));
+}
+
 // L'humeur devinée dans le texte ne fait pas mentir le nuage — le ciel reste aux
 // capteurs, sinon il afficherait un corps qu'il ne sent pas. Elle règle seulement
 // la façon de le dire.

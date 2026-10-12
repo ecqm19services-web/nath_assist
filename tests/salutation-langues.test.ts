@@ -52,6 +52,19 @@ describe('salutations hors français', () => {
     expect(respond('nagseet', { ...ctx, prenom: null }).texte).not.toMatch(/,\s*!/);
   });
 
+  it('un salut ne doit jamais avaler une demande', () => {
+    // Mon propre écart : la reconnaissance étrangère passait avant toutes les
+    // autres intentions. Une phrase qui demande quelque chose doit être entendue.
+    expect(detectIntent('hello, peux-tu m aider ?')).toBe('aide');
+    expect(detectIntent('jambo, qui es tu ?')).toBe('identite');
+    expect(detectIntent('ciao, merci beaucoup')).toBe('remerciement');
+    // Un salut seul reste un salut, dans n importe quelle langue.
+    expect(detectIntent('hello')).toBe('salutation');
+    expect(detectIntent('nagseet')).toBe('salutation');
+    // Le français ne bouge pas : « salut » garde la main sur « comment ».
+    expect(detectIntent('salut, comment tu vas ?')).toBe('salutation');
+  });
+
   it('la ponctuation française garde son espace avant !', () => {
     // Le prénom inconnu laisse une virgule à retirer : ce retrait ne doit jamais
     // coller le point d'exclamation au mot, comme le veut l'usage français.

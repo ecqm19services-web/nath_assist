@@ -78,7 +78,7 @@ describe('levier de test caché — le témoin de modèle (jamais actionné par 
     const o = (await (await worker.fetch(req, env)).json()) as any;
     expect(o.modele_utilise).toBeUndefined();
   });
-  it('le raisonneur reçoit en plus la consigne de répondre en français', async () => {
+  it('le raisonneur reçoit en plus la consigne de parler la langue de la question', async () => {
     let vues: any;
     const env = {
       AI: { run: async (_m: string, e: any) => { vues = e; return { response: 'ok' }; } },
@@ -92,12 +92,15 @@ describe('levier de test caché — le témoin de modèle (jamais actionné par 
     });
     await worker.fetch(req, env);
     expect(vues.messages[0].role).toBe('system');
-    expect(vues.messages[0].content).toContain('français');
+    expect(vues.messages[0].content).toContain('langue de la question');
+    // Le wolof et l'anglais sont des marchés, pas des accidents : plus de verrou
+    // français, seulement la langue où la personne écrit.
+    expect(vues.messages[0].content).not.toMatch(/en français/);
     // Prouvé en live : la consigne en tête seule ne tient pas le raisonneur.
     // Elle doit aussi être rappelée au pied de la dernière question.
     const dern = vues.messages[vues.messages.length - 1];
     expect(dern.content).toContain('why does the sky look blue');
-    expect(dern.content).toContain('Réponds impérativement en français');
+    expect(dern.content).toContain('Réponds impérativement dans la langue de ce message');
     expect(dern.role).toBe('user');
   });
   it('le rappel est ajouté à la dernière question, original préservé', async () => {
@@ -122,7 +125,7 @@ describe('levier de test caché — le témoin de modèle (jamais actionné par 
     expect(vues.messages[1].content).toBe('première question');
     expect(vues.messages[2].content).toBe('réponse');
     expect(vues.messages[3].content).toContain('pourquoi le ciel est bleu');
-    expect(vues.messages[3].content).toContain('Réponds impérativement en français');
+    expect(vues.messages[3].content).toContain('Réponds impérativement dans la langue de ce message');
   });
   it('les autres tempéraments gardent la conversation telle quelle', async () => {
     let vues: any;

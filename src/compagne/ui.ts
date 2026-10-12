@@ -8,7 +8,7 @@ import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from
 import { creerCerveauNet, lireEndpoint, lireTemperament } from './cerveauNet';
 import { choisirPensee, garderCap, jugerSurPlace, scorerTension } from './juge';
 import { ecrireMemoire, extrairePrenom, lireMemoire } from './memoire';
-import { humeurVoix, separerLecture } from './comprehension';
+import { humeurVoix, rappelLangue, separerLecture } from './comprehension';
 import { candidatesPourMonologue, choisirMonologue, nextDelai, type MonoCtx } from './proactive';
 import { entendReveil } from './reveil';
 import { createVoice } from './voice';
@@ -131,12 +131,12 @@ export function createCompagneUI(
   let cerveau: Cerveau | null = null;
   const histoire: Message[] = [];
 
-  function chargerCerveau() {
+  function monterCerveauLocal(bCerveau: HTMLElement): void {
     // Rien de confidentiel à l'écran : ni nom de modèle, ni fragment brut de la
     // librairie — seulement des « ressources intellectuelles » en cours de chargement.
     let ressource = 1;
     let dernierP = 0;
-    const bCerveau = bulle('Chargement des ressources intellectuelles en cours... 0 %', 'nuage');
+    bCerveau.textContent = 'Chargement des ressources intellectuelles en cours... 0 %';
     creerCerveau((p) => {
       // Le % repart à zéro à chaque ressource : on les compte pour rester honnête
       // (pas un faux « ça recule »), sans jamais nommer ce qui se charge.
@@ -144,17 +144,18 @@ export function createCompagneUI(
       dernierP = p;
       bCerveau.textContent = `Chargement des ressources intellectuelles en cours... ${Math.min(99, Math.round(p * 100))} % · ressource ${ressource}`;
     }).then(({ cerveau: c, raison }) => {
+      const net = lireEndpoint(localStorage);
       if (c) {
-        cerveau = c;
-        bCerveau.textContent = 'Mon cerveau est arrivé. Dis les phrases les plus tordues, je suivrai.';
+        // Le plus grand cerveau réglé par la personne garde la main : le local
+        // sagement en réserve, il prendra le relais si la ligne se tait.
+        if (!net) cerveau = c;
+        bCerveau.textContent = net
+          ? 'Mon cerveau de réserve est prêt, si la ligne devait manquer.'
+          : 'Mon cerveau est arrivé. Dis les phrases les plus tordues, je suivrai.';
         return;
       }
-      // Le local n'a pas pu atterrir : si un grand cerveau en ligne est réglé,
-      // il prend le relais sans attendre — jamais bloquant.
-      const net = lireEndpoint(localStorage);
       if (net) {
-        cerveau = creerCerveauNet(net, fetch, lireTemperament(localStorage));
-        bCerveau.textContent = 'Je me suis reliée à un plus grand cerveau. Demande, je réponds vite.';
+        bCerveau.textContent = 'Le cerveau de réserve n’a pas pu atterrir... la ligne, elle, répond déjà.';
         return;
       }
       bCerveau.textContent = raison === 'reseau'
@@ -170,21 +171,35 @@ export function createCompagneUI(
       relance.textContent = 'réessayer le cerveau';
       relance.addEventListener('click', () => {
         relance.remove();
-        chargerCerveau();
+        monterCerveauLocal(bCerveau);
       });
       bCerveau.appendChild(relance);
     });
   }
-  if (gpuDisponible()) chargerCerveau();
-  else {
-    // Pas de gros cerveau local ici : si un grand cerveau en ligne est réglé
-    // (Worker Nath-Tech), il répond instantanément, sans rien télécharger.
+
+  function chargerCerveau(): void {
+    // Un grand cerveau en ligne réglé est un choix explicite : il répond dès le
+    // premier message, sans faire attendre. Et chez une personne qui paie ses
+    // données, on ne lance plus un gros téléchargement en cachette — ça se demande.
     const net = lireEndpoint(localStorage);
     if (net) {
       cerveau = creerCerveauNet(net, fetch, lireTemperament(localStorage));
-      bulle('Je suis reliée à un plus grand cerveau — demande-moi ce que tu veux.', 'nuage');
+      const b = bulle('Je suis reliée à un plus grand cerveau — demande-moi ce que tu veux.', 'nuage');
+      if (!gpuDisponible()) return;
+      const opt = document.createElement('button');
+      opt.type = 'button';
+      opt.className = 'compagne-relance';
+      opt.textContent = 'charger un cerveau ici aussi (gros téléchargement)';
+      opt.addEventListener('click', () => {
+        opt.remove();
+        monterCerveauLocal(bulle('', 'nuage'));
+      });
+      b.appendChild(opt);
+      return;
     }
+    if (gpuDisponible()) monterCerveauLocal(bulle('', 'nuage'));
   }
+  chargerCerveau();
 
   function traiter(question: string) {
     const q = question.trim();
@@ -235,7 +250,7 @@ export function createCompagneUI(
         { role: 'user', content: q },
       ];
       cerveau
-        .ask(messages)
+        .ask(rappelLangue(messages))
         .then(async (rep) => {
           const lue = separerLecture(rep);
           const texte = lue.texte.replace(/!/g, '…').slice(0, 600) || '…je cherche encore mes mots.';
@@ -434,10 +449,17 @@ export function createCompagneUI(
       dire(`Rebonjour ${memoire.prenom}… je gardais ta place dans le ciel.`, 'lumineuse');
     } else {
       bulle('Je suis là… touche le ciel, écris-moi, ou appelle-moi « Hey Nath » (bouton oreille). On a toute la nuit.', 'nuage');
-      // Curieuse une seule fois : elle demande qui vous êtes.
-      setTimeout(() => {
-        if (!memoire.prenom) bulle('Au fait… comment tu t’appelles ?', 'nuage');
-      }, 12000);
+      // Curieuse une seule fois : elle demande qui vous êtes. Mais jamais pendant
+      // qu on se parle — la réponse peut être en route, et le prénom arrive avec.
+      const demanderNom = (): void => {
+        if (memoire.prenom) return;
+        if (performance.now() - dernierEchange < 25000) {
+          window.setTimeout(demanderNom, 8000);
+          return;
+        }
+        bulle('Au fait… comment tu t’appelles ?', 'nuage');
+      };
+      setTimeout(demanderNom, 12000);
     }
   }, 1500);
 
