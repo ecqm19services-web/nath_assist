@@ -73,6 +73,12 @@ export function bundleCourant(): string {
   return import.meta.url.split('/').pop()?.split('?')[0] ?? '';
 }
 
+/** Sonde-t-on, ou ménage-t-on le forfait ? Un onglet qui clignote ne doit pas
+ * coûter des données à celui qui les paie. `0` veut dire « jamais sondé ». */
+export function doitSonder(dernier: number, maintenant: number, intervalle = 60_000): boolean {
+  return dernier === 0 || maintenant - dernier >= intervalle;
+}
+
 function creerPuce(bundle: string, store: Magasin): void {
   const poche = document.createElement('div');
   poche.className = 'maj-puce visible';
@@ -137,8 +143,12 @@ export function surveillerMiseAJour(fetchImpl: typeof fetch = fetch): void {
   };
 
   let presentee = false;
+  let dernierSondage = 0;
   const sonder = async (): Promise<void> => {
     if (presentee) return;
+    const instant = Date.now();
+    if (!doitSonder(dernierSondage, instant)) return;
+    dernierSondage = instant;
     const neuf = await bundleEnLigne(fetchImpl, page);
     if (!servicePlusRecent(neuf, actuel) || !neuf || estEcartee(store, neuf)) return;
     presentee = true;

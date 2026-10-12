@@ -9,7 +9,7 @@
 // comparaison ne verrait jamais la nouveauté.
 import { describe, expect, it } from 'vitest';
 
-import { ecarter, estEcartee, nomDuBundle, servicePlusRecent, verifierMiseAJour } from '../src/compagne/miseAJour';
+import { doitSonder, ecarter, estEcartee, nomDuBundle, servicePlusRecent, verifierMiseAJour } from '../src/compagne/miseAJour';
 
 /** Le faux magasin de session, pour voir ce que la puce retient. */
 class Store {
@@ -113,5 +113,14 @@ describe('verifierMiseAJour — la sonde réseau', () => {
     expect(
       await verifierMiseAJour({ fetchImpl: quiEchoue, bundleActuel: 'index-A.js', page: 'https://exemple.github.io/nath_assist/' }),
     ).toBe(false);
+  });
+
+  it('ne sonde pas plus d une fois par minute quand l onglet clignote', () => {
+    // Un visiteur qui paie ses données (forfait FCFA) ne doit pas payer le
+    // va-et-vient de ses onglets : la sonde a un temps minimal entre deux visites.
+    expect(doitSonder(0, 0)).toBe(true);
+    expect(doitSonder(0, 90_000)).toBe(true);
+    expect(doitSonder(50_000, 55_000)).toBe(false);
+    expect(doitSonder(50_000, 111_000)).toBe(true);
   });
 });
