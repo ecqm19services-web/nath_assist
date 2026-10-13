@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { consigneLecture, separerLecture, humeurVoix, rappelLangue, HUMEURS } from '../src/compagne/comprehension';
+import { consigneLecture, separerLecture, humeurVoix, rappelLangue, detecterLangue, HUMEURS } from '../src/compagne/comprehension';
 
 // Le grand cerveau comprend déjà le wolof, l'anglais, une phrase bancale. Mais il
 // ne rendait que du texte : le prénom dit dans une autre langue restait aux
@@ -92,6 +92,24 @@ describe('la lecture d une réponse du cerveau', () => {
     expect(rappelLangue(seul)[0].content).toBe('x');
   });
 
+  it('le rappel nomme la langue au lieu de la désigner', () => {
+    // Mesuré sur le filet en ligne : « réponds dans la langue de ce message »
+    // échoue 6 fois sur 6 dès que l'âme manque à l'appel, alors que nommer la
+    // langue tient 3 sur 3. Une consigne fllette ne vaut pas une consigne claire.
+    const envoye = rappelLangue([{ role: 'user', content: 'Tell me one short thing about the ocean.' }]);
+    expect(envoye[0].content).toMatch(/en anglais/i);
+    expect(envoye[0].content).toMatch(/in English/i);
+    expect(envoye[0].content).toContain('@@');
+  });
+
+  it('le rappel reste vague quand la langue n est pas sûre', () => {
+    // Une langue hors du jeu n'est pas une langue devinée : mieux vaut la
+    // consigne générale qu'une affirmation fausse qui embarque la réponse.
+    const envoye = rappelLangue([{ role: 'user', content: 'Ki suu dhugaa qaba?' }]);
+    expect(envoye[0].content).toMatch(/langue de ce message/);
+    expect(envoye[0].content).not.toMatch(/anglais|français|wolof|English|French|Wolof/i);
+  });
+
   it('l humeur comprise ne touche que la voix, jamais le ciel', () => {
     // Le ciel garde les capteurs : une humeur devinée dans le texte ne doit pas
     // faire mentir le nuage. Elle règle seulement la façon de dire.
@@ -101,5 +119,36 @@ describe('la lecture d une réponse du cerveau', () => {
     expect(humeurVoix('calme')).toBe('posee');
     expect(humeurVoix('neutre')).toBe('posee');
     expect(humeurVoix(null)).toBe('posee');
+  });
+});
+
+describe('la langue où l on écrit, lue sans le modèle', () => {
+  it('reconnait l anglais, le français et le wolof', () => {
+    expect(detecterLangue('hi, my name is Fatou. Tell me one short thing about the ocean.')).toBe('en');
+    expect(detecterLangue('salut, je m appelle Fatou. Dis-moi une chose courte sur l océan.')).toBe('fr');
+    expect(detecterLangue('Na nga def? Lan nga xam ci mere bi?')).toBe('wo');
+  });
+
+  it('ne devine pas ce qui n est pas une langue', () => {
+    // Une phrase d'un mot, un nombre, ou une langue hors jeu : la consigne
+    // reste générale. Affirmer une langue pour la retirer trois mots plus loin
+    // serait le pire conseil à donner au modèle.
+    expect(detecterLangue('')).toBe(null);
+    expect(detecterLangue('   ')).toBe(null);
+    expect(detecterLangue('42')).toBe(null);
+    expect(detecterLangue('Bonjour')).toBe(null);
+    expect(detecterLangue('Ki suu dhugaa qaba?')).toBe(null);
+  });
+
+  it('refuse de trancher quand les mots se ressemblent dans deux langues', () => {
+    // « cloud » et « merci » se disent presque pareil : une seule langue en
+    // marge ne suffit pas à affirmer quoi que ce soit.
+    expect(detecterLangue('merci cloud')).toBe(null);
+  });
+
+  it('lit la langue malgré les accents et les apostrophes', () => {
+    expect(detecterLangue('pourrais-tu me dire ce que sont les nuages ?')).toBe('fr');
+    expect(detecterLangue('Peux-tu m’expliquer ce qu’est un nuage ?')).toBe('fr');
+    expect(detecterLangue('Can you tell me what a cloud is?')).toBe('en');
   });
 });

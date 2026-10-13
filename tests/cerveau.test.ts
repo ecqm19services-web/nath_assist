@@ -32,6 +32,13 @@ describe('âme : Nath est un guide, pas une réponse toute faite', () => {
   it('le persona autorise les étapes (la règle des listes est assouplie)', () => {
     expect(persona(ctx)).toContain('listes à puces');
   });
+  it("l'âme ne fait jamais retomber sur le français par défaut", () => {
+    // « Si la langue t'échappe, réponds en français » est un trou noir : un
+    // modèle incertain y file, et une question anglaise ressort en français.
+    const p = persona(ctx);
+    expect(p).toMatch(/la langue où l.on t/i);
+    expect(p).not.toMatch(/échappe,? réponds en français|défaut[^.]{0,40}français/i);
+  });
 });
 
 // Stub du navigateur : on simule les trois états de machine possibles.

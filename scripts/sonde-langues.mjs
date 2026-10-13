@@ -5,12 +5,16 @@ const endpoint = 'https://nath-cerveau.nath-assist.workers.dev/dire';
 const question = process.argv[2] || 'Na nga def? Lan nga xam ci asman bi?';
 const consigne = process.argv[3] || 'Reponds tres court, une seule phrase.';
 
+// Deuxieme argument : la consigne souffle au modele, tel que la Compagne la dit.
+const messages = [
+  { role: 'system', content: consigne },
+  { role: 'user', content: question },
+];
+
 const reponse = await fetch(endpoint, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    messages: [{ role: 'system', content: consigne }, { role: 'user', content: question }],
-  }),
+  body: JSON.stringify({ messages }),
 });
 const donnees = await reponse.json();
 const texte = (donnees.result && donnees.result.response) || '';
