@@ -72,3 +72,32 @@ export async function chargerCielReel(
     return null;
   }
 }
+
+export interface LieuReseau {
+  latitude: number;
+  longitude: number;
+}
+
+// La personne refuse la permission de géolocalisation ? Le grand cerveau réglé
+// (réglé par elle, jamais imposé) connaît la position approximative de son
+// point d'entrée réseau : de quoi un ciel vrai sans rien arracher. Et sans
+// cerveau réglé, on n'appelle personne — une position ne se marchande pas.
+export async function lieuDuReseau(net: string | null, fetchImpl: typeof fetch): Promise<LieuReseau | null> {
+  if (!net) return null;
+  try {
+    const res = await fetchImpl(`${net.replace(/\/+$/, '')}/lieu`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    if (!res.ok) return null;
+    const o = (await res.json()) as Record<string, any>;
+    if (!o?.lieu) return null;
+    const latitude = Number(o.lieu.latitude);
+    const longitude = Number(o.lieu.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    return { latitude, longitude };
+  } catch {
+    return null;
+  }
+}

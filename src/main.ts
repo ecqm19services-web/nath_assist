@@ -13,7 +13,8 @@ import { createCompagneUI } from './compagne/ui';
 import { creerPanneauSavoir } from './compagne/savoirUI';
 import { creerPanneauOutils } from './compagne/outilsUI';
 import { probaEvenements } from './nuage/meteo';
-import { chargerCielReel } from './nuage/cielReel';
+import { chargerCielReel, lieuDuReseau } from './nuage/cielReel';
+import { lireEndpoint } from './compagne/cerveauNet';
 import { surveillerMiseAJour } from './compagne/miseAJour';
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
@@ -94,6 +95,7 @@ cielBtn.title = 'Le ciel réel — laisser respirer au nuage le temps de chez to
 cielBtn.setAttribute('aria-label', 'Laisser au nuage le temps réel de chez toi');
 document.body.append(cielBtn);
 let cielTimer = 0;
+let cielDemande = false; // la personne veut-elle toujours le ciel réel ?
 async function respirerLeCiel(lat: number, lon: number): Promise<void> {
   const ciel = await chargerCielReel(lat, lon, fetch);
   if (ciel) {
@@ -107,21 +109,37 @@ cielBtn.addEventListener('click', () => {
     // deuxième appui : on rend au ciel sa vie intérieure
     window.clearInterval(cielTimer);
     cielTimer = 0;
+    cielDemande = false;
     state.cielReel = null;
     cielBtn.classList.remove('actif');
     cielBtn.title = 'Le ciel réel — laisser respirer au nuage le temps de chez toi';
     return;
   }
-  if (!navigator.geolocation) return; // pas d'oreille pour la position : on n'imite pas
+  cielDemande = true;
+  if (!navigator.geolocation) { void cielDuReseau(); return; }
   navigator.geolocation.getCurrentPosition(
     (pos) => {
+      if (!cielDemande) return; // entre-temps, la personne a éteint le ciel
       void respirerLeCiel(pos.coords.latitude, pos.coords.longitude);
       cielTimer = window.setInterval(() => void respirerLeCiel(pos.coords.latitude, pos.coords.longitude), 600000);
     },
-    () => { cielBtn.classList.remove('actif'); }, // refus ou silence : on ne force rien
+    () => void cielDuReseau(), // refus ou silence : on ne force rien, mais on ne reste pas aveugle
     { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
   );
 });
+
+// Refuser la géolocalisation ne doit pas être un mur. La personne a-t-elle réglé
+// un grand cerveau ? Ce cerveau connaît l'entrée réseau de la maison : on va la
+// chercher là, chez elle, et nulle part ailleurs. Sans réglage, on n'appelle
+// personne — deux nombres valent mieux qu'une permission arrachée.
+async function cielDuReseau(): Promise<void> {
+  const lieu = await lieuDuReseau(lireEndpoint(localStorage), fetch);
+  if (!lieu) { cielBtn.classList.remove('actif'); return; }
+  if (!cielDemande) return; // entre-temps, la personne a éteint le ciel
+  await respirerLeCiel(lieu.latitude, lieu.longitude);
+  window.clearInterval(cielTimer);
+  cielTimer = window.setInterval(() => void respirerLeCiel(lieu.latitude, lieu.longitude), 600000);
+}
 
 // Un toucher du ciel : onde lumineuse + éveil de la musique (politique autoplay).
 let reveille = false;

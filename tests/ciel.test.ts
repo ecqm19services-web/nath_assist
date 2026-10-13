@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chargerCielReel, codeVersCiel } from '../src/nuage/cielReel';
+import { chargerCielReel, codeVersCiel, lieuDuReseau } from '../src/nuage/cielReel';
 
 describe('ciel réel : le vrai temps respire dans le nuage', () => {
   it('ciel dégagé = lumière haute, pas de pluie, calme', () => {
@@ -8,6 +8,32 @@ describe('ciel réel : le vrai temps respire dans le nuage', () => {
     expect(c.luminosite).toBeGreaterThan(0.8);
     expect(c.orage).toBe(false);
     expect(c.libelle.length).toBeGreaterThan(0);
+  });
+
+  it('sans grand cerveau réglé, on ne demande la position à personne', async () => {
+    let sorties = 0;
+    const faux = (async () => { sorties++; return new Response('{}'); }) as unknown as typeof fetch;
+    expect(await lieuDuReseau(null, faux)).toBeNull();
+    expect(await lieuDuReseau('', faux)).toBeNull();
+    expect(sorties).toBe(0);
+  });
+
+  it('la position du réseau arrive en nombres, prête pour le ciel', async () => {
+    const corps = { lieu: { latitude: 14.71667, longitude: -17.46769, ville: 'Dakar', pays: 'SN' } };
+    const faux = (async () => new Response(JSON.stringify(corps), { status: 200 })) as unknown as typeof fetch;
+    expect(await lieuDuReseau('https://cerveau.test', faux))
+      .toEqual({ latitude: 14.71667, longitude: -17.46769 });
+  });
+
+  it('une ligne muette ou douteuse rend null — jamais une position inventée', async () => {
+    const muet = (async () => new Response('', { status: 500 })) as unknown as typeof fetch;
+    expect(await lieuDuReseau('https://cerveau.test', muet)).toBeNull();
+    const vide = (async () => new Response(JSON.stringify({ lieu: null }))) as unknown as typeof fetch;
+    expect(await lieuDuReseau('https://cerveau.test', vide)).toBeNull();
+    const fou = (async () => new Response(JSON.stringify({ lieu: { latitude: 'paris', longitude: 2 } }))) as unknown as typeof fetch;
+    expect(await lieuDuReseau('https://cerveau.test', fou)).toBeNull();
+    const casse = (async () => { throw new Error('réseau mort'); }) as unknown as typeof fetch;
+    expect(await lieuDuReseau('https://cerveau.test', casse)).toBeNull();
   });
 
   it('pluie et bruine font tomber de l’eau, jamais inventées', () => {

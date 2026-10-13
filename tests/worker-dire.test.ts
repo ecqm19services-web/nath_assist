@@ -39,6 +39,33 @@ describe('tempéraments du grand cerveau — la liste tenue côté Worker', () =
   });
 });
 
+describe('/lieu — la position sue sans permission et sans clé', () => {
+  const envMuet = { AI: { run: async () => { throw new Error('le lieu ne doit jamais réveiller le cerveau'); } } } as never;
+
+  it('rend la position du point d’entrée réseau quand elle existe', async () => {
+    const req = new Request('https://worker.test/lieu', { method: 'POST', body: '{}' });
+    Object.assign(req as never, { cf: { latitude: '14.71667', longitude: '-17.46769', city: 'Dakar', country: 'SN' } });
+    const o = (await (await worker.fetch(req, envMuet)).json()) as any;
+    expect(o.lieu).toEqual({ latitude: 14.71667, longitude: -17.46769 });
+    // Deux nombres et rien d’autre : la ville, le pays, l’opérateur restent du
+    // côté du réseau — ils ne repartent pas vers l’écran.
+    expect(JSON.stringify(o)).not.toMatch(/Dakar|"SN"|city|country/i);
+  });
+
+  it('sans position connue répond null au lieu d’inventer', async () => {
+    const req = new Request('https://worker.test/lieu', { method: 'POST', body: '{}' });
+    const o = (await (await worker.fetch(req, envMuet)).json()) as any;
+    expect(o.lieu).toBeNull();
+  });
+
+  it('un nombre fou n’est pas une position', async () => {
+    const req = new Request('https://worker.test/lieu', { method: 'POST', body: '{}' });
+    Object.assign(req as never, { cf: { latitude: 'paris', longitude: '' } });
+    const o = (await (await worker.fetch(req, envMuet)).json()) as any;
+    expect(o.lieu).toBeNull();
+  });
+});
+
 describe('nettoyerPensee — le raisonneur garde sa pensée pour lui', () => {
   // La balise de réflexion est reconstruite pour que rien ne l'écrive en toutes lettres.
   const OUVR = '<' + 'think>';

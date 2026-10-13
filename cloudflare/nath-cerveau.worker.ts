@@ -95,6 +95,20 @@ export default {
     }
 
     try {
+      // Où se tient la personne ? Le point d'entrée réseau le sait déjà : pas de
+      // permission à réclamer, pas de clé à payer, pas de nom de fournisseur à
+      // l'écran. Deux nombres repartent, rien d'autre — ville, pays et opérateur
+      // restent du côté du réseau, et rien n'est gardé après la réponse.
+      if (url.pathname === '/lieu') {
+        const indice = (req as unknown as { cf?: Record<string, unknown> }).cf ?? {};
+        const latitude = Number(indice.latitude);
+        const longitude = Number(indice.longitude);
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+          return reponse({ lieu: null }, req);
+        }
+        return reponse({ lieu: { latitude, longitude } }, req);
+      }
+
       if (url.pathname === '/dire') {
         const messagesRecus = Array.isArray(corps?.messages) ? corps.messages : [];
         if (!messagesRecus.length) return reponse({ error: 'messages requis' }, req, 400);
