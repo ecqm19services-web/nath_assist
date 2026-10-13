@@ -64,6 +64,14 @@ describe('/lieu — la position sue sans permission et sans clé', () => {
     const o = (await (await worker.fetch(req, envMuet)).json()) as any;
     expect(o.lieu).toBeNull();
   });
+
+  it('la reponse s’annonce en utf-8 : sans charset, un client legacy traduit les accents en charcuterie', async () => {
+    // Verifie en production : « application/json » sec fait deviner le Latin-1 a
+    // certains outils, qui rendent « jefandikoo » en « jÃ«fandikoo ».
+    const req = new Request('https://worker.test/lieu', { method: 'POST', body: '{}' });
+    const res = await worker.fetch(req, envMuet);
+    expect(res.headers.get('Content-Type')).toContain('charset=utf-8');
+  });
 });
 
 describe('nettoyerPensee — le raisonneur garde sa pensée pour lui', () => {

@@ -33,7 +33,7 @@ function cors(req: Request): Record<string, string> {
 function reponse(corps: unknown, req: Request, statut = 200): Response {
   return new Response(JSON.stringify(corps), {
     status: statut,
-    headers: { 'Content-Type': 'application/json', ...cors(req) },
+    headers: { 'Content-Type': 'application/json; charset=utf-8', ...cors(req) },
   });
 }
 
