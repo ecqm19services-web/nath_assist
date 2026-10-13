@@ -33,6 +33,20 @@ export function gpuDisponible(): boolean {
   return typeof navigator !== 'undefined' && 'gpu' in navigator;
 }
 
+// Le gros cerveau local pèse des centaines de mégaoctets. Chez une personne qui
+// paie ses données à la mesure, il ne part jamais sans un oui : le oui se note
+// une fois dans la mémoire de l'appareil et se relit ensuite — il n'est jamais
+// deviné, jamais volé à un réglage voisin.
+const CLE_CONSENTEMENT = 'nath.cerveau.local';
+
+export function consentementLocal(storage: Storage): boolean {
+  return storage.getItem(CLE_CONSENTEMENT) === 'oui';
+}
+
+export function demanderLocal(storage: Storage): void {
+  storage.setItem(CLE_CONSENTEMENT, 'oui');
+}
+
 // Vraie sonde WebGPU : 'gpu' dans navigator ne suffit pas — encore faut-il
 // qu'une carte adaptable existe (les machines sans GPU échouent ici, pas au téléchargement).
 // Et il faut l'extension 'shader-f16' : sans elle, les cerveaux q4f16 ne compilent

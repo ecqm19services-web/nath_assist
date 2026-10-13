@@ -4,7 +4,7 @@
 import { detectIntent, respond, type CompagneCtx, type Intent } from './engine';
 import { calculerNumero, calculerSuite, estUneQuestionDate, estUneQuestionHeure } from './logique';
 import { repondreMaths } from './maths';
-import { creerCerveau, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
+import { creerCerveau, consentementLocal, demanderLocal, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
 import { creerCerveauNet, lireEndpoint, lireTemperament } from './cerveauNet';
 import { choisirPensee, garderCap, jugerSurPlace, scorerTension } from './juge';
 import { ecrireMemoire, extrairePrenom, lireMemoire, saluerRetour } from './memoire';
@@ -132,6 +132,9 @@ export function createCompagneUI(
   const histoire: Message[] = [];
 
   function monterCerveauLocal(bCerveau: HTMLElement): void {
+    // Le verrou est ici, pas seulement sur le bouton : pas un octet ne part sans
+    // le oui de la personne. Un oui donné une fois est relu, il n'est jamais deviné.
+    if (!consentementLocal(localStorage)) return;
     // Rien de confidentiel à l'écran : ni nom de modèle, ni fragment brut de la
     // librairie — seulement des « ressources intellectuelles » en cours de chargement.
     let ressource = 1;
@@ -177,27 +180,41 @@ export function createCompagneUI(
     });
   }
 
+  function offrirLocal(b: HTMLElement): void {
+    // Le gros cerveau se demande, il ne s'impose pas : une personne qui paie ses
+    // données ne doit jamais les voir partir pendant qu'elle lit.
+    const opt = document.createElement('button');
+    opt.type = 'button';
+    opt.className = 'compagne-relance';
+    opt.textContent = 'charger un cerveau ici aussi (gros téléchargement)';
+    opt.addEventListener('click', () => {
+      demanderLocal(localStorage);
+      opt.remove();
+      monterCerveauLocal(bulle('', 'nuage'));
+    });
+    b.appendChild(opt);
+  }
+
   function chargerCerveau(): void {
     // Un grand cerveau en ligne réglé est un choix explicite : il répond dès le
     // premier message, sans faire attendre. Et chez une personne qui paie ses
-    // données, on ne lance plus un gros téléchargement en cachette — ça se demande.
+    // données, on ne lance jamais un gros téléchargement en cachette — ça se demande.
     const net = lireEndpoint(localStorage);
     if (net) {
       cerveau = creerCerveauNet(net, fetch, lireTemperament(localStorage));
       const b = bulle('Je suis reliée à un plus grand cerveau — demande-moi ce que tu veux.', 'nuage');
-      if (!gpuDisponible()) return;
-      const opt = document.createElement('button');
-      opt.type = 'button';
-      opt.className = 'compagne-relance';
-      opt.textContent = 'charger un cerveau ici aussi (gros téléchargement)';
-      opt.addEventListener('click', () => {
-        opt.remove();
-        monterCerveauLocal(bulle('', 'nuage'));
-      });
-      b.appendChild(opt);
+      if (gpuDisponible()) offrirLocal(b);
       return;
     }
-    if (gpuDisponible()) monterCerveauLocal(bulle('', 'nuage'));
+    // Pas de ligne réglée : le petit moteur embarqué répond déjà, tout de suite.
+    // Le gros local attend un oui — hier encore il partait seul, et ce sont des
+    // centaines de mégaoctets sur un forfait.
+    if (!gpuDisponible()) return;
+    if (consentementLocal(localStorage)) {
+      monterCerveauLocal(bulle('', 'nuage'));
+      return;
+    }
+    offrirLocal(bulle('Mon petit moteur répond déjà. Le grand cerveau local, lui, ne se télécharge que si vous le voulez.', 'nuage'));
   }
   chargerCerveau();
 
