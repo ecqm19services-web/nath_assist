@@ -5,6 +5,7 @@
 // qui sort de l'appareil.
 
 import { createVoice } from './voice';
+import { exporterCoffre, importerCoffre } from './coffre';
 import {
   ajouterPaquet,
   ajouterFiche,
@@ -58,7 +59,7 @@ const el = (html: string) => {
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
 
-type Onglet = 'flamme' | 'frigo' | 'assiette' | 'journal' | 'tuteur' | 'souffle' | 'resume' | 'carte';
+type Onglet = 'flamme' | 'frigo' | 'assiette' | 'journal' | 'tuteur' | 'souffle' | 'resume' | 'carte' | 'coffre';
 
 const TITRES: Record<Onglet, string> = {
   flamme: 'Flamme',
@@ -69,6 +70,7 @@ const TITRES: Record<Onglet, string> = {
   souffle: 'Souffle',
   resume: 'Résumé',
   carte: 'Carte',
+  coffre: 'Coffre',
 };
 
 export function creerPanneauOutils(storage: Storage): HTMLElement {
@@ -528,6 +530,53 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     });
   }
 
+  // ——— 9. Le coffre : emporter et reposer ses souvenirs ———
+  function rendreCoffre(): void {
+    corps.innerHTML = `
+      <div class="oi-carte">
+        <p class="oi-titre">🎒 Le coffre de tes souvenirs</p>
+        <p class="oi-note">Ce que la Compagne sait de toi — ton prénom, tes fiches, tes réglages — reste sur ton appareil. Une réinstallation, ou un iPhone qui vide Safari, peut tout effacer. Emporte tes affaires dans ce texte, repose-les où tu veux.</p>
+        <div class="oi-actions"><button data-act="emporter">Emporter mes affaires</button></div>
+        <textarea id="oi-coffre" class="oi-champ" rows="4" placeholder="Ton texte apparaît ici…"></textarea>
+        <div class="oi-actions">
+          <button data-act="copier">Copier</button>
+          <button data-act="reposer">Reposer ici</button>
+        </div>
+        <div data-zone></div>
+      </div>${horsLigne()}`;
+    const champ = corps.querySelector('#oi-coffre') as HTMLTextAreaElement;
+    const zone = corps.querySelector('[data-zone]') as HTMLElement;
+    const souffler = (t: string) => {
+      zone.innerHTML = `<p class="oi-note">${esc(t)}</p>`;
+    };
+    corps.querySelector('[data-act="emporter"]')?.addEventListener('click', () => {
+      champ.value = exporterCoffre(storage);
+      souffler('Tes affaires tiennent dans ce texte. Copie-le et garde-le pour toi — personne d’autre n’y lit quoi que ce soit.');
+    });
+    corps.querySelector('[data-act="copier"]')?.addEventListener('click', async () => {
+      if (!champ.value.trim()) {
+        souffler('D’abord « Emporter mes affaires », puis copie.');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(champ.value);
+        souffler('Copié. Colle-le là où tu veux le garder.');
+      } catch {
+        champ.focus();
+        champ.select();
+        souffler('Tout est sélectionné — copie-le à la main.');
+      }
+    });
+    corps.querySelector('[data-act="reposer"]')?.addEventListener('click', () => {
+      const n = importerCoffre(storage, champ.value);
+      souffler(
+        n > 0
+          ? `${n} affaire${n > 1 ? 's' : ''} remise${n > 1 ? 's' : ''} en place. Recharge la page pour tout retrouver.`
+          : 'Rien à reposer ici : ce texte n’est pas un coffre valide.',
+      );
+    });
+  }
+
   const RENDUS: Record<Onglet, () => void> = {
     flamme: rendreFlamme,
     frigo: rendreFrigo,
@@ -537,6 +586,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     souffle: rendreSouffle,
     resume: rendreResume,
     carte: rendreCarte,
+    coffre: rendreCoffre,
   };
 
   function rendre(o: Onglet): void {

@@ -8,7 +8,8 @@ import { creerCerveau, consentementLocal, demanderLocal, gpuDisponible, persona,
 import { creerCerveauNet, lireEndpoint, lireTemperament } from './cerveauNet';
 import { choisirPensee, garderCap, jugerSurPlace, scorerTension } from './juge';
 import { ecrireMemoire, extrairePrenom, lireMemoire, saluerRetour } from './memoire';
-import { humeurVoix, rappelLangue, separerLecture } from './comprehension';
+import { ancreLangue, humeurVoix, rappelLangue, separerLecture } from './comprehension';
+import { brouillonDe, fautIlRetisser } from './dialogue';
 import { candidatesPourMonologue, choisirMonologue, nextDelai, type MonoCtx } from './proactive';
 import { entendReveil } from './reveil';
 import { createVoice } from './voice';
@@ -259,6 +260,7 @@ export function createCompagneUI(
 
     // Chemin du grand cerveau : vraie compréhension, mémoire de conversation.
     if (cerveau) {
+      const qui = cerveau;
       const night = Math.min(1, Math.max(0, (Math.abs(c.timeOfDay - 0.5) - 0.2) * 5));
       const bAttente = bulle('…', 'nuage');
       const messages: Message[] = [
@@ -266,18 +268,37 @@ export function createCompagneUI(
         ...histoire.slice(-10),
         { role: 'user', content: q },
       ];
+      // La langue est la promesse du marché — une question wolof rendue
+      // en français est une promesse rompue. Quand la réponse mesurée n'est pas
+      // dans la langue de la question, on la retisse une fois, avec une ancre
+      // qui nomme la langue et ferme les autres. Une fois : la reprise coûte.
       cerveau
         .ask(rappelLangue(messages))
         .then(async (rep) => {
           const lue = separerLecture(rep);
-          const texte = lue.texte.replace(/!/g, '…').slice(0, 600) || '…je cherche encore mes mots.';
+          const b = brouillonDe(q, lue.texte);
+          let texte = b.texte.replace(/!/g, '…').slice(0, 600);
+          let hum = lue.humeur;
+          if (fautIlRetisser(b) && b.langueQuestion) {
+            const reprise: Message[] = [
+              { ...messages[0], content: `${messages[0].content} ${ancreLangue(b.langueQuestion)}` },
+              ...messages.slice(1, -1),
+              { role: 'user', content: q },
+            ];
+            const sec = separerLecture(await qui.ask(rappelLangue(reprise)));
+            if (!fautIlRetisser(brouillonDe(q, sec.texte, true)) && sec.texte) {
+              texte = sec.texte;
+              hum = sec.humeur ?? hum;
+            }
+          }
+          texte = texte || '…je cherche encore mes mots.';
           // Le cerveau a compris la langue : un prénom reçu en wolof, en anglais ou
           // dans une phrase bancale entre dans la mémoire comme par la règle française.
           if (lue.prenom && !memoire.prenom) {
             memoire = { prenom: lue.prenom, dejaVu: true };
             ecrireMemoire(localStorage, memoire);
           }
-          const ton = humeurVoix(lue.humeur);
+          const ton = humeurVoix(hum);
           // Garde-fou (silencieux tant qu'aucun secours n'est réglé) : une
           // réponse jugée hors cap cède la place à la réponse embarquée —
           // ni blocage, ni invention, le muet laisse tout passer.

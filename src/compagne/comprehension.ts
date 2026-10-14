@@ -77,7 +77,7 @@ function humeurValide(v: string | null): HumeurLue | null {
 // devinée : on garde la consigne générale plutôt que d'affirmer une langue.
 // Des mots outils, pas des sujets : « ocean » et « ocean » se disent presque
 // pareil ici et là, et un mot partagé ne doit jamais faire pencher la balance.
-type LangueCertaine = 'en' | 'fr' | 'wo';
+export type LangueCertaine = 'en' | 'fr' | 'wo';
 
 const MARQUEURS: Record<LangueCertaine, ReadonlySet<string>> = {
   en: new Set([
@@ -153,6 +153,16 @@ export function rappelLangue<T extends { role: string; content: string }>(messag
     ? `(Réponds en ${NOMS[langue][0]}, la langue de ce message. Answer in ${NOMS[langue][1]}. Puis termine par la ligne @@.)`
     : '(Réponds dans la langue de ce message, puis termine par la ligne @@.)';
   return messages.map((m, k) => (k === i ? { ...m, content: `${m.content}\n\n${rappel}` } : m));
+}
+
+// Le crochet du retissage : la phrase d'ancrage qui ferme la porte à la langue
+// d'avant. Elle nomme la langue visée — désigner n'a pas tenu, mesuré — et dit
+// ce qui est interdit, parce qu'un historique pollué n'obéit qu'à un ordre clair.
+export function ancreLangue(langue: LangueCertaine): string {
+  const interdites = (Object.keys(NOMS) as LangueCertaine[])
+    .filter((l) => l !== langue)
+    .map((l) => NOMS[l][0]);
+  return `Réponds uniquement en ${NOMS[langue][0]} — jamais en ${interdites.join(', ')}. Answer only in ${NOMS[langue][1]}.`;
 }
 
 // L'humeur devinée dans le texte ne fait pas mentir le nuage — le ciel reste aux

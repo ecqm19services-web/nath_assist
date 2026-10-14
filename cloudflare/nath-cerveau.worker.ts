@@ -113,20 +113,20 @@ export default {
         const messagesRecus = Array.isArray(corps?.messages) ? corps.messages : [];
         if (!messagesRecus.length) return reponse({ error: 'messages requis' }, req, 400);
         const modele = modeleAutorise(corps?.modele) ?? env.MODELE_DIRE ?? '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
-        // Le raisonneur pense volontiers en anglais : lui rappeler la langue
-        // où l'on écrit, en tête ET au pied de la dernière question — la tête
-        // seule ne le tient pas (prouvé en live), jamais ailleurs que pour lui.
-        const raisonneur = modele.includes('deepseek');
-        let messages = messagesRecus;
-        if (raisonneur) {
-          const i = messagesRecus.length - 1;
-          messages = [
-            { role: 'system', content: 'Tu réponds toujours dans la langue de la question — wolof, anglais, français — jamais dans une autre.' },
-            ...messagesRecus.map((m: any, k: number) => (k === i
-              ? { ...m, content: `${m.content}\n\n(Réponds impérativement dans la langue de ce message.)` }
-              : m)),
-          ];
-        }
+        // La langue est la promesse du marché : une question wolof rendue en
+        // français est une promesse rompue. Mesuré en production, la dérive
+        // guette chaque tempérament (Llama comme le raisonneur), pas un seul —
+        // « booste le cerveau pour qu'il comprenne tout » vaut pour toute la liste.
+        // On rappelle la langue en tête ET au pied de la dernière question : la
+        // tête seule ne tient pas (prouvé en live), et jamais on ne nomme un moteur.
+        const verrouLangue = 'Tu réponds toujours dans la langue de la question — wolof, anglais, français — jamais dans une autre.';
+        const dernier = messagesRecus.length - 1;
+        const messages = [
+          { role: 'system', content: verrouLangue },
+          ...messagesRecus.map((m: any, k: number) => (k === dernier
+            ? { ...m, content: `${m.content}\n\n(Réponds impérativement dans la langue de ce message.)` }
+            : m)),
+        ];
         // Le raisonneur pense avant de répondre : il lui faut de la place.
         const r = await env.AI.run(modele, {
           messages,

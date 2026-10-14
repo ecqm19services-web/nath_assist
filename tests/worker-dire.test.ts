@@ -162,16 +162,54 @@ describe('levier de test caché — le témoin de modèle (jamais actionné par 
     expect(vues.messages[3].content).toContain('pourquoi le ciel est bleu');
     expect(vues.messages[3].content).toContain('Réponds impérativement dans la langue de ce message');
   });
-  it('les autres tempéraments gardent la conversation telle quelle', async () => {
+  it('les autres tempéraments recoivent aussi le verrou de langue', async () => {
+    // La dérive wolof→français a été mesurée avec Llama, pas seulement avec le
+    // raisonneur : « booste le cerveau pour qu'il comprenne tout » vaut pour
+    // chaque tempérament de la liste, pas pour un seul. La conversation arrive
+    // intacte, la consigne de langue s'ajoute en tête et au pied de la question.
     let vues: any;
     const env = {
       AI: { run: async (_m: string, e: any) => { vues = e; return { response: 'ok' }; } },
     } as never;
     const req = new Request('https://worker.test/dire', {
       method: 'POST',
-      body: JSON.stringify({ messages: [{ role: 'user', content: 'salut' }], modele: '@cf/qwen/qwen3-30b-a3b-fp8' }),
+      body: JSON.stringify({ messages: [{ role: 'user', content: 'naka nga def' }], modele: '@cf/meta/llama-3.3-70b-instruct-fp8-fast' }),
     });
     await worker.fetch(req, env);
-    expect(vues.messages.length).toBe(1);
+    expect(vues.messages[0].role).toBe('system');
+    expect(vues.messages[0].content).toContain('langue de la question');
+    const dern = vues.messages[vues.messages.length - 1];
+    expect(dern.content).toContain('naka nga def');
+    expect(dern.content).toContain('Réponds impérativement dans la langue de ce message');
+  });
+  it('aucun tempérament de la liste autorisée ne reste sans verrou', async () => {
+    // On itère la liste réelle : ajouter un tempérament sans le verrou de langue
+    // serait une porte dérobée vers la promesse rompue. Ce test la ferme.
+    for (const modele of MODELES_DIRE) {
+      let vues: any;
+      const env = {
+        AI: { run: async (_m: string, e: any) => { vues = e; return { response: 'ok' }; } },
+      } as never;
+      const req = new Request('https://worker.test/dire', {
+        method: 'POST',
+        body: JSON.stringify({ messages: [{ role: 'user', content: 'hello' }], modele }),
+      });
+      await worker.fetch(req, env);
+      expect(vues.messages[0].content).toContain('langue de la question');
+      expect(vues.messages[vues.messages.length - 1].content).toContain('Réponds impérativement dans la langue de ce message');
+    }
+  });
+  it('le defaut veille quand le modele est fantaisiste, verrou quand même', async () => {
+    let vues: any; let modeleParle = '';
+    const env = {
+      AI: { run: async (m: string, e: any) => { modeleParle = m; vues = e; return { response: 'ok' }; } },
+    } as never;
+    const req = new Request('https://worker.test/dire', {
+      method: 'POST',
+      body: JSON.stringify({ messages: [{ role: 'user', content: 'salut' }], modele: '@cf/echappe/du-controle' }),
+    });
+    await worker.fetch(req, env);
+    expect(modeleParle).toBe('@cf/meta/llama-3.3-70b-instruct-fp8-fast');
+    expect(vues.messages[0].content).toContain('langue de la question');
   });
 });

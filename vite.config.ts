@@ -13,6 +13,9 @@ export default defineConfig({
   },
   plugins: [VitePWA({
     registerType: 'autoUpdate',
+    // La couleur d'ambiance est déjà dite dans index.html (aux côtés des balises
+    // Apple que iOS exige) : on évite que le plugin en injecte une seconde.
+    injectPageThemeColor: false,
     manifest: {
       name: "Nath Assist — l’assistant vivant",
       short_name: 'Nath Assist',

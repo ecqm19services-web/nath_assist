@@ -56,6 +56,13 @@ describe('garde-fou: rien de lourd ne se lance tout seul', () => {
   it('aucun demarrage automatique du gros telechargement', () => {
     expect(ui).not.toMatch(/gpuDisponible\(\)\)\s*monterCerveauLocal\(/);
   });
+
+  it('le retissage de langue est accroche au vrai chemin de reponse', () => {
+    // Une fonction juste et jamais appelee est une promesse menteuse : la
+    // reprise doit etre branchee sur la chaine qui repond a la personne.
+    expect(ui).toMatch(/if \(fautIlRetisser\(b\)/);
+    expect(ui).toContain('ancreLangue(');
+  });
 });
 
 // Le hors-ligne est une promesse : recharger sans réseau. Mais un pré-cache qui
