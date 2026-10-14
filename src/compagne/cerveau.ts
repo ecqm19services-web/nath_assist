@@ -89,7 +89,9 @@ export async function creerCerveau(
   const MODELES = sonde === 'ok' ? MODELES_F16 : MODELES_F32;
   let CreateMLCEngine: typeof import('@mlc-ai/web-llm')['CreateMLCEngine'];
   try {
-    ({ CreateMLCEngine } = await import('@mlc-ai/web-llm'));
+    // Le nom est un engagement : ce morceau-là reste hors du pré-cache et ne
+    // part que quand la personne l'a demandé, jamais à la seule ouverture.
+    ({ CreateMLCEngine } = await import(/* webpackChunkName: "cerveau-local" */ '@mlc-ai/web-llm'));
   } catch {
     return { cerveau: null, raison: 'reseau' }; // la librairie elle-même n'a pas pu charger
   }

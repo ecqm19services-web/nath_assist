@@ -57,3 +57,89 @@ describe('garde-fou: rien de lourd ne se lance tout seul', () => {
     expect(ui).not.toMatch(/gpuDisponible\(\)\)\s*monterCerveauLocal\(/);
   });
 });
+
+// Le hors-ligne est une promesse : recharger sans réseau. Mais un pré-cache qui
+// embarque le moteur local de 6 Mo facture ce poids à chaque première visite,
+// y compris à la personne qui n'en a jamais voulu. Le gros morceau se charge
+// quand on le demande, jamais quand on ouvre la page.
+describe("le hors-ligne ne paie pas le gros cerveau", () => {
+  const fichiers = import.meta.glob('../{vite.config.ts,src/compagne/cerveau.ts}', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }) as Record<string, string>;
+  const config = fichiers['../vite.config.ts'];
+  const cerveau = fichiers['../src/compagne/cerveau.ts'];
+
+  it('les deux fichiers sont bien lus', () => {
+    // Un garde-fou qui ne lit rien ne protège rien.
+    expect(config).toContain('VitePWA');
+    expect(cerveau).toContain("import('@mlc-ai/web-llm')");
+  });
+
+  it('le morceau lourd porte un nom reconnaissable', () => {
+    // Sans nom, il se fond dans assets/index-*.js et le pré-cache l'avale.
+    expect(cerveau).toMatch(/webpackChunkName:\s*["']cerveau-local["']/);
+  });
+
+  it('le pre-cache ecarte explicitement le morceau lourd', () => {
+    // La pièce de 6 Mo doit être explicitement écartée du pré-cache.
+    expect(config).toMatch(/globIgnores[\s\S]*cerveau-local/);
+  });
+
+  it('le hors-ligne reste leger par construction', () => {
+    // Le plafond de taille doit être abaissé : plus rien d'aussi lourd n'a
+    // le droit d'entrer dans le pré-cache.
+    expect(config).not.toMatch(/maximumFileSizeToCacheInBytes:\s*10 \* 1024 \* 1024/);
+  });
+});
+
+// Relancer une page hors réseau marche : la coquille est pré-cachée et le
+// Service Worker la sert. Une liaison profonde (un lien partagé, une page
+// ouverte à l'avance) retombait sur un refus du serveur : le repli de navigation
+// écartait TOUTES les URL absolues, donc aussi celles de l'app elle-même.
+describe("le hors-ligne ne trahit pas les liens", () => {
+  const sources = import.meta.glob('../vite.config.ts', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+  const config = Object.values(sources)[0];
+
+  it('la configuration est bien lue', () => {
+    expect(config).toContain('workbox');
+  });
+
+  it('le repli de navigation est dit null, pas oublie', () => {
+    // Omis, le repli revient tout seul et écrase la vitrine en silence.
+    expect(config).toMatch(/navigateFallback:\s*null/);
+    expect(config).not.toMatch(/navigateFallbackDenylist/);
+  });
+
+  it('la coquille et la vitrine sont bien pré-cachées', () => {
+    // Sans repli, le hors-ligne repose sur le pré-cache : les deux pages doivent
+    // entrer dans la liste, d'où le "html" dans les motifs.
+    expect(config).toMatch(/globPatterns:\s*\[[^\]]*html[^\]]*\]/);
+  });
+});
+
+// Ce que la promesse tient vraiment se lit dans le Service Worker produit, pas
+// dans les intentions du config. Si « npm.cmd run build » n'a pas tourné, ce
+// garde-fou est sauté : le faire suivre avant de marquer le hors-ligne vrai.
+describe('le service worker produit tient la promesse', () => {
+  const bruts = import.meta.glob('../**/sw.js', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+  const sw = Object.entries(bruts).find(([chemin]) => /sw\.js$/.test(chemin))?.[1] ?? '';
+
+  it('le fichier est lu', () => {
+    expect(sw).toContain('precacheAndRoute');
+  });
+
+  it('aucune route de navigation ne sert la coquille à la place des autres pages', () => {
+    expect(sw).not.toContain('NavigationRoute');
+  });
+
+  it('les deux pages repondront hors réseau', () => {
+    expect(sw).toMatch(/url:"index\.html"/);
+    expect(sw).toMatch(/url:"entreprise\.html"/);
+  });
+
+  it('le gros morceau local reste hors du pre-cache', () => {
+    expect(sw).not.toMatch(/cerveau-local/);
+  });
+});

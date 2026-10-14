@@ -3,6 +3,14 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   base: './',
+  build: {
+    rollupOptions: {
+      // Le moteur local (WebLLM) pèse des mégaoctets : il garde un nom explicite
+      // pour rester hors du pré-cache. Il se charge quand on le veut, pas quand
+      // on ouvre la page.
+      output: { manualChunks: { 'cerveau-local': ['@mlc-ai/web-llm'] } },
+    },
+  },
   plugins: [VitePWA({
     registerType: 'autoUpdate',
     manifest: {
@@ -24,12 +32,18 @@ export default defineConfig({
       skipWaiting: true,
       clientsClaim: true,
       globPatterns: ['**/*.{js,css,html,webmanifest,png}'],
-      // Le cerveau Qwen (chunk WebLLM ~6 Mo) doit être pré-cache pour fonctionner hors-ligne.
-      maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
-      // La page vitrine Entreprise est une vraie page : le SPA ne doit jamais
-      // l'écraser quand le Service Worker est installé (retour visiteur B2B).
-      navigateFallback: 'index.html',
-      navigateFallbackDenylist: [/^\/[^/]/],
+      // Le hors-ligne ne doit rien facturer à la personne qui n'a rien demandé :
+      // le gros cerveau local reste dehors, au même titre que les cartes du ciel.
+      globIgnores: ['**/cerveau-local*', '**/three*', '**/*.map'],
+      // Le pré-cache tient dans une pochette : rien d'aussi lourd que le moteur
+      // local n'a le droit d'y entrer.
+      maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+      // Pas de repli de navigation : sous un chemin (Pages, Worker), le motif
+      // qui écartait la vitrine écartait aussi l'app elle-même — et le hors-ligne
+      // tombait sur un refus du serveur. Les deux pages sont pré-cachées, chacune
+      // répond pour son adresse : rien n'écrase rien. Il faut le dire par null :
+      // omis, le repli revient de lui-même et écrase la vitrine en silence.
+      navigateFallback: null,
     },
   })],
 });
