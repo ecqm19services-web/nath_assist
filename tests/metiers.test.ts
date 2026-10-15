@@ -8,6 +8,8 @@ import {
   PACKS,
   avancerJour,
   motDuJour,
+  ordonnerPourCrise,
+  packsPourPays,
   piegeDuJour,
   progressionDe,
   trouverPack,
@@ -23,8 +25,8 @@ const stockageFake = (): Pick<Storage, 'getItem' | 'setItem'> => {
 };
 
 describe('PACKS — les paquets métiers livrés', () => {
-  it('au moins trois métiers', () => {
-    expect(PACKS.length).toBeGreaterThanOrEqual(3);
+  it('au moins huit métiers (vagues 1 + 2 + 3)', () => {
+    expect(PACKS.length).toBeGreaterThanOrEqual(8);
   });
   it('ids uniques', () => {
     expect(new Set(PACKS.map((p) => p.id)).size).toBe(PACKS.length);
@@ -118,6 +120,92 @@ describe('progression du jour (stockage local)', () => {
   });
 });
 
+// La deuxième vague cible le marché sénégalais : cuisine locale + premiers soins,
+// deux « indispensables » très concrets et vérifiables par n'importe qui.
+describe('vague 2 — cuisine sénégalaise et premiers soins', () => {
+  it('les deux nouveaux ids existent', () => {
+    expect(trouverPack('cuisine-senegalaise')).not.toBeNull();
+    expect(trouverPack('premiers-soins')).not.toBeNull();
+  });
+  it('cuisine sénégalaise porte les plats et produits du pays', () => {
+    const p = trouverPack('cuisine-senegalaise')!;
+    const texte = JSON.stringify(p).toLowerCase();
+    for (const mot of ['thiéboudienne', 'yassa', 'mafé', 'thiof']) {
+      expect(texte).toContain(mot);
+    }
+  });
+  it('premiers soins cite le schéma officiel et les gestes qui sauvent', () => {
+    const p = trouverPack('premiers-soins')!;
+    const texte = JSON.stringify(p).toLowerCase();
+    expect(texte).toContain('protéger');
+    expect(texte).toContain('alerter');
+    expect(texte).toContain('secourir');
+    expect(texte).toContain('30 compressions');
+    expect(texte).toContain('position latérale de sécurité');
+  });
+  it('aucun faux conseil médical : chaque piège dit clairement « ne pas »', () => {
+    const p = trouverPack('premiers-soins')!;
+    for (const piege of p.pieges) {
+      // Une négation claire évite qu'on lise un conseil dangereux dans le texte.
+      expect(piege.eviter).toMatch(/\bne (jamais|pas|rien)\b/i);
+    }
+  });
+});
+
+describe('vague 3 — au-delà du Sénégal : pays, crise, approvisionnement', () => {
+  it('les trois nouveaux ids existent', () => {
+    expect(trouverPack('cuisine-afrique-ouest')).not.toBeNull();
+    expect(trouverPack('crise-survie')).not.toBeNull();
+    expect(trouverPack('approvisionnement')).not.toBeNull();
+  });
+  it('crise-survie couvre les essentiels sans hôpital : eau, plaie, SRO, rationnement', () => {
+    const p = trouverPack('crise-survie')!;
+    const t = JSON.stringify(p).toLowerCase();
+    for (const m of ['ébullition', 'plaie', 'sro', 'rationnement']) {
+      expect(t).toContain(m);
+    }
+    // Sécurité médicale : chaque piège doit être écrit comme une négation claire.
+    for (const piege of p.pieges) {
+      expect(piege.eviter).toMatch(/\bne (jamais|pas|rien)\b/i);
+    }
+  });
+  it('approvisionnement reste un métier, pas une panique', () => {
+    const p = trouverPack('approvisionnement')!;
+    const t = JSON.stringify(p).toLowerCase();
+    for (const m of ['stock tampon', 'fournisseur', 'prix']) {
+      expect(t).toContain(m);
+    }
+  });
+  it('cuisine AO : banku, attiéké, jollof et foufou au menu', () => {
+    const p = trouverPack('cuisine-afrique-ouest')!;
+    const t = JSON.stringify(p).toLowerCase();
+    for (const m of ['banku', 'attiéké', 'jollof', 'foufou']) {
+      expect(t).toContain(m);
+    }
+  });
+  it('PackMetier accepte un champ pays optionnel (undefined = universel)', () => {
+    for (const p of PACKS) {
+      if (p.pays !== undefined) expect(Array.isArray(p.pays)).toBe(true);
+    }
+  });
+  it('packsPourPays("SN") garde universel + SN ; filtre les autres', () => {
+    const sn = packsPourPays(PACKS, 'SN');
+    const ids = sn.map((p) => p.id);
+    expect(ids).toContain('couture');
+    expect(ids).toContain('cuisine-senegalaise');
+    // Le pack sénégalais ne doit PAS être filtré ; un pack exclusivement CI ne doit pas sortir.
+    const pseudoCI = { ...PACKS[0], id: 'test-ci-only', pays: ['CI'] };
+    expect(packsPourPays([pseudoCI], 'SN').map((p) => p.id)).not.toContain('test-ci-only');
+  });
+  it('packsPourPays("") renvoie tout (aucun filtrage)', () => {
+    expect(packsPourPays(PACKS, '').length).toBe(PACKS.length);
+  });
+  it('ordonnerPourCrise met « crise-survie » et « approvisionnement » en tête', () => {
+    const out = ordonnerPourCrise(PACKS);
+    expect(out.slice(0, 2).map((p) => p.id).sort()).toEqual(['approvisionnement', 'crise-survie']);
+  });
+});
+
 // Le routeur d'onglets (outilsUI) DOIT avoir un onglet Métiers qui appelle ces
 // fonctions. Verrouillé dans la source : un refactor qui perd l'onglet tombe ici.
 const uiBrute = (
@@ -135,5 +223,19 @@ describe('outilsUI.ts — l’onglet Métiers est branché', () => {
   });
   it('la fonction rendreMetiers existe', () => {
     expect(/function\s+rendreMetiers\b/.test(uiBrute)).toBe(true);
+  });
+  it('importe le module des pays et du contexte pour s’adapter à la situation', () => {
+    expect(/from\s+'\.\.\/metiers\/pays'/.test(uiBrute)).toBe(true);
+    expect(/from\s+'\.\.\/metiers\/contexte'/.test(uiBrute)).toBe(true);
+  });
+  it('l’onglet appelle le filtre par pays et l’ordonnancement crise', () => {
+    expect(uiBrute).toMatch(/packsPourPays/);
+    expect(uiBrute).toMatch(/ordonnerPourCrise/);
+  });
+  it('la bascule « Mode crise » et le sélecteur de pays existent à l’écran', () => {
+    expect(uiBrute).toMatch(/Mode crise/);
+    // Le code HTML des contrôles (data-act=…) doit prévoir les deux interactions.
+    expect(uiBrute).toMatch(/data-act=["']crise/);
+    expect(uiBrute).toMatch(/data-pays=/);
   });
 });

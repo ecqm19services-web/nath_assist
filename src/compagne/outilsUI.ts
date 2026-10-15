@@ -23,11 +23,15 @@ import {
   PACKS as METIERS_PACKS,
   avancerJour,
   motDuJour,
+  ordonnerPourCrise,
+  packsPourPays,
   piegeDuJour,
   progressionDe,
   trouverPack,
   tacheDuJour,
 } from '../metiers/pack';
+import { PAYS as METIERS_PAYS, AVERTISSEMENT_URGENCE, paysDe } from '../metiers/pays';
+import { lireContexte, ecrireContexte, type Contexte } from '../metiers/contexte';
 import {
   analyserDictee,
   epurerDictee,
@@ -710,7 +714,14 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
 
   // ——— 11. Les métiers : un indispensable de métier, hors-ligne ———
   function rendreMetiers(): void {
-    const pack = trouverPack(metiersPackId) ?? METIERS_PACKS[0];
+    // Le contexte (pays + mode crise) pilote ce qui est visible et dans quel ordre.
+    const ctx: Contexte = lireContexte(storage);
+    const visibles = ordonnerPourCrise(packsPourPays(METIERS_PACKS, ctx.pays));
+    // Si le pack courant sort de la liste filtrée, retomber sur le premier visible.
+    if (!visibles.some((x) => x.id === metiersPackId)) {
+      metiersPackId = visibles[0]?.id ?? '';
+    }
+    const pack = trouverPack(metiersPackId) ?? visibles[0];
     if (!pack) {
       corps.innerHTML = '<div class="oi-carte"><p class="oi-note">Aucun pack métier pour l’instant.</p></div>';
       return;
@@ -719,13 +730,31 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     const t = tacheDuJour(pack, jour);
     const m = motDuJour(pack, jour);
     const p = piegeDuJour(pack, jour);
-    const boutonsPacks = METIERS_PACKS.map(
+    const boutonsPacks = visibles.map(
       (x) => `<button data-mt="${esc(x.id)}"${x.id === pack.id ? ' class="actif"' : ''}>${x.emoji} ${esc(x.nom)}</button>`,
     ).join('');
+    const boutonsPays = [
+      `<button data-pays=""${ctx.pays === '' ? ' class="actif"' : ''}>Tous</button>`,
+      ...METIERS_PAYS.map(
+        (pp) => `<button data-pays="${esc(pp.code)}"${ctx.pays === pp.code ? ' class="actif"' : ''}>${pp.emoji} ${esc(pp.nom)}</button>`,
+      ),
+    ].join('');
+    const paysChoisi = ctx.pays ? paysDe(ctx.pays) : null;
+    const encartUrgence = paysChoisi
+      ? `<p class="oi-titre2">Urgences ${paysChoisi.emoji} ${esc(paysChoisi.nom)}</p>
+         <p class="oi-pet">Police ${esc(paysChoisi.urgence.police)} · Pompiers ${esc(paysChoisi.urgence.pompiers)} · SAMU ${esc(paysChoisi.urgence.samu)}${paysChoisi.urgence.commun ? ' · Numéro commun ' + esc(paysChoisi.urgence.commun) : ''}</p>
+         <p class="oi-pet">${esc(AVERTISSEMENT_URGENCE)}</p>`
+      : '';
+    const criseLibelle = ctx.crise ? '✓ Mode crise activé' : 'Mode crise (priorise survie & approvisionnement)';
     corps.innerHTML = `
       <div class="oi-carte">
         <p class="oi-titre">&#129520; Un métier, un jour, un geste</p>
         <p class="oi-note">Apprends le métier comme on l’apprend sur le terrain : aujourd’hui une tâche, un mot exact, un piège à éviter. Hors-ligne, sans compte ; ta progression voyage avec le coffre.</p>
+        <p class="oi-titre2">Pays</p>
+        <div class="oi-actions">${boutonsPays}</div>
+        <div class="oi-actions"><button data-act="crise"${ctx.crise ? ' class="actif"' : ''}>${criseLibelle}</button></div>
+        ${encartUrgence}
+        <p class="oi-titre2">Le métier</p>
         <div class="oi-actions">${boutonsPacks}</div>
         <p class="oi-note">${esc(pack.resume)}</p>
         <p class="oi-titre2">Jour ${jour + 1} — la tâche du jour</p>
@@ -744,6 +773,17 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
         rendreMetiers();
       }),
     );
+    corps.querySelectorAll<HTMLElement>('[data-pays]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const code = b.dataset.pays ?? '';
+        ecrireContexte(storage, { ...ctx, pays: code });
+        rendreMetiers();
+      }),
+    );
+    corps.querySelector('[data-act="crise"]')?.addEventListener('click', () => {
+      ecrireContexte(storage, { ...ctx, crise: !ctx.crise });
+      rendreMetiers();
+    });
     corps.querySelector('[data-act="demain"]')?.addEventListener('click', () => {
       avancerJour(pack.id, storage);
       rendreMetiers();

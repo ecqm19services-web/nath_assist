@@ -112,11 +112,31 @@ ou **SP4 (Play Store d'abord)** si la fenêtre de publication est la priorité a
   notation, durée conseillée, appréciation qui n'est jamais une fin) + onglet **Examen** sur les
   paquets de l'élève. 539 tests verts, prouvé en runtime (5 cartes, réponses cachées puis révélées,
   « 3/5 · 60 % — C'est en bonne voie »).
-- **SP3-bis Packs Métiers — LIVRÉ (première vague).** `src/metiers/pack.ts` contient **Couture**,
-  **Boulangerie**, **Électricité** (5 tâches · 8 mots · 4 pièges chacun), hors-ligne et français
-  simple. Onglet **Métiers** : un jour = une tâche + un mot + un piège, bouton « Jour suivant ».
-  Progression sous `nath.metiers.progression` → transportée par le coffre. 592 tests verts (dont 21
-  nouveaux : 18 unitaires + 3 intégration UI). Le « explicateur de domaine d'activité » est lancé.
+- **SP3-bis Packs Métiers — LIVRÉ (vagues 1 + 2 + 3).** `src/metiers/pack.ts` contient
+  **Couture**, **Boulangerie**, **Électricité**, **Cuisine sénégalaise**, **Premiers soins**,
+  **Cuisine d’Afrique de l’Ouest**, **Crise & survie** et **Approvisionnement** (5 tâches ·
+  6-8 mots · 3-4 pièges chacun), hors-ligne et français simple.
+  La vague 2 cible le Sénégal (thiéb, yassa, mafé + PSE 15/17/18).
+  La vague 3 élargit à **toute l’Afrique de l’Ouest et au-delà** :
+  - `src/metiers/pays.ts` : table de 13 pays (SN ML CI BF GN BJ TG NE GH NG CM MA FR), chacun
+    avec **numéros d’urgence locaux** (police/pompiers/SAMU) + monnaie + langues ; un rappel
+    honnête invite à confirmer auprès des autorités locales.
+  - `src/metiers/contexte.ts` : le pays choisi + le **mode crise** sont persistés sous
+    `nath.metiers.contexte` (donc transportés par le coffre) et devinés depuis la langue
+    BCP-47 du navigateur (`fr-SN` → SN, `en-GH` → GH…).
+  - `PackMetier.pays?` + `packsPourPays()` filtrent les packs selon le pays (les universels
+    restent toujours), et `ordonnerPourCrise()` remonte **Crise & survie** et
+    **Approvisionnement** en tête quand le mode crise est activé — sans jamais rien retirer
+    (doctrine « gratuit non bridé »).
+  - Contenu : plats du Golfe de Guinée au Sahel (banku, attiéké, foutou/foufou, jollof, ndolé,
+    saka-saka, garba, alloco) + survie sans hôpital (ébullition, chloration, SRO, latrine,
+    triage, rationnement) + méthode d’approvisionnement (stock tampon, fournisseur de repli,
+    prix de revient, seuil d’alerte, chaîne du froid).
+  Onglet **Métiers** : sélecteur de pays + bascule **Mode crise** + encart urgences locales
+  + un jour = une tâche + un mot + un piège. Progression sous `nath.metiers.progression` →
+  coffre. **622 tests verts** (+26 pour la vague 3 : 9 pays, 6 contexte, 11 packs/filtrage/UI,
+  dont un verrou anti-faux conseil médical : chaque « à éviter » crise/prmsoins dit
+  explicitement « ne pas/jamais/rien »).
 - **SP1 Cerveau hors-ligne — CÂBLÉ EN PRODUCTION.** Le local (Web-LLM, sonde GPU,
   consentement, fail-open) et le réseau gratuit existent déjà. **`cerveauRouteur.ts`**
   (`choisirCerveau` local>réseau>repli, `cleeDeReponse`, `avecCache`) est maintenant
