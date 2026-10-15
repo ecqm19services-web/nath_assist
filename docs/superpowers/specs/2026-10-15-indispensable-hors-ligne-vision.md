@@ -102,3 +102,22 @@ Play Store/lourde à résoudre tout de suite.
 Écrire le **plan d'implémentation TDD** de SP2-lite (tâches 2–5 min, ROUGE d'abord), puis l'exécuter.
 Arbitrage demandé : **démarrer par SP2-lite (langues)**, ou privilégier **SP3 (un pack métier précis)**,
 ou **SP4 (Play Store d'abord)** si la fenêtre de publication est la priorité absolue.
+
+## Statut d'avancement (15 oct. 2026)
+
+- **SP2-lite Langues vivantes — LIVRÉ & DÉPLOYÉ.** Socle wolof (16 formes attestées) + registre
+  nouchi (5 formes citées) + `carnet.ts` (enrichissable, rangé sous `nath.`, transporté par le coffre)
+  + onglet **Langues**. 528 tests verts, prouvé en runtime hors-ligne (« merci » → « jërëjëf »).
+- **SP3-lite Examen blanc — LIVRÉ & DÉPLOYÉ.** `examen.ts` (composition déterministe par graine,
+  notation, durée conseillée, appréciation qui n'est jamais une fin) + onglet **Examen** sur les
+  paquets de l'élève. 539 tests verts, prouvé en runtime (5 cartes, réponses cachées puis révélées,
+  « 3/5 · 60 % — C'est en bonne voie »).
+- **SP1 Cerveau hors-ligne — NON CLÔS (volontairement).** Web-LLM est déjà dépendance, mais le
+  vrai hors-ligne « extraordinaire » exige le téléchargement/stockage local des poids (Mo→Go), et
+  WebGPU Windows est instable. C'est un chantier à part entière, pas une case à cocher ici.
+- **SP4 Play Store — BLOQUÉ HORS-CODE.** La voie est TWA/Bubblewrap avec **targetSdk 36** (déjà
+  exigé). Construire/publier l'AAB demande le SDK Android + Java et les gestes du Play Console
+  (compte existant, publication en attente) — rien que le dépôt web ne possa remplacer.
+- **SP5 Monétisation FCFA — DÉCISION À PENDRE.** La clé pro locale existe ; **paywalliser** Langues
+  ou Examen maintenant réduirait l'adoption visée. À armer quand on fixe le modèle (pack à vie vs
+  abonnement), sans espionner et hors-ligne d'abord.
