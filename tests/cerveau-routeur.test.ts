@@ -121,3 +121,17 @@ describe('creerCerveauNet — le cache-first est câblé dans le chemin payant',
     expect(appels).toBe(2);
   });
 });
+
+// L'UI de la Compagne DOIT passer par le routeur : c'est la preuve que la pièce
+// n'est pas qu'un meuble de test mais le vrai choix du cerveau en production.
+const uiBrut = (import.meta.glob('../src/compagne/ui.ts', { query: '?raw', import: 'default', eager: true }) as Record<string, string>)['../src/compagne/ui.ts'] ?? '';
+describe('ui.ts — le routeur est le vrai décideur du cerveau', () => {
+  it('importe choisirCerveau depuis cerveauRouteur', () => {
+    expect(/from\s+'\.\/cerveauRouteur'/.test(uiBrut)).toBe(true);
+    expect(/choisirCerveau/.test(uiBrut)).toBe(true);
+  });
+  it('n’a plus besoin de recopier la précédence à la main', () => {
+    // L'appel explicite du routeur remplace les « if (net) { ... } if (gpu) { ... } » en série.
+    expect(/choisirCerveau\s*\(/.test(uiBrut)).toBe(true);
+  });
+});

@@ -6,6 +6,7 @@ import { calculerNumero, calculerSuite, estUneQuestionDate, estUneQuestionHeure 
 import { repondreMaths } from './maths';
 import { creerCerveau, consentementLocal, demanderLocal, gpuDisponible, persona, type Cerveau, type Message } from './cerveau';
 import { creerCerveauNet, lireEndpoint, lireTemperament } from './cerveauNet';
+import { choisirCerveau } from './cerveauRouteur';
 import { choisirPensee, garderCap, jugerSurPlace, scorerTension } from './juge';
 import { ecrireMemoire, extrairePrenom, lireMemoire, saluerRetour } from './memoire';
 import { ancreLangue, humeurVoix, rappelLangue, separerLecture } from './comprehension';
@@ -201,21 +202,33 @@ export function createCompagneUI(
     // premier message, sans faire attendre. Et chez une personne qui paie ses
     // données, on ne lance jamais un gros téléchargement en cachette — ça se demande.
     const net = lireEndpoint(localStorage);
-    if (net) {
+    const gpu = gpuDisponible();
+    const oui = consentementLocal(localStorage);
+    // La précédence n'est plus recopiée ici : c'est le routeur qui tranche,
+    // et il tient la cohérence avec les tests (local > réseau > repli).
+    const canal = choisirCerveau({
+      localPret: false,
+      consentementLocal: oui,
+      gpuCompatible: gpu,
+      enLigne: true,
+      endpointRegle: !!net,
+    });
+    if (canal === 'reseau') {
       cerveau = creerCerveauNet(net, fetch, lireTemperament(localStorage));
       const b = bulle('Je suis reliée à un plus grand cerveau — demande-moi ce que tu veux.', 'nuage');
-      if (gpuDisponible()) offrirLocal(b);
+      if (gpu) offrirLocal(b);
       return;
     }
-    // Pas de ligne réglée : le petit moteur embarqué répond déjà, tout de suite.
-    // Le gros local attend un oui — hier encore il partait seul, et ce sont des
-    // centaines de mégaoctets sur un forfait.
-    if (!gpuDisponible()) return;
-    if (consentementLocal(localStorage)) {
+    if (canal === 'local') {
+      // GPU + consentement : on charge le gros modèle local, avec son option de reprise.
       monterCerveauLocal(bulle('', 'nuage'));
       return;
     }
-    offrirLocal(bulle('Mon petit moteur répond déjà. Le grand cerveau local, lui, ne se télécharge que si vous le voulez.', 'nuage'));
+    // 'repli' : le petit moteur embarqué répond déjà. S'il reste une carte GPU
+    // sans consentement, on ne l'impose pas — on le propose.
+    if (gpu && !oui) {
+      offrirLocal(bulle('Mon petit moteur répond déjà. Le grand cerveau local, lui, ne se télécharge que si vous le voulez.', 'nuage'));
+    }
   }
   chargerCerveau();
 

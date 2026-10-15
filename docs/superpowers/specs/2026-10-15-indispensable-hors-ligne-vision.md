@@ -112,11 +112,13 @@ ou **SP4 (Play Store d'abord)** si la fenêtre de publication est la priorité a
   notation, durée conseillée, appréciation qui n'est jamais une fin) + onglet **Examen** sur les
   paquets de l'élève. 539 tests verts, prouvé en runtime (5 cartes, réponses cachées puis révélées,
   « 3/5 · 60 % — C'est en bonne voie »).
-- **SP1 Cerveau hors-ligne — EN COURS (couture livrée).** Le local (Web-LLM, sonde GPU,
-  consentement, fail-open) et le réseau gratuit existent déjà. Ajouté ici **`cerveauRouteur.ts`**
-  (`choisirCerveau` local>réseau>repli, `cleeDeReponse`, `avecCache`) et **cache-first câblé dans
-  `creerCerveauNet`** : une question posée ne repart jamais deux fois vers l'API (un échec n'est
-  pas figé, il se retente). C'est le premier levier « arrêter de payer ». Le téléchargement réel
+- **SP1 Cerveau hors-ligne — CÂBLÉ EN PRODUCTION.** Le local (Web-LLM, sonde GPU,
+  consentement, fail-open) et le réseau gratuit existent déjà. **`cerveauRouteur.ts`**
+  (`choisirCerveau` local>réseau>repli, `cleeDeReponse`, `avecCache`) est maintenant
+  **réellement le décideur dans `ui.ts`** (plus de précédence recopiée à la main, verrouillé
+  par test d'intégration source) et le **cache-first est câblé dans `creerCerveauNet`** :
+  une question posée ne repart jamais deux fois vers l'API (un échec n'est pas figé, il
+  se retente). C'est le 1ᵉʳ levier concret « arrêter de payer ». Le téléchargement réel
   des poids (Go) et la fiabilité WebGPU Windows restent un chantier à part.
 - **SP4 Play Store — OUTILLÉ (dépôt), PUBLICATION HORS-DÉPÔT.** Manifeste **durci pour TWA**
   (`id`, `scope`, `start_url`, `lang fr`, `orientation`, `categories`, icônes `any`+`maskable`),
