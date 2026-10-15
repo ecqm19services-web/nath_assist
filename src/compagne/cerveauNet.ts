@@ -6,6 +6,7 @@
 // ce module dort : le cerveau local et le petit moteur suffisent.
 
 import type { Cerveau, Message } from './cerveau';
+import { avecCache, cleeDeReponse } from './cerveauRouteur';
 
 const CLE = 'nath.cerveau';
 const CLE_MODELE = 'nath.cerveau.modele';
@@ -79,21 +80,27 @@ export function lireEndpoint(storage: Storage): string {
 // réponse arrive, et rien d'autre ne quitte l'appareil. Un tempérament
 // choisi (modèle ouvert des géants) voyage dans la requête — le Worker filtre.
 export function creerCerveauNet(endpoint: string, fetchImpl: typeof fetch = fetch, modele = ''): Cerveau {
+  // Le cache vit dans l'instance : une réponse obtenue ne repart pas vers l'API.
+  // Un vide (échec) n'est jamais figé — la prochaine question retentera vraiment.
+  const cache = avecCache<string>();
   return {
     async ask(messages: Message[]): Promise<string> {
-      try {
-        const res = await fetchImpl(`${endpoint}/dire`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(modele ? { messages, modele } : { messages }),
-        });
-        if (!res.ok) return '';
-        const o = (await res.json()) as Record<string, any>;
-        const r = o?.result?.response ?? o?.response;
-        return typeof r === 'string' ? r.trim() : '';
-      } catch {
-        return '';
-      }
+      const cle = cleeDeReponse(messages, `${endpoint}|${modele}`);
+      return cache.chargerOu(cle, async () => {
+        try {
+          const res = await fetchImpl(`${endpoint}/dire`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(modele ? { messages, modele } : { messages }),
+          });
+          if (!res.ok) return '';
+          const o = (await res.json()) as Record<string, any>;
+          const r = o?.result?.response ?? o?.response;
+          return typeof r === 'string' ? r.trim() : '';
+        } catch {
+          return '';
+        }
+      });
     },
   };
 }

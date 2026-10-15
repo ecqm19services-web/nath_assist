@@ -112,12 +112,19 @@ ou **SP4 (Play Store d'abord)** si la fenêtre de publication est la priorité a
   notation, durée conseillée, appréciation qui n'est jamais une fin) + onglet **Examen** sur les
   paquets de l'élève. 539 tests verts, prouvé en runtime (5 cartes, réponses cachées puis révélées,
   « 3/5 · 60 % — C'est en bonne voie »).
-- **SP1 Cerveau hors-ligne — NON CLÔS (volontairement).** Web-LLM est déjà dépendance, mais le
-  vrai hors-ligne « extraordinaire » exige le téléchargement/stockage local des poids (Mo→Go), et
-  WebGPU Windows est instable. C'est un chantier à part entière, pas une case à cocher ici.
-- **SP4 Play Store — BLOQUÉ HORS-CODE.** La voie est TWA/Bubblewrap avec **targetSdk 36** (déjà
-  exigé). Construire/publier l'AAB demande le SDK Android + Java et les gestes du Play Console
-  (compte existant, publication en attente) — rien que le dépôt web ne possa remplacer.
-- **SP5 Monétisation FCFA — DÉCISION À PENDRE.** La clé pro locale existe ; **paywalliser** Langues
-  ou Examen maintenant réduirait l'adoption visée. À armer quand on fixe le modèle (pack à vie vs
-  abonnement), sans espionner et hors-ligne d'abord.
+- **SP1 Cerveau hors-ligne — EN COURS (couture livrée).** Le local (Web-LLM, sonde GPU,
+  consentement, fail-open) et le réseau gratuit existent déjà. Ajouté ici **`cerveauRouteur.ts`**
+  (`choisirCerveau` local>réseau>repli, `cleeDeReponse`, `avecCache`) et **cache-first câblé dans
+  `creerCerveauNet`** : une question posée ne repart jamais deux fois vers l'API (un échec n'est
+  pas figé, il se retente). C'est le premier levier « arrêter de payer ». Le téléchargement réel
+  des poids (Go) et la fiabilité WebGPU Windows restent un chantier à part.
+- **SP4 Play Store — OUTILLÉ (dépôt), PUBLICATION HORS-DÉPÔT.** Manifeste **durci pour TWA**
+  (`id`, `scope`, `start_url`, `lang fr`, `orientation`, `categories`, icônes `any`+`maskable`),
+  garde-fou `play-store.test.ts`, et **`scripts/prepare-play-store.ps1`** (build, contrôles
+  prérequis, Bubblewrap, checklist **targetSdk 36** + `/.well-known/assetlinks.json`). La
+  construction/push de l'AAB exige SDK Android + Java + Play Console — hors du pouvoir du dépôt.
+- **SP5 Monétisation FCFA — MÉCANISME ARMÉ, NON ACTIVÉ.** `paliers.ts` (`palierDe`, `estOuvert`) :
+  toute capacité est **« libre » par défaut** ; une ne se réserve que sur réglage explicite, alors
+  la clé Nath+ locale l'ouvre. **Aucun paywall forcé** — la doctrine « le gratuit n'est jamais
+  bridé » est tenue. À activer capacité par capacité quand le modèle est fixé (pack à vie vs
+  abonnement).

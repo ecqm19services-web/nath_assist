@@ -23,9 +23,23 @@ export default defineConfig({
       theme_color: '#05070f',
       background_color: '#05070f',
       display: 'standalone',
+      lang: 'fr',
+      dir: 'ltr',
+      // Prêt pour un empaquetage TWA (Play Store via Bubblewrap) : un identifiant
+      // stable, une portée claire, le sens d'écran et les familles de l'app.
+      id: 'nath-assist',
+      start_url: './',
+      scope: './',
+      orientation: 'portrait',
+      categories: ['education', 'productivity', 'lifestyle'],
       icons: [
-        { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
-        { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+        { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        // Variants maskables : Play exige un icon à zone sûre. Ici on réutilise le
+        // même png (aucun fichier manquant au pré-cache) — l'idéal reste un visuel
+        // dédié avec marges, à produire dans scripts/gen-icons.mjs.
+        { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+        { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
       ],
     },
     workbox: {
