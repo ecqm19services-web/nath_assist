@@ -20,6 +20,15 @@ import {
   type Fiche,
 } from '../etudes/examen';
 import {
+  PACKS as METIERS_PACKS,
+  avancerJour,
+  motDuJour,
+  piegeDuJour,
+  progressionDe,
+  trouverPack,
+  tacheDuJour,
+} from '../metiers/pack';
+import {
   analyserDictee,
   epurerDictee,
 } from '../traduction/dictee';
@@ -67,7 +76,7 @@ const el = (html: string) => {
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
 
-type Onglet = 'flamme' | 'frigo' | 'assiette' | 'journal' | 'tuteur' | 'souffle' | 'resume' | 'carte' | 'langues' | 'examen' | 'coffre';
+type Onglet = 'flamme' | 'frigo' | 'assiette' | 'journal' | 'tuteur' | 'souffle' | 'resume' | 'carte' | 'langues' | 'examen' | 'metiers' | 'coffre';
 
 const TITRES: Record<Onglet, string> = {
   flamme: 'Flamme',
@@ -80,6 +89,7 @@ const TITRES: Record<Onglet, string> = {
   carte: 'Carte',
   langues: 'Langues',
   examen: 'Examen',
+  metiers: 'Métiers',
   coffre: 'Coffre',
 };
 
@@ -128,6 +138,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
   let examenCartes: Fiche[] | null = null;
   let examenMarks: Record<string, boolean> = {};
   let examenResultat: { corrects: number; total: number; score: number } | null = null;
+  let metiersPackId = METIERS_PACKS[0]?.id ?? '';
 
   const horsLigne = () => (!navigator.onLine ? '<p class="outils-note">Hors-ligne : tout ce que tu vois ici continue de fonctionner.</p>' : '');
   const cerveauRegle = () => !!lireEndpoint(storage).trim();
@@ -697,7 +708,49 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     });
   }
 
-  // ——— 11. Le coffre : emporter et reposer ses souvenirs ———
+  // ——— 11. Les métiers : un indispensable de métier, hors-ligne ———
+  function rendreMetiers(): void {
+    const pack = trouverPack(metiersPackId) ?? METIERS_PACKS[0];
+    if (!pack) {
+      corps.innerHTML = '<div class="oi-carte"><p class="oi-note">Aucun pack métier pour l’instant.</p></div>';
+      return;
+    }
+    const jour = progressionDe(pack.id, storage);
+    const t = tacheDuJour(pack, jour);
+    const m = motDuJour(pack, jour);
+    const p = piegeDuJour(pack, jour);
+    const boutonsPacks = METIERS_PACKS.map(
+      (x) => `<button data-mt="${esc(x.id)}"${x.id === pack.id ? ' class="actif"' : ''}>${x.emoji} ${esc(x.nom)}</button>`,
+    ).join('');
+    corps.innerHTML = `
+      <div class="oi-carte">
+        <p class="oi-titre">&#129520; Un métier, un jour, un geste</p>
+        <p class="oi-note">Apprends le métier comme on l’apprend sur le terrain : aujourd’hui une tâche, un mot exact, un piège à éviter. Hors-ligne, sans compte ; ta progression voyage avec le coffre.</p>
+        <div class="oi-actions">${boutonsPacks}</div>
+        <p class="oi-note">${esc(pack.resume)}</p>
+        <p class="oi-titre2">Jour ${jour + 1} — la tâche du jour</p>
+        <p><strong>${esc(t.titre)}</strong></p>
+        <ul class="oi-liste">${t.gestes.map((g) => `<li>• ${esc(g)}</li>`).join('')}</ul>
+        <p class="oi-titre2">Le mot juste</p>
+        <p><strong>${esc(m.mot)}</strong> — ${esc(m.sens)}</p>
+        <p class="oi-titre2">Le piège du jour</p>
+        <p>${esc(p.enoncé)}</p>
+        <p class="oi-pet">Pour l’éviter : ${esc(p.eviter)}</p>
+        <div class="oi-actions"><button data-act="demain">Jour suivant</button></div>
+      </div>${horsLigne()}`;
+    corps.querySelectorAll<HTMLElement>('[data-mt]').forEach((b) =>
+      b.addEventListener('click', () => {
+        metiersPackId = b.dataset.mt ?? metiersPackId;
+        rendreMetiers();
+      }),
+    );
+    corps.querySelector('[data-act="demain"]')?.addEventListener('click', () => {
+      avancerJour(pack.id, storage);
+      rendreMetiers();
+    });
+  }
+
+  // ——— 12. Le coffre : emporter et reposer ses souvenirs ———
   function rendreCoffre(): void {
     corps.innerHTML = `
       <div class="oi-carte">
@@ -755,6 +808,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     carte: rendreCarte,
     langues: rendreLangues,
     examen: rendreExamen,
+    metiers: rendreMetiers,
     coffre: rendreCoffre,
   };
 
