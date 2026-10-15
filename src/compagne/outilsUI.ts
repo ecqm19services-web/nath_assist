@@ -6,6 +6,7 @@
 
 import { createVoice } from './voice';
 import { exporterCoffre, importerCoffre } from './coffre';
+import { lireCarnet, teacher, traduire } from '../traduction/carnet';
 import {
   ajouterPaquet,
   ajouterFiche,
@@ -59,7 +60,7 @@ const el = (html: string) => {
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
 
-type Onglet = 'flamme' | 'frigo' | 'assiette' | 'journal' | 'tuteur' | 'souffle' | 'resume' | 'carte' | 'coffre';
+type Onglet = 'flamme' | 'frigo' | 'assiette' | 'journal' | 'tuteur' | 'souffle' | 'resume' | 'carte' | 'langues' | 'coffre';
 
 const TITRES: Record<Onglet, string> = {
   flamme: 'Flamme',
@@ -70,6 +71,7 @@ const TITRES: Record<Onglet, string> = {
   souffle: 'Souffle',
   resume: 'Résumé',
   carte: 'Carte',
+  langues: 'Langues',
   coffre: 'Coffre',
 };
 
@@ -107,6 +109,12 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
   let souffleTimer: number | null = null;
   let souffleDepart = 0;
   let carteIle: string | null = null;
+  let languesLang = 'wolof';
+  let languesReq = '';
+  let languesDe = '';
+  let languesA = '';
+  let languesMsg = '';
+  let languesRes: { resultat: string | null; manques: string[] } | null = null;
 
   const horsLigne = () => (!navigator.onLine ? '<p class="outils-note">Hors-ligne : tout ce que tu vois ici continue de fonctionner.</p>' : '');
   const cerveauRegle = () => !!lireEndpoint(storage).trim();
@@ -530,7 +538,72 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     });
   }
 
-  // ——— 9. Le coffre : emporter et reposer ses souvenirs ———
+  // ——— 9. Les langues : parler la sienne, la garder sans réseau ———
+  const LANGUES: [string, string][] = [
+    ['wolof', 'Wolof'], ['nouchi', 'Nouchi'], ['anglais', 'Anglais'],
+    ['espagnol', 'Espagnol'], ['arabe', 'Arabe'], ['chinois', 'Chinois'],
+  ];
+
+  function rendreLangues(): void {
+    const apprises = lireCarnet(storage);
+    corps.innerHTML = `
+      <div class="oi-carte">
+        <p class="oi-titre">&#128483;&#65039; Parler ta langue</p>
+        <p class="oi-note">Traduire un mot, une petite phrase — ici, même sans réseau. Ce que tu apprends ici reste sur ton appareil et voyage avec ton coffre.</p>
+        <div class="oi-actions">
+          ${LANGUES.map(([k, nom]) => `<button data-lg="${k}"${k === languesLang ? ' class="actif"' : ''}>${nom}</button>`).join('')}
+        </div>
+        <label class="oi-libelle" for="oi-lg-mot">Le mot ou la phrase, en français</label>
+        <input id="oi-lg-mot" class="oi-champ" type="text" placeholder="ex. merci, de l’eau, ma maison" value="${esc(languesReq)}" />
+        <div class="oi-actions">
+          <button data-act="dire">Traduire</button>
+          ${voix.ttsDisponible ? '<button data-act="lire">&#128266; Me le dire</button>' : ''}
+        </div>
+        <div data-res>${languesRes
+          ? `<p class="oi-reponse">${esc(languesRes.resultat ?? 'Je ne sais pas encore ce mot.')}</p>${languesRes.manques.length ? `<p class="oi-note">Il me manque : ${languesRes.manques.map(esc).join(', ')} — donne-le moi en dessous.</p>` : ''}`
+          : ''}</div>
+        <p class="oi-titre2">Lui apprendre un mot</p>
+        <input id="oi-lg-de" class="oi-champ" type="text" placeholder="en français (ex. voiture)" value="${esc(languesDe)}" />
+        <input id="oi-lg-a" class="oi-champ" type="text" placeholder="dans ta langue (ex. gaara)" value="${esc(languesA)}" />
+        <div class="oi-actions"><button data-act="donner">Ajouter au carnet</button></div>
+        ${languesMsg ? `<p class="oi-note">${esc(languesMsg)}</p>` : ''}
+        <p class="oi-note">${apprises.length} mot${apprises.length > 1 ? 's' : ''} appris${apprises.length > 1 ? 's' : ''} de toi, gardés sur cet appareil.</p>
+      </div>${horsLigne()}`;
+    const mot = corps.querySelector('#oi-lg-mot') as HTMLInputElement;
+    mot.addEventListener('input', () => (languesReq = mot.value));
+    const de = corps.querySelector('#oi-lg-de') as HTMLInputElement;
+    de.addEventListener('input', () => (languesDe = de.value));
+    const a = corps.querySelector('#oi-lg-a') as HTMLInputElement;
+    a.addEventListener('input', () => (languesA = a.value));
+    corps.querySelectorAll<HTMLElement>('[data-lg]').forEach((b) =>
+      b.addEventListener('click', () => {
+        languesLang = b.dataset.lg ?? 'wolof';
+        languesRes = null;
+        rendreLangues();
+      }),
+    );
+    corps.querySelector('[data-act="dire"]')!.addEventListener('click', () => {
+      languesRes = traduire(languesReq, languesLang, storage);
+      rendreLangues();
+    });
+    corps.querySelector('[data-act="lire"]')?.addEventListener('click', () => {
+      if (languesRes?.resultat) voix.parler(languesRes.resultat, 'posee');
+    });
+    corps.querySelector('[data-act="donner"]')!.addEventListener('click', () => {
+      const avant = lireCarnet(storage).length;
+      teacher(storage, languesDe, languesA, languesLang);
+      const apres = lireCarnet(storage).length;
+      const nom = languesDe.trim();
+      if (apres > avant) languesMsg = `C’est noté : « ${nom} » se dit « ${languesA.trim()} ». Merci.`;
+      else if (nom && languesA.trim()) languesMsg = `Ta parole remplace l’ancienne pour « ${nom} ».`;
+      else languesMsg = 'Il me faut le mot et sa traduction pour l’apprendre.';
+      languesDe = '';
+      languesA = '';
+      rendreLangues();
+    });
+  }
+
+  // ——— 10. Le coffre : emporter et reposer ses souvenirs ———
   function rendreCoffre(): void {
     corps.innerHTML = `
       <div class="oi-carte">
@@ -586,6 +659,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     souffle: rendreSouffle,
     resume: rendreResume,
     carte: rendreCarte,
+    langues: rendreLangues,
     coffre: rendreCoffre,
   };
 

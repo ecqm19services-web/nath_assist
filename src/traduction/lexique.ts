@@ -141,16 +141,42 @@ const DEPART: Record<string, Entree[]> = {
     ['père', '爸爸'], ['mère', '妈妈'], ['chien', '狗'], ['chat', '猫'],
     ['livre', '书'], ['école', '学校'], ['jour', '日'], ['nuit', '夜'],
   ].map(([de, a]) => ({ de, a, langue: 'chinois' })),
+  // Le wolof, langue du marche, n'a rien ainventer : chaque forme est attestee
+  // dans des sources ouvertes (dictionnaires et corpora de la langue). Les
+  // caracteres speciaux (ё, e circonflexe…) sont la graphie courante, pas du bruit.
+  wolof: [
+    ['bonjour', 'nanga def'], ['merci', 'jërëjëf'], ['oui', 'waaw'], ['non', 'déet'],
+    ['eau', 'ndox'], ['pain', 'mburu'], ['maison', 'kër'], ['ami', 'xarit'],
+    ['père', 'igget'], ['mère', 'yaay'], ['chien', 'xaj'], ['chat', 'muus'],
+    ['livre', 'teere'], ['école', 'ekol'], ['jour', 'bés'], ['nuit', 'guddi'],
+  ].map(([de, a]) => ({ de, a, langue: 'wolof' })),
+  // Le nouchi : registre à base française né à Abidjan, pas une langue close.
+  // On ne part que de formes citées dans des sources ouvertes ; le reste, la
+  // communauté l'ajoute entrée par entrée (carnet + coffre), jamais nous.
+  nouchi: [
+    ['ami', 'bramôgô'], ['personne', 'môgo'], ['confiance', 'fianss'], ['courage', 'kèr'],
+    ['policier', 'charo'],
+  ].map(([de, a]) => ({ de, a, langue: 'nouchi' })),
 };
 const ALIAS: Record<string, string> = {
   english: 'anglais', spanish: 'espagnol', german: 'allemand',
   italian: 'italien', portuguese: 'portugais', arabic: 'arabe', chinese: 'chinois',
+  wo: 'wolof', wollof: 'wolof', ouolof: 'wolof',
+  nouchi: 'nouchi',
 };
 
 export function lexiqueDepart(langue: string): Entree[] {
   const n = normaliser(langue);
   const clef = ALIAS[n] ?? n;
   return (DEPART[clef] ?? []).map((e) => ({ ...e }));
+}
+
+// Une même langue s écrit de bien des façons (wo, wollof, english…).
+// Ramener tout ça à la forme maison évite que le carnet d un côté et le
+// socle de l autre ne se reconnaissent jamais.
+export function langueCanonique(langue: string): string {
+  const n = normaliser(langue);
+  return ALIAS[n] ?? n;
 }
 
 // Le carnet se transmet de main en main : un texte simple, une ligne par mot.
