@@ -13,6 +13,13 @@ import {
   lirePaquets,
 } from '../etudes/store';
 import {
+  apprecier,
+  composerExamen,
+  dureeConseillee,
+  resultatExamen,
+  type Fiche,
+} from '../etudes/examen';
+import {
   analyserDictee,
   epurerDictee,
 } from '../traduction/dictee';
@@ -60,7 +67,7 @@ const el = (html: string) => {
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
 
-type Onglet = 'flamme' | 'frigo' | 'assiette' | 'journal' | 'tuteur' | 'souffle' | 'resume' | 'carte' | 'langues' | 'coffre';
+type Onglet = 'flamme' | 'frigo' | 'assiette' | 'journal' | 'tuteur' | 'souffle' | 'resume' | 'carte' | 'langues' | 'examen' | 'coffre';
 
 const TITRES: Record<Onglet, string> = {
   flamme: 'Flamme',
@@ -72,6 +79,7 @@ const TITRES: Record<Onglet, string> = {
   resume: 'Résumé',
   carte: 'Carte',
   langues: 'Langues',
+  examen: 'Examen',
   coffre: 'Coffre',
 };
 
@@ -115,6 +123,11 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
   let languesA = '';
   let languesMsg = '';
   let languesRes: { resultat: string | null; manques: string[] } | null = null;
+  let examenPaquetId = '';
+  let examenGraine = '';
+  let examenCartes: Fiche[] | null = null;
+  let examenMarks: Record<string, boolean> = {};
+  let examenResultat: { corrects: number; total: number; score: number } | null = null;
 
   const horsLigne = () => (!navigator.onLine ? '<p class="outils-note">Hors-ligne : tout ce que tu vois ici continue de fonctionner.</p>' : '');
   const cerveauRegle = () => !!lireEndpoint(storage).trim();
@@ -603,7 +616,88 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     });
   }
 
-  // ——— 10. Le coffre : emporter et reposer ses souvenirs ———
+  // ——— 10. L'examen blanc : se tester avant le vrai jour, hors-ligne ———
+  function rendreExamen(): void {
+    const paquets = lirePaquets(storage);
+    if (!examenPaquetId && paquets.length) examenPaquetId = paquets[0].id;
+    const paquet = paquets.find((p) => p.id === examenPaquetId) ?? null;
+    const cartes = examenCartes ?? [];
+    const corrige = examenResultat !== null;
+    const sujets = paquet
+      ? `<div class="oi-actions">${paquets
+          .map(
+            (p) =>
+              `<button data-pq="${esc(p.id)}"${p.id === examenPaquetId ? ' class="actif"' : ''}>${esc(p.nom)} (${p.fiches.length})</button>`,
+          )
+          .join('')}</div>`
+      : '';
+    const liste = cartes.length
+      ? `<p class="oi-titre2">Ton sujet · ${cartes.length} cartes · vise ${dureeConseillee(cartes.length)} s</p>` +
+        `<div class="oi-liste">${cartes
+          .map(
+            (f, i) =>
+              `<div class="oi-ligne"><span><strong>${i + 1}. ${esc(f.verso)}</strong></span>` +
+              `<button data-mark="${esc(f.id)}"${examenMarks[f.id] ? ' class="actif"' : ''}>${examenMarks[f.id] ? 'Je savais' : 'À revoir'}</button></div>` +
+              (corrige ? `<p class="oi-pet">${esc(f.recto)}</p>` : ''),
+          )
+          .join('')}</div>` +
+        `<div class="oi-actions"><button data-act="corriger">Voir mon résultat</button><button data-act="nouveau">Un autre sujet</button></div>` +
+        (corrige
+          ? `<p class="oi-reponse">${examenResultat!.corrects}/${examenResultat!.total} · ${Math.round(examenResultat!.score * 100)} % — ${esc(apprecier(examenResultat!.score))}</p>`
+          : '')
+      : '';
+    corps.innerHTML = `
+      <div class="oi-carte">
+        <p class="oi-titre">&#128221; L’examen blanc</p>
+        <p class="oi-note">Avant le vrai jour, teste-toi dans les mêmes conditions — ici, même sans réseau. Choisis un paquet, compose un sujet, souviens-toi, puis dis ce que tu savais.</p>
+        ${paquets.length ? sujets : '<p class="oi-note">Aucun paquet encore. Crée des fiches dans le coin d’études, ou envoie-en depuis le résumé.</p>'}
+        ${paquet && !cartes.length
+          ? `<div class="oi-actions"><button data-act="composer"${paquet.fiches.length < 2 ? ' disabled' : ''}>Composer un sujet (${Math.min(10, paquet.fiches.length)} cartes)</button></div>${
+              paquet.fiches.length < 2 ? '<p class="oi-note">Il faut au moins deux cartes dans ce paquet.</p>' : ''
+            }`
+          : ''}
+        ${liste}
+      </div>${horsLigne()}`;
+    corps.querySelectorAll<HTMLElement>('[data-pq]').forEach((b) =>
+      b.addEventListener('click', () => {
+        examenPaquetId = b.dataset.pq ?? examenPaquetId;
+        examenCartes = null;
+        examenMarks = {};
+        examenResultat = null;
+        rendreExamen();
+      }),
+    );
+    corps.querySelector('[data-act="composer"]')?.addEventListener('click', () => {
+      if (!paquet) return;
+      examenGraine = `${paquet.id}-${Date.now()}`;
+      examenCartes = composerExamen(paquet.fiches, 10, examenGraine);
+      examenMarks = {};
+      examenResultat = null;
+      rendreExamen();
+    });
+    corps.querySelector('[data-act="nouveau"]')?.addEventListener('click', () => {
+      if (!paquet) return;
+      examenGraine = `${paquet.id}-${Date.now()}`;
+      examenCartes = composerExamen(paquet.fiches, 10, examenGraine);
+      examenMarks = {};
+      examenResultat = null;
+      rendreExamen();
+    });
+    corps.querySelectorAll<HTMLElement>('[data-mark]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const id = b.dataset.mark ?? '';
+        examenMarks = { ...examenMarks, [id]: !examenMarks[id] };
+        rendreExamen();
+      }),
+    );
+    corps.querySelector('[data-act="corriger"]')?.addEventListener('click', () => {
+      if (!cartes.length) return;
+      examenResultat = resultatExamen(cartes.map((f) => ({ id: f.id, juste: !!examenMarks[f.id] })));
+      rendreExamen();
+    });
+  }
+
+  // ——— 11. Le coffre : emporter et reposer ses souvenirs ———
   function rendreCoffre(): void {
     corps.innerHTML = `
       <div class="oi-carte">
@@ -660,6 +754,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     resume: rendreResume,
     carte: rendreCarte,
     langues: rendreLangues,
+    examen: rendreExamen,
     coffre: rendreCoffre,
   };
 
