@@ -25,8 +25,8 @@ const stockageFake = (): Pick<Storage, 'getItem' | 'setItem'> => {
 };
 
 describe('PACKS — les paquets métiers livrés', () => {
-  it('au moins huit métiers (vagues 1 + 2 + 3)', () => {
-    expect(PACKS.length).toBeGreaterThanOrEqual(8);
+  it('au moins douze métiers (vagues 1 à 4)', () => {
+    expect(PACKS.length).toBeGreaterThanOrEqual(12);
   });
   it('ids uniques', () => {
     expect(new Set(PACKS.map((p) => p.id)).size).toBe(PACKS.length);
@@ -203,6 +203,38 @@ describe('vague 3 — au-delà du Sénégal : pays, crise, approvisionnement', (
   it('ordonnerPourCrise met « crise-survie » et « approvisionnement » en tête', () => {
     const out = ordonnerPourCrise(PACKS);
     expect(out.slice(0, 2).map((p) => p.id).sort()).toEqual(['approvisionnement', 'crise-survie']);
+  });
+});
+
+describe('vague 4 — coiffure, tech, terre, béton', () => {
+  const NOUVEAUX = [
+    { id: 'coiffure', marqueurs: ['démêler', 'vanille', 'défrisage'] },
+    { id: 'reparation-telephones', marqueurs: ['ESD', 'batterie', 'nappe'] },
+    { id: 'marchage', marqueurs: ['paillage', 'rotation', 'repiquage'] },
+    { id: 'maconnerie', marqueurs: ['chaînage', 'mortier', 'parpaing'] },
+  ];
+  for (const n of NOUVEAUX) {
+    it(`le pack ${n.id} existe et est correctement structuré`, () => {
+      const p = trouverPack(n.id)!;
+      expect(p).not.toBeNull();
+      expect(p.taches.length).toBeGreaterThanOrEqual(5);
+      expect(p.glossaire.length).toBeGreaterThanOrEqual(6);
+      expect(p.pieges.length).toBeGreaterThan(2);
+      for (const t of p.taches) expect(t.gestes.length).toBeGreaterThanOrEqual(2);
+    });
+    it(`le pack ${n.id} contient les mots-clés de son métier`, () => {
+      const p = trouverPack(n.id)!;
+      const t = JSON.stringify(p).toLowerCase();
+      for (const m of n.marqueurs) expect(t).toContain(m.toLowerCase());
+    });
+  }
+  it('coiffure et maçonnerie interdisent explicitement leurs erreurs graves', () => {
+    for (const id of ['coiffure', 'maconnerie', 'reparation-telephones', 'marchage']) {
+      const p = trouverPack(id)!;
+      for (const piege of p.pieges) {
+        expect(piege.eviter).toMatch(/\bne (jamais|pas|rien)\b/i);
+      }
+    }
   });
 });
 

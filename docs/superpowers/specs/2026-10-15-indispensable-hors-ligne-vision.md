@@ -137,6 +137,16 @@ ou **SP4 (Play Store d'abord)** si la fenêtre de publication est la priorité a
   coffre. **622 tests verts** (+26 pour la vague 3 : 9 pays, 6 contexte, 11 packs/filtrage/UI,
   dont un verrou anti-faux conseil médical : chaque « à éviter » crise/prmsoins dit
   explicitement « ne pas/jamais/rien »).
+- **SP3-bis (suite) — vague 4 — LIVRÉE.** **12 packs** au total avec l'ajout de
+  **💇 Coiffure & tressage** (consulter, laver, démêler, tresser, finir + négations
+  verrouillées sur le défrisage et la traction), **📱 Réparation téléphones** (diagnostic,
+  ouverture, écran/batterie, micro-soudure, ESD, emballement Li-ion), **🌾 Marîchage**
+  (sol, pépinière, repiquage, irrigation/paillage, récolte & vente), **🧱 Maçonnerie**
+  (implantation, fondations, chaînage, hourdis, enduits en trois couches). Verrou
+  vague 4 : chaque « à éviter » contient `ne (jamais|pas|rien)` (insensible à la casse).
+  Le **garde-fou langue** a mordu : le littéral `°C` (une élision baissée apparente
+  `c` + espace + voyelle) est détecté et réécrit en `degrés`. **631 tests verts** (+9
+  pour la vague 4 : 8 tests par pack + un bloc négation croisée).
 - **SP1 Cerveau hors-ligne — CÂBLÉ EN PRODUCTION.** Le local (Web-LLM, sonde GPU,
   consentement, fail-open) et le réseau gratuit existent déjà. **`cerveauRouteur.ts`**
   (`choisirCerveau` local>réseau>repli, `cleeDeReponse`, `avecCache`) est maintenant

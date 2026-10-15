@@ -430,6 +430,202 @@ export const PACKS: PackMetier[] = [
       { enoncé: 'Produits fragiles au fond du sac', eviter: 'Ne pas écraser les sensibles : lourd en bas, fragile en haut.' },
     ],
   },
+  {
+    id: 'coiffure',
+    nom: 'Coiffure & tressage',
+    emoji: '💇‍♀️',
+    resume: 'Coiffer et tresser proprement, sans abîmer le cheveu ni la cliente.',
+    taches: [
+      { titre: 'Consulter avant de toucher', gestes: [
+        'Regarder le cuir chevelu : pellicules, irritations, plaies, poux.',
+        'Demander les produits déjà utilisés et les allergies connues.',
+        'Annoncer le prix et la durée avant de commencer.',
+      ] },
+      { titre: 'Laver et préparer', gestes: [
+        'Eau tiède, pas brûlante : le cuir sensible gonfle avec la chaleur.',
+        'Shampoing adapté au type de cheveu, masquer des longueurs.',
+        'Rincer abondamment, puis appliquer une crème sans rinçage.',
+      ] },
+      { titre: 'Démêler sans casser', gestes: [
+        'Peigne à dents larges, mèche par mèche.',
+        'Commencer par les pointes, puis remonter vers les racines.',
+        'Tenir la mèche serrée à la base pour ne pas tirer le cuir.',
+      ] },
+      { titre: 'Tresser une natte ou une vanille', gestes: [
+        'Trois brins égaux, tension régulière du début à la fin.',
+        'Pour une vanille, ajouter à chaque passage une mèche prise dessous.',
+        'Finir proprement : élastique doux, pas de traction excessive sur le front.',
+      ] },
+      { titre: 'Finir et conseiller', gestes: [
+        'Une huile légère sur les pointes uniquement.',
+        'Conseiller un foulard ou une taie satinée la nuit pour tenir la forme.',
+        'Fixer le prochain rendez-vous d’entretien (4 à 6 semaines).',
+      ] },
+    ],
+    glossaire: [
+      { mot: 'mèche', sens: 'portion de cheveux séparée pour travailler proprement' },
+      { mot: 'raie', sens: 'ligne tracée sur le crâne pour séparer les zones' },
+      { mot: 'vanille', sens: 'natte collée longue et fine, appelée aussi tresse africaine' },
+      { mot: 'nappy', sens: 'texture crépue naturelle, non défrisée ni texturée' },
+      { mot: 'défrisage', sens: 'lissage chimique, à espacer de trois mois minimum' },
+      { mot: 'démêlant', sens: 'crème qui facilite le peignage sans casser' },
+      { mot: 'soin du cuir', sens: 'gommage, huile ou lotions appliqués sur la peau, pas sur les longueurs' },
+      { mot: 'coiffure protectrice', sens: 'style qui met les pointes à l’abri des frottements (vanilles, twists, chignon)' },
+    ],
+    pieges: [
+      { enoncé: 'Défriser sur un cuir irrité', eviter: 'Ne jamais appliquer un défrisant sur un cuir irrité, qui pèle ou qui gratte : faire d’abord un test mèche et attendre la guérison.' },
+      { enoncé: 'Tresser trop serré', eviter: 'Ne pas tirer jusqu’à la douleur : si la cliente sent une traction vive, c’est mal posé. Le front et la nuque sont les zones les plus fragiles.' },
+      { enoncé: 'Peigner un nœud depuis la racine', eviter: 'Ne jamais commencer un démêlage par la racine : on casse le cheveu. Toujours des pointes vers le haut.' },
+      { enoncé: 'Passer la tondeuse à sec sur une peau sèche', eviter: 'Ne pas tondre une peau sèche ou irritée sans préparation : nettoyer, huiler ou gel, et lames propres et désinfectées.' },
+    ],
+  },
+  {
+    id: 'reparation-telephones',
+    nom: 'Réparation téléphones',
+    emoji: '📱',
+    resume: 'Dépanner un smartphone sans le casser, et sans se mettre en danger.',
+    taches: [
+      { titre: 'Diagnostiquer avant d’ouvrir', gestes: [
+        'Tester écran, tactile, haut-parleur, micro, caméras, boutons, charge, Wi-Fi, réseau.',
+        'Noter les symptômes exacts avec le client ; une panne « écran noir » a cinq causes possibles.',
+        'Proposer un devis ouvert et chiffré seulement après ce test complet.',
+      ] },
+      { titre: 'Ouvrir proprement', gestes: [
+        'Sauvegarder les données du client avant toute manipulation.',
+        'Chauffer le pourtour (tapis chauffant ou décapeur thermique doux) ou injecter de l’alcool isopropylique au niveau de la colle.',
+        'Utiliser une ventouse puis un médiator, vis triées et notées par position.',
+      ] },
+      { titre: 'Remplacer un écran ou une batterie', gestes: [
+        'Déclipser d’abord la batterie, puis les nappes écran/tactile.',
+        'Poser un joint adhésif neuf ; ne pas réutiliser la colle d’origine.',
+        'Tester avant de refermer, pour éviter de rouvrir.',
+      ] },
+      { titre: 'Micro-souder en sécurité', gestes: [
+        'Bracelet et tapis ESD obligatoires, fer à 320 ou 350 degrés, avec flux.',
+        'Travailler sous loupe, jamais à l’œil nu sur un composant de moins de 2 mm.',
+        'Ne jamais laisser un fer sous tension sans surveillance.',
+      ] },
+      { titre: 'Refermer et restituer', gestes: [
+        'Remettre les joints, clipser sans forcer, revisser dans l’ordre inverse.',
+        'Faire un test complet devant le client : appels, charge, photo, audio.',
+        'Garantir la pièce et le geste : durée et conditions écrites.',
+      ] },
+    ],
+    glossaire: [
+      { mot: 'ESD', sens: 'décharge électrostatique : invisible mais destructrice, bracelet et tapis obligatoires' },
+      { mot: 'nappe', sens: 'connecteur plat qui relie l’écran ou les boutons à la carte mère' },
+      { mot: 'flex', sens: 'cable interne très fin, se plie mais ne se casse pas (théoriquement)' },
+      { mot: 'PMOS', sens: 'circuits de protection de la batterie lithium-ion' },
+      { mot: 'courant de fuite', sens: 'consommation anormale mesurée sur alimentation de laboratoire, signe d’un court-jus' },
+      { mot: 'reconditionné', sens: 'pièce de récupération testée et certifiée, moins chère que la pièce neuve' },
+      { mot: 'tapis chauffant', sens: 'plaque qui chauffe une zone précise pour ramollir la colle d’un écran' },
+      { mot: 'sauvegarde', sens: 'copie des données avant toute intervention, même mineure' },
+    ],
+    pieges: [
+      { enoncé: 'Manipuler une batterie gonflée ou chaude', eviter: 'Ne jamais percer, plier ni faire chauffer une batterie Li-ion gonflée : risque d’emballement thermique. L’évacuer en extérieur, la remplacer AVANT tout autre geste.' },
+      { enoncé: 'Souder sans bracelet ESD', eviter: 'Ne pas toucher une carte sans bracelet ou tapis antistatique : une décharge invisible tue un composant sans laisser de trace.' },
+      { enoncé: 'Remonter avec la colle d’origine', eviter: 'Ne jamais recoller sans joint neuf : étanchéité perdue, poussière, écran qui se décolle à la première chaleur.' },
+      { enoncé: 'Chiffrer sans diagnostiquer', eviter: 'Ne pas annoncer un prix avant d’avoir testé : une panne « écran noir » peut venir de la batterie, de la nappe, du connecteur, de la carte ou du logiciel.' },
+    ],
+  },
+  {
+    id: 'marchage',
+    nom: 'Marchage',
+    emoji: '🌾',
+    resume: 'Faire pousser des légumes qui se vendent : sol, eau, saison, marché.',
+    taches: [
+      { titre: 'Préparer le sol', gestes: [
+        'Observer la terre : couleur, structure, vie (vers, racines). Une terre meuble est une bonne terre.',
+        'Apporter fumier mûr ou compost, jamais frais sur les racines.',
+        'Faire des planches larges de 80 à 120 cm, allées étroites : on marche sans tasser.',
+      ] },
+      { titre: 'Semis et pépinière', gestes: [
+        'Semer en fonction de la saison et du cycle, pas de l’envie.',
+        'Profondeur : deux à trois fois la taille de la graine.',
+        'Arroser en pulvérisation fine jusqu’à la levée.',
+      ] },
+      { titre: 'Repiquer au bon stade', gestes: [
+        'Attendre quatre à six feuilles vraies, tige ferme.',
+        'Piquer le soir ou quand le ciel est couvert.',
+        'Arroser au pied, sans noyer.',
+      ] },
+      { titre: 'Irriguer et entretenir', gestes: [
+        'Pailler pour garder l’humidité et freiner les herbes.',
+        'Biner en surface plutôt que d’arroser plus.',
+        'Privilégier le goutte-à-goutte ou l’arrosage au pied, jamais sur les feuilles en plein soleil.',
+      ] },
+      { titre: 'Récolter et vendre', gestes: [
+        'Cueillir tôt le matin, encore dans la fraîcheur.',
+        'Trier, retirer l’abîmé, présenter proprement.',
+        'Afficher le prix et l’origine : un client revient sur une réputation, pas sur un rabais.',
+      ] },
+    ],
+    glossaire: [
+      { mot: 'fumure organique', sens: 'apport de compost ou fumier mûr, qui nourrit le sol sans brûler les racines' },
+      { mot: 'paillage', sens: 'couche protectrice au pied : paille, feuilles, carton ; garde l’eau, freine les herbes' },
+      { mot: 'binage', sens: 'griffer la surface pour aérer et retirer les jeunes herbes' },
+      { mot: 'rotation', sens: 'changer la famille de culture chaque saison sur la même planche' },
+      { mot: 'repiquage', sens: 'déplacer la jeune plante de la pépinière vers la planche définitive' },
+      { mot: 'stade quatre feuilles', sens: 'moment idéal pour repiquer la plupart des solanacées et cucurbitacées' },
+      { mot: 'goutte-à-goutte', sens: 'irrigation localisée au pied, économe en eau et en maladies foliaires' },
+      { mot: 'culture sous abri', sens: 'serre ou tunnel pour forcer hors saison ou protéger des pluies battantes' },
+    ],
+    pieges: [
+      { enoncé: 'Repiquer en plein soleil', eviter: 'Ne jamais repiquer en plein soleil ni en journée chaude : piquer le soir ou quand le ciel est couvert.' },
+      { enoncé: 'Arroser une pépinière en jet direct', eviter: 'Ne pas utiliser un jet fort sur une pépinière : on casse les tiges et on déplace les graines. Pulvérisation fine, toujours.' },
+      { enoncé: 'La même famille au même endroit chaque année', eviter: 'Ne pas cultiver chaque année tomates, aubergines ou piments au même endroit : le sol s’épuise et les maladies s’installent.' },
+      { enoncé: 'Récolter sous le soleil haut', eviter: 'Ne pas cueillir après dix heures : feuilles et fruits flétrissent avant le marché. Le matin, c’est tout.' },
+    ],
+  },
+  {
+    id: 'maconnerie',
+    nom: 'Maçonnerie & bâtiment',
+    emoji: '🧱',
+    resume: 'Monter un mur droit, d’aplomb et qui ne fissure pas.',
+    taches: [
+      { titre: 'Implanter et tracer', gestes: [
+        'Cordeaux tendus, niveau à bulle, fils à plomb.',
+        'Contrôler l’equerrage avec la règle du triangle 3-4-5.',
+        'Reporter les cotes sur des repères fixes, pas sur la terre molle.',
+      ] },
+      { titre: 'Fouiller et fonder', gestes: [
+        'Fouiller jusqu’au bon sol : hors terre végétale, hors remblai récent.',
+        'Béton de propreté, puis semelle armée dimensionnée au mur qu’elle porte.',
+        'Arase au niveau, contrôlée au cordeau sur toute la longueur.',
+      ] },
+      { titre: 'Monter un mur', gestes: [
+        'Mortier dosé et gâché pour une heure maximum, pas plus.',
+        'Joints horizontaux d’environ un centimètre, vérifiés au cordeau tous les trois rangs.',
+        'Décaler systématiquement d’un demi-module entre deux rangs : c’est ce qui empêche la fissure verticale.',
+      ] },
+      { titre: 'Ceinturer et daller', gestes: [
+        'Rien ne monte sans chaînage en haut : il reprend les efforts et évite les fissures de toiture.',
+        'Poteaux et poutres ferraillés selon le plan, pas au jugé.',
+        'Vibrer le béton de la dalle pour chasser l’air et éviter les nids de granulats.',
+      ] },
+      { titre: 'Enduire et protéger', gestes: [
+        'Trois couches : gobetis d’accroche, corps de dressage, finition lissée.',
+        'Cure humide pendant au moins sept jours, surtout en saison sèche et venteuse.',
+        'Gouttières, débords et soubassements : l’eau non évacuée est la première cause des fissures.',
+      ] },
+    ],
+    glossaire: [
+      { mot: 'semelle', sens: 'fondation filante en béton armé sous les murs porteurs' },
+      { mot: 'arase', sens: 'surface supérieure parfaitement nivelée d’une fondation, avant de monter' },
+      { mot: 'chaînage', sens: 'poutre béton armé qui ceinture un mur ou un bâtiment' },
+      { mot: 'hourdis', sens: 'blocs (terracotta, béton) posés entre les poutrelles d’une dalle' },
+      { mot: 'gobetis', sens: 'première couche d’enduit, riche en ciment, qui accroche le mortier' },
+      { mot: 'mortier bâtard', sens: 'mélange chaux + ciment, plus souple et moins fissible que le ciment seul' },
+      { mot: 'demi-module', sens: 'décalage d’une moitié de parpaing entre deux rangs successifs' },
+      { mot: 'equerrage 3-4-5', sens: 'corde tendue en triangle 3/4/5 pour obtenir un angle droit parfait' },
+    ],
+    pieges: [
+      { enoncé: 'Fonder dans la terre végétale', eviter: 'Ne jamais asseoir une fondation sur terre végétale ou remblai récent : elle travaillera et le mur fissurera. Fouiller jusqu’au bon sol.' },
+      { enoncé: 'Empiler des parpaings sans décalage', eviter: 'Ne pas aligner les joints verticaux d’un rang à l’autre : le mur se fend en deux sous la charge. Toujours décaler d’un demi-module.' },
+      { enoncé: 'Enduire d’un seul coup', eviter: 'Ne pas appliquer trois centimètres de mortier en une passe : ça gondole et ça se décolle. Toujours trois couches fines, chaque couche prise.' },
+      { enoncé: 'Couler une dalle sans vibrer', eviter: 'Ne pas couler sans vibrer : les bulles créent des nids de granulats, points faibles sous la charge. Vibreur ponctuel, passe à passe.' },
+    ],
+  },
 ];
 
 export function trouverPack(id: string): PackMetier | null {
