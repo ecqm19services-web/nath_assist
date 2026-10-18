@@ -1,12 +1,16 @@
 # Kit de lancement NUAGE — by Nath-Tech
 
+> Voir aussi **`docs/BILAN-TRANSMISSION.md`** : état complet du chantier, accès, doctrine,
+> pièges d'environnement et prochaines étapes priorisées.
+
 Actions humaines obligatoires (les seules que l'IA ne peut pas faire à votre place).
 Durée totale estimée : ~90 minutes, 0 € de frais fixes.
 
 ## 1. Créer les comptes (gratuits)
 
-- [ ] **GitHub** — déjà configuré localement ; la poussée ne se fait que sur ordre explicite.
-- [ ] **Cloudflare** — le Worker du gros cerveau (`wrangler deploy`) ; R2 (10 Go gratuits) seulement
+- [ ] **GitHub** — déjà configuré localement ; la poussée ne se fait que sur ordre explicite
+      (« fais github »). Compte actif : `gh auth switch --user ecqm19services-web`.
+- [ ] **Cloudflare** — le Worker du gros cerveau (`nath-cerveau`, `wrangler deploy`) ; R2 (10 Go gratuits) seulement
       si des packs de fichiers doivent être distribués. L'hébergement du site, lui, est sur GitHub Pages.
 - [ ] **Google** — un seul compte ouvre : AdSense (pub récompensée), YouTube Data API (usine sommeil), Gemini API (palier gratuit).
 - [ ] **Mistral « La Plateforme »** — palier gratuit pour l'assistance connectée optionnelle.

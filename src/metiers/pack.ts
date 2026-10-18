@@ -585,7 +585,7 @@ export const PACKS: PackMetier[] = [
     taches: [
       { titre: 'Implanter et tracer', gestes: [
         'Cordeaux tendus, niveau à bulle, fils à plomb.',
-        'Contrôler l’equerrage avec la règle du triangle 3-4-5.',
+        'Contrôler l’équerrage avec la règle du triangle 3-4-5.',
         'Reporter les cotes sur des repères fixes, pas sur la terre molle.',
       ] },
       { titre: 'Fouiller et fonder', gestes: [
@@ -617,7 +617,7 @@ export const PACKS: PackMetier[] = [
       { mot: 'gobetis', sens: 'première couche d’enduit, riche en ciment, qui accroche le mortier' },
       { mot: 'mortier bâtard', sens: 'mélange chaux + ciment, plus souple et moins fissible que le ciment seul' },
       { mot: 'demi-module', sens: 'décalage d’une moitié de parpaing entre deux rangs successifs' },
-      { mot: 'equerrage 3-4-5', sens: 'corde tendue en triangle 3/4/5 pour obtenir un angle droit parfait' },
+      { mot: 'équerrage 3-4-5', sens: 'corde tendue en triangle 3/4/5 pour obtenir un angle droit parfait' },
     ],
     pieges: [
       { enoncé: 'Fonder dans la terre végétale', eviter: 'Ne jamais asseoir une fondation sur terre végétale ou remblai récent : elle travaillera et le mur fissurera. Fouiller jusqu’au bon sol.' },

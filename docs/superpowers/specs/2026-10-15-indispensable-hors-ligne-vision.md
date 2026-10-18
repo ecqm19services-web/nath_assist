@@ -103,7 +103,7 @@ Play Store/lourde à résoudre tout de suite.
 Arbitrage demandé : **démarrer par SP2-lite (langues)**, ou privilégier **SP3 (un pack métier précis)**,
 ou **SP4 (Play Store d'abord)** si la fenêtre de publication est la priorité absolue.
 
-## Statut d'avancement (15 oct. 2026)
+## Statut d'avancement (15 oct. 2026, relu le 18 oct. 2026)
 
 - **SP2-lite Langues vivantes — LIVRÉ & DÉPLOYÉ.** Socle wolof (16 formes attestées) + registre
   nouchi (5 formes citées) + `carnet.ts` (enrichissable, rangé sous `nath.`, transporté par le coffre)
@@ -165,3 +165,20 @@ ou **SP4 (Play Store d'abord)** si la fenêtre de publication est la priorité a
   la clé Nath+ locale l'ouvre. **Aucun paywall forcé** — la doctrine « le gratuit n'est jamais
   bridé » est tenue. À activer capacité par capacité quand le modèle est fixé (pack à vie vs
   abonnement).
+
+## Transfert de chantier (18 oct. 2026)
+
+La session de développement s'arrête ici pour ce qui concerne les Packs Métiers et le socle
+hors-ligne. **Le document de référence pour reprendre est `docs/BILAN-TRANSMISSION.md`** :
+état vérifié du dépôt et de la production, accès et comptes, cartographie des 64 modules,
+18 clés de stockage `nath.`, doctrine produit, pièges Windows/PowerShell déjà payés, séquence
+exacte de déploiement, inventaire des verrous de tests, limites honnêtes et prochaines étapes
+priorisées.
+
+Dernier état vérifié : `main` `4ed1191` (vague 4, 12 packs), `gh-pages` `7f0ad8c`, bundle prod
+`index-C7liTzT_.js`, **631 tests verts** (59 fichiers), `tsc` 0. **Une correction de polish est
+locale et non poussée** : `equerrage` → **`équerrage`** dans le pack Maçonnerie (deux occurrences,
+l. 588 et 620) — le garde-fou langue ne détecte que les élisions baissées, pas les accents
+manquants, d'où son passage inaperçu. Build refait localement (`index-DKduT1KH.js`), en attente
+de l'ordre explicite « fais github ».
+
