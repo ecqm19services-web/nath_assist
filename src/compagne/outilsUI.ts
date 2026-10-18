@@ -31,7 +31,7 @@ import {
   tacheDuJour,
 } from '../metiers/pack';
 import { PAYS as METIERS_PAYS, AVERTISSEMENT_URGENCE, paysDe } from '../metiers/pays';
-import { lireContexte, ecrireContexte, type Contexte } from '../metiers/contexte';
+import { lireContexte, ecrireContexte, paysEffectif, type Contexte } from '../metiers/contexte';
 import {
   analyserDictee,
   epurerDictee,
@@ -716,7 +716,13 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
   function rendreMetiers(): void {
     // Le contexte (pays + mode crise) pilote ce qui est visible et dans quel ordre.
     const ctx: Contexte = lireContexte(storage);
-    const visibles = ordonnerPourCrise(packsPourPays(METIERS_PACKS, ctx.pays));
+    // Pays « vu » : celui choisi ; à défaut, celui que la langue du navigateur
+    // laisse deviner (fr-SN → Sénégal). Sans region détectable, on reste sur « Tous ».
+    const langues = navigator.languages?.length
+      ? Array.from(navigator.languages)
+      : [navigator.language ?? ''];
+    const paysVu = paysEffectif(ctx, langues);
+    const visibles = ordonnerPourCrise(packsPourPays(METIERS_PACKS, paysVu));
     // Si le pack courant sort de la liste filtrée, retomber sur le premier visible.
     if (!visibles.some((x) => x.id === metiersPackId)) {
       metiersPackId = visibles[0]?.id ?? '';
@@ -734,12 +740,12 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
       (x) => `<button data-mt="${esc(x.id)}"${x.id === pack.id ? ' class="actif"' : ''}>${x.emoji} ${esc(x.nom)}</button>`,
     ).join('');
     const boutonsPays = [
-      `<button data-pays=""${ctx.pays === '' ? ' class="actif"' : ''}>Tous</button>`,
+      `<button data-pays=""${paysVu === '' ? ' class="actif"' : ''}>Tous</button>`,
       ...METIERS_PAYS.map(
-        (pp) => `<button data-pays="${esc(pp.code)}"${ctx.pays === pp.code ? ' class="actif"' : ''}>${pp.emoji} ${esc(pp.nom)}</button>`,
+        (pp) => `<button data-pays="${esc(pp.code)}"${paysVu === pp.code ? ' class="actif"' : ''}>${pp.emoji} ${esc(pp.nom)}</button>`,
       ),
     ].join('');
-    const paysChoisi = ctx.pays ? paysDe(ctx.pays) : null;
+    const paysChoisi = paysVu ? paysDe(paysVu) : null;
     const encartUrgence = paysChoisi
       ? `<p class="oi-titre2">Urgences ${paysChoisi.emoji} ${esc(paysChoisi.nom)}</p>
          <p class="oi-pet">Police ${esc(paysChoisi.urgence.police)} · Pompiers ${esc(paysChoisi.urgence.pompiers)} · SAMU ${esc(paysChoisi.urgence.samu)}${paysChoisi.urgence.commun ? ' · Numéro commun ' + esc(paysChoisi.urgence.commun) : ''}</p>
