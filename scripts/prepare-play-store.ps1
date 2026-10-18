@@ -14,7 +14,8 @@ $Racine = Split-Path -Parent $PSScriptRoot
 Set-Location $Racine
 
 # 1) L'URL publique où vit l'app + son manifeste (le TWA les télécharge au 1er lancement).
-$UrlApp    = 'https://ecqm19services-web.github.io/icf/'
+# C'est la page GitHub Pages du dépôt — pas /icf/, chemin qui n'a jamais été publié.
+$UrlApp    = 'https://ecqm19services-web.github.io/nath_assist/'
 $UrlManifeste = "$UrlApp`manifest.webmanifest"
 
 Write-Host ''
@@ -24,12 +25,11 @@ Write-Host "Manifeste  : $UrlManifeste"
 Write-Host ''
 
 # 2) Contrôler les prérequis d'un poste de build Android (sinon, on s'arrête honnêtement).
-function Test-Outil($nom, $verif) {
-  try { & $verif 2>$null | Out-Null; return $true } catch { return $false }
-}
+# Get-Command plutôt que « & 'java -version' » : l'appel avec espace dans la chaîne
+# échouait même quand l'outil était installé — la détection doit dire la vérité.
 $manques = @()
-if (-not (Test-Outil 'node' 'node --version'))  { $manques += 'Node.js' }
-if (-not (Test-Outil 'java' 'java -version'))   { $manques += 'Java 8+ (JDK)' }
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) { $manques += 'Node.js' }
+if (-not (Get-Command java -ErrorAction SilentlyContinue))  { $manques += 'Java 8+ (JDK)' }
 if (-not $env:ANDROID_HOME -and -not $env:ANDROID_SDK_ROOT) { $manques += 'Android SDK (ANDROID_HOME)' }
 
 # 3) Builder le site (le manifeste durci doit être présent dans dist/).

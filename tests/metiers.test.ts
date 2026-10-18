@@ -25,8 +25,8 @@ const stockageFake = (): Pick<Storage, 'getItem' | 'setItem'> => {
 };
 
 describe('PACKS — les paquets métiers livrés', () => {
-  it('au moins dix-huit métiers (vagues 1 à 5)', () => {
-    expect(PACKS.length).toBeGreaterThanOrEqual(18);
+  it('au moins vingt-quatre métiers (vagues 1 à 6)', () => {
+    expect(PACKS.length).toBeGreaterThanOrEqual(24);
   });
   it('ids uniques', () => {
     expect(new Set(PACKS.map((p) => p.id)).size).toBe(PACKS.length);
@@ -245,6 +245,48 @@ describe('vague 5 — pêche, élevage, santé, cordonnerie, plomberie, peinture
         expect(piege.eviter).toMatch(/\bne (jamais|pas|rien)\b/i);
       }
     }
+  });
+});
+
+// La vague 6 couvre les métiers de rapport les plus pratiqués : bois, cuisine
+// qui se vend, miel, boutique, métal, produits d'entretien.
+describe('vague 6 — menuiserie, transformation, apiculture, boutique, soudure, entretien', () => {
+  const NOUVEAUX = [
+    { id: 'menuiserie', marqueurs: ['équerre', 'raboter', 'assemblage', 'ponce'] },
+    { id: 'transformation-alimentaire', marqueurs: ['bocal', 'étiquette', 'péremption', 'ébullition'] },
+    { id: 'apiculture', marqueurs: ['ruche', 'enfumoir', 'cadre', 'essaim'] },
+    { id: 'gestion-boutique', marqueurs: ['stock', 'caisse', 'inventaire', 'marge'] },
+    { id: 'soudure', marqueurs: ['masque', 'baguette', 'tôle', 'étincelle'] },
+    { id: 'produits-entretien', marqueurs: ['savon', 'lessive', 'gant', 'dosage'] },
+  ];
+  for (const n of NOUVEAUX) {
+    it(`le pack ${n.id} existe et est correctement structuré`, () => {
+      const p = trouverPack(n.id)!;
+      expect(p).not.toBeNull();
+      expect(p.taches.length).toBeGreaterThanOrEqual(5);
+      expect(p.glossaire.length).toBeGreaterThanOrEqual(6);
+      expect(p.pieges.length).toBeGreaterThan(2);
+      for (const t of p.taches) expect(t.gestes.length).toBeGreaterThanOrEqual(2);
+    });
+    it(`le pack ${n.id} contient les mots-clés de son métier`, () => {
+      const p = trouverPack(n.id)!;
+      const t = JSON.stringify(p).toLowerCase();
+      for (const m of n.marqueurs) expect(t).toContain(m.toLowerCase());
+    });
+  }
+  it('la vague 6 entier dit toujours « ne pas » dans ses pièges', () => {
+    for (const n of NOUVEAUX) {
+      const p = trouverPack(n.id)!;
+      for (const piege of p.pieges) {
+        expect(piege.eviter).toMatch(/\bne (jamais|pas|rien)\b/i);
+      }
+    }
+  });
+  it('soudure et produits d’entretien nomment leur protection (verrou sécurité)', () => {
+    const sou = JSON.stringify(trouverPack('soudure')!);
+    expect(sou).toContain('masque');
+    const ent = JSON.stringify(trouverPack('produits-entretien')!);
+    expect(ent).toContain('gant');
   });
 });
 

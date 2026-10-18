@@ -15,13 +15,14 @@ pensée pour l'Afrique de l'Ouest, **fonctionnant hors-ligne**, en français sim
 jamais afficher le nom d'un moteur d'IA. Dépôt GitHub `ecqm19services-web/nath_assist`,
 publiée sur GitHub Pages.
 
-**L'état.** Le socle est **vert, buildé, déployé** : 646 tests (59 fichiers), `tsc` 0 erreur,
-prod servie = bundle construit localement (`index-BlbwIZL5.js`, vague 5 + pré-sélection
- comprises), `main` = `gh-pages` = poussés, vérifié au curl après délai CDN.
+**L'état.** Le socle est **vert, buildé, déployé** : 668 tests (60 fichiers), `tsc` 0 erreur,
+prod servie = bundle construit localement (`index-B9BknN5k.js`, vague 6 + page sonde de
+terrain), `main` = `gh-pages` = poussés, vérifié au curl après délai CDN.
 
-**La priorité.** Les chantiers 1 et 2 (§13) sont **livrés en prod**. Le cap suivant est
-**SP1 — poids local réel** (§13 item 3) ; SP4 reste bloqué à l'installation manuelle
-JDK + Android SDK ; SP5 attend la décision de modèle de l'utilisateur.
+**La priorité.** Les chantiers 1 et 2 (§13) sont **livrés en prod**, vague 6 comprise, avec la
+**page de mesure de terrain** (`?sonde=cerveau`) : le protocole téléphone de SP1 est désormais
+un écran, pas une console (voir §12 et §13-3). SP4 : script réparé et JDK 17 déjà présent sur
+ce poste — seul **Android SDK** (hors dépôt) bloque ; SP5 attend la décision de modèle.
 
 **Le rituel.** L'utilisateur pilote par mots-clés courts :
 `continues` (enchaîner la suite logique), `tout` (lever toutes les restrictions de périmètre),
@@ -50,15 +51,15 @@ sans `fais github`.
 
 | Surface | État vérifié |
 |---|---|
-| `main` | `ec8a1ae` — feat(metiers): vague 5 + pré-sélection par la langue — **poussé** ; avant : `39646d9` (bilan + `équerrage`) |
-| `gh-pages` | dernier deploy = bundle `index-BlbwIZL5.js` — **poussé** |
-| Bundle | `index-BlbwIZL5.js` — hash **identique** local (`dist/`) ↔ prod (curl, cache-buster) |
-| Tests | **646 passed (59 files)** |
+| `main` | HEAD = feat(metiers): vague 6 (six métiers) + page sonde `?sonde=cerveau` + fix script SP4 — **poussé** ; avant : `4cf27b0` (bilan), `ec8a1ae` (vague 5) |
+| `gh-pages` | dernier deploy = bundle `index-B9BknN5k.js` — **poussé** |
+| Bundle | `index-B9BknN5k.js` — hash **identique** local (`dist/`) ↔ prod (curl, cache-buster) ; pré-cache **894,32 KiB** |
+| Tests | **668 passed (60 files)** |
 | `tsc --noEmit` | **0** |
-| Build Vite | OK — pré-cache 868,39 KiB |
+| Build Vite | OK — pré-cache 894,32 KiB (11 entrées) |
 | Worker Cloudflare | `nath-cerveau` — **inchangé** depuis longtemps (module 100 % client) |
-| Runtime | **vérifié en navigateur (preview 4173)** : 12 onglets ; `fr-SN` simulé → pastille Sénégal active, encart urgences SN, 17 packs visibles (cuisine-AO filtré, correct), pack `peche-artisanale` se rend sans erreur |
-| Working tree | **propre** — tout est commité et poussé |
+| Runtime | **vérifié en navigateur (preview 4173, 18 oct.)** : app normale sur `index-B9BknN5k.js` — les six métiers de la vague 6 sont rendus, vue « un jour, une tâche » correcte (Menuiserie : piège du jour, mot juste, Jour suivant) ; **page sonde** `?sonde=cerveau` : l'app ne se monte PAS (ni ciel, ni micro, aucune permission), lignes en français simple, « Mesurer » → atterrissage 6 s et réponse 2 521 ms (machine déjà ré-atterrie après purge). **SP1 desktop (18 oct.)** : sans `shader-f16` → variante fp32 ; 277–278 Mo ; rechargement chaud = **0 requête modèle** ; inférence ~0,7–0,8 s ; 25×8 → « Ça fait 200. » — les mesures du tour précédent (12 onglets, `fr-SN` simulé → pastille Sénégal, cuisine-AO filtrée, `peche-artisanale` rendu) tiennent toujours |
+| Working tree | **rien en attente** — ce bilan (vague 6, sonde, fix SP4) part avec le commit HEAD |
 
 Historique récente (du plus récent au plus ancien) :
 
@@ -104,9 +105,9 @@ Mistral, F-Droid, agrégateur Mobile Money, INAPIPI/OMPIC/BOIP pour la marque, d
 | Couche | Choix |
 |---|---|
 | Build | **Vite** + TypeScript strict, `target` ES2022, **SPA mono-entry** (`index.html` → `src/main.ts`) |
-| PWA | `vite-plugin-pwa` : pré-cache `generateSW`, `skipWaiting` + `clientsClaim`, pré-cache ~850 KiB |
+| PWA | `vite-plugin-pwa` : pré-cache `generateSW`, `skipWaiting` + `clientsClaim`, pré-cache ~894 KiB |
 | 3D / visuel | **three.js** (scène « nuage sensoriel »), shaders de ciel, aurores, auréole |
-| Tests | **Vitest** (`npm test` = `vitest run`) — 59 fichiers, 646 tests |
+| Tests | **Vitest** (`npm.cmd run test`) — 60 fichiers, 668 tests |
 | Types | `tsconfig.json` strict ; `npm run build` = `tsc --noEmit && vite build` |
 | Backend | quasi aucun : **1 Worker Cloudflare** (`cloudflare/nath-cerveau.worker.ts`, `nath-cerveau`) pour l'assistance connectée optionnelle et le verrou de langue |
 | Données | **localStorage sous préfixe `nath.`** + coffre export/import (pas de base, pas de compte) |
@@ -131,7 +132,7 @@ entrées (`input/*`), l'audio, l'auréole, puis la **Compagne** (`compagne/ui`) 
 | `src/assist/` | outils de la boîte à outils | `flamme.ts` (feu/chauffe) `frigo`… via outilsUI, `assiette.ts` `cuisine.ts` `journal.ts` `souffle.ts` `tuteur.ts` `resume.ts` `carte.ts` `mots.ts` `dire.ts` |
 | `src/etudes/` | études & savoir | `quiz.ts` `fiches.ts` `savoir.ts` `encyclo.ts` `examen.ts` `store.ts` |
 | `src/traduction/` | langues | `lexique.ts` (socle FR/EN/WO) `carnet.ts` (enrichissable) `dictee.ts` `moteurNet.ts` |
-| `src/metiers/` | **packs métier hors-ligne** | `pack.ts` (18 packs) `pays.ts` (13 pays) `contexte.ts` (pays + mode crise) |
+| `src/metiers/` | **packs métier hors-ligne** | `pack.ts` (24 packs) `pays.ts` (13 pays) `contexte.ts` (pays + mode crise) |
 | `src/entreprise/` | vitrine & white-label | `devis.ts` `marque.ts` |
 | `src/monetisation/` | verrous doux | `cle.ts` `paliers.ts` `pro.ts` |
 
@@ -143,6 +144,7 @@ entrées (`input/*`), l'audio, l'auréole, puis la **Compagne** (`compagne/ui`) 
 | `outilsUI.ts` | **12 onglets** de la boîte à outils + rendu Métiers (sélecteur pays, bascule Mode crise, encart urgences) |
 | `cerveau.ts` | gros cerveau local (demande le poids, **ne le télécharge jamais tout seul**) |
 | `cerveauNet.ts` | cerveau connecté + **cache-first** (une question n'est jamais redemandée à l'API) |
+| `sondeCerveau.ts` | **mesure de terrain** `?sonde=cerveau` : chiffres en français simple, zéro nom de machine ; drapeau levé, l'app normale ne démarre pas |
 | `cerveauRouteur.ts` | `choisirCerveau` (local > réseau > repli), `cleeDeReponse`, `avecCache` |
 | `coffre.ts` | export/import de la mémoire ; `estMaison()` retient **tout ce qui commence par `nath.`** |
 | `memoire.ts` `proactive.ts` `reveil.ts` `dialogue.ts` `comprehension.ts` `juge.ts` `logique.ts` `maths.ts` | compagnie : mémoire, initiative, réveil, dialogue, compréhension, juge, logique, maths |
@@ -276,7 +278,7 @@ reteni par le coffre, même non listé ici.)
 
 ---
 
-## 10. Tests — 59 fichiers, 646 tests, et les verrouillages qui comptent
+## 10. Tests — 60 fichiers, 668 tests, et les verrouillages qui comptent
 
 **Commandes.** `npm.cmd test` (tout, ~155 s) · `npm.cmd test -- tests/metiers.test.ts`
 (un fichier) · `npx.cmd vitest run tests/<fichier>` (équivalent). **Le compte est la vérité :
@@ -287,7 +289,8 @@ le dire sans l'avoir vu est une faute.**
 | Test | Ce qu'il verrouille |
 |---|---|
 | `garde-fou-langue.test.ts` | aucune élision baissée (`l eau`, `d un`, `qu il`…) dans **aucun** texte servi ; scanne les sources |
-| `metiers.test.ts` | ≥ 18 packs ; les ids par vague ; marqueurs de contenu par pack ; `pays?` ; `packsPourPays` ; `ordonnerPourCrise` ; **négation médicale** `ne (jamais\|pas\|rien)` sur chaque piège soins/crise/vague 5 (vérifiée **piege par piege**, pas en bloc) ; **câblage UI** vérifié dans le source de `outilsUI.ts` via `import.meta.glob` raw (imports de `pays`/`contexte`, appels au filtre, `Mode crise`, `data-pays=`, `data-act=`, et **pré-sélection `paysVu = paysEffectif`**) |
+| `metiers.test.ts` | ≥ 24 packs ; les ids par vague ; marqueurs de contenu par pack ; `pays?` ; `packsPourPays` ; `ordonnerPourCrise` ; **négation médicale** `ne (jamais\|pas\|rien)` sur chaque piège soins/crise/vagues 5-6 (vérifiée **piege par piege**, pas en bloc) ; **câblage UI** vérifié dans le source de `outilsUI.ts` via `import.meta.glob` raw (imports de `pays`/`contexte`, appels au filtre, `Mode crise`, `data-pays=`, `data-act=`, et **pré-sélection `paysVu = paysEffectif`**) |
+| `sonde-cerveau.test.ts` | drapeau `?sonde=cerveau` ( parsing strict ) ; `decrireSonde` : nombres à la française, mesures manquantes absentes, **zéro nom de technologie à l'écran** ; verrou source : `main.ts` importe et teste le drapeau **avant** `createScene` |
 | `metiers-pays.test.ts` | unicité des codes, numéros d'urgence renseignés, 8 piliers AO, insensibilité à la casse, SN 15/17/18, GH 191/192/193, FR 15/17/18/112 |
 | `metiers-contexte.test.ts` | défaut, préfixe `nath.`, round-trip, **JSON menteur** toléré, code inconnu ignoré, `devinerPaysDepuisLangue` |
 | `play-store.test.ts` | manifeste conforme TWA (id, scope, start_url, lang, orientation, categories, icônes `any`+`maskable`) |
@@ -312,7 +315,7 @@ onglet **Langues**. Éprouvé en runtime hors-ligne (« merci » → « jërëj�
 appréciation qui n'est **jamais une fin** (« C'est en bonne voie ») + onglet **Examen** sur les
 paquets de l'élève. Éprouvé en runtime (5 cartes, réponses cachées puis révélées, 3/5 · 60 %).
 
-### SP3-bis — Packs Métiers — **LIVRÉ, 5 vagues, 18 packs — tout est en prod**
+### SP3-bis — Packs Métiers — **LIVRÉ, 6 vagues, 24 packs — tout est en prod**
 `src/metiers/pack.ts`, onglet **Métiers**. Chaque pack : 5 tâches (gestes concrets), 6-8 mots
 de glossaire, 3-4 pièges avec négation explicite. Français simple, 100 % hors-ligne.
 
@@ -336,6 +339,12 @@ de glossaire, 3-4 pièges avec négation explicite. Français simple, 100 % hors
 | 16 | `cordonnerie` | Cordonnerie | universel |
 | 17 | `plomberie` | Plomberie | universel |
 | 18 | `peinture` | Peinture en bâtiment | universel |
+| 19 | `menuiserie` | Menuiserie bois | universel |
+| 20 | `transformation-alimentaire` | Transformation alimentaire | universel |
+| 21 | `apiculture` | Apiculture | universel |
+| 22 | `gestion-boutique` | Gestion de boutique | universel |
+| 23 | `soudure` | Soudure et métal | universel |
+| 24 | `produits-entretien` | Savons et produits d’entretien | universel |
 
 **Filtrage & crise.** `packsPourPays(packs, code)` garde universels + pays choisi. Depuis la
 vague 5, l'onglet filtre sur le **pays « vu »** : celui choisi, sinon celui deviné de la langue
@@ -353,20 +362,31 @@ triage, rationnement) ; méthode d'approvisionnement (**stock tampon**, **fourni
 repli**, prix de revient, seuil d'alerte, chaîne du froid) ; démêler/vanille/natte/défrisage ;
 **ESD**, nappe, batterie **Li-ion** (emballement thermique) ; pépinière, **repiquage**,
 **paillage**, rotation ; **équerrage 3-4-5**, fondations, **chaînage**, **hourdis**,
-**gobetis**, **mortier bâtard**, enduits en trois couches.
+**gobetis**, **mortier bâtard**, enduits en trois couches ; vague 6 : **tenon-mortaise**,
+rabotage dans le fil, **ébullition**/mise en vide/**péremption** des bocaux, **enfumoir**/
+couvain/**opercule**/essaim, **fond de caisse**/rotation/**marge**, **masque**/baguette/
+laitier/pointage, **soude dans l’eau** et jamais l’inverse, **Javel jamais mélangée**.
 
 ### SP1 — Cerveau hors-ligne — **CÂBLÉ EN PROD, chantier ouvert**
 `cerveauRouteur.ts` (`choisirCerveau` local > réseau > repli, `cleeDeReponse`, `avecCache`)
 est **réellement le décideur** dans `ui.ts` (plus de précédence recopiée à la main — verrouillé
 par test d'intégration source) et le **cache-first est câblé dans `creerCerveauNet`** : une
 question posée ne repart jamais deux fois vers l'API (un échec se retente, il n'est pas figé).
-**Ce qui reste à faire :** téléchargement réel des poids (plusieurs Go) et fiabilité **WebGPU
-sous Windows**. C'est le 1ᵉʳ levier concret « arrêter de payer ».
+**Ce qui reste à faire :** éprouver le poids local sur les **téléphones visés** — l'outil
+existe depuis le 18 oct. : la page **`?sonde=cerveau`** (`src/compagne/sondeCerveau.ts`) rend
+la mesure possible sur place, sans console : lignes en français simple (variante choisie,
+mémoire prêtée, poids posé, secondes d'atterrissage, ms de réponse), **zéro nom de machine**.
+C'est le 1ᵉʳ levier concret « arrêter de payer ».
 
 ### SP4 — Play Store — **OUTILLÉ dans le dépôt, publication hors-dépôt**
 Manifeste durci pour **TWA** + garde-fou `play-store.test.ts` +
 `scripts/prepare-play-store.ps1` (build, contrôles de prérequis, Bubblewrap, checklist
-**targetSdk 36** + `/.well-known/assetlinks.json`). **Bloquant : il faut JDK + Android SDK +
+**targetSdk 36** + `/.well-known/assetlinks.json`). **Corrigé le 18 oct.** : l'URL du script
+pointait sur `/icf/` (jamais publié) → désormais `/nath_assist/` ; la détection des outils utilisait
+`& 'java -version'` ( chaîne avec espace = échec même quand l'outil est là) → `Get-Command`.
+Vérifié sur ce poste : **JDK 17 (Adoptium) présent, Node présent — seul l'Android SDK manque**.
+`bubblewrap init` refuse le stdin pipé (invite « Path to your existing JDK 17 » en TTY) : la
+génération du squelette se fera dans un terminal humain. **Bloquant réel : Android SDK +
 Play Console** — hors du pouvoir du dépôt et de l'agent.
 
 ### SP5 — Monétisation FCFA — **MÉCANISME ARMÉ, NON ACTIVÉ**
@@ -380,8 +400,19 @@ sur réglage explicite, et alors la **clé Nath+ locale** (`monetisation/cle.ts`
 ## 12. Limites, lacunes et pitfalls connus — la liste honnête
 
 **Sujets techniques ouverts.**
-- **Poids du modèle local** non téléchargé : SP1 est un *routeur* intelligent, pas encore un
-  cerveau fully-on-device. WebGPU/Windows instable.
+- **SP1 mesuré sur desktop Windows (18 oct., navigateur de test)** : carte sans `shader-f16` →
+  c'est bien la variante **fp32 (0.5B)** qui tourne ; 277 Mo en cache, prêt hors-ligne après un
+  rechargement sans aucune requête modèle ; latence première réponse ~0,8 s. **Ce qui reste
+  non mesuré : les téléphones visés** (Android modestes, RAM, thermique) — la promesse
+  « extraordinaire sans connexion » est prouvée sur ce poste, pas encore prouvée sur le terrain —
+  **la page `?sonde=cerveau` existe désormais pour ça** (protocole au §13-3).
+  Note machine : Chrome/Windows ignore `powerPreference` sur `requestAdapter` (crbug.com/369219127) —
+  inoffensif, la sonde fonctionne quand même.
+- **Page sonde `?sonde=cerveau`** (livrée 18 oct.) : drapeau levé, `main.ts` ne monte **rien**
+  de la vie habituelle — ni ciel, ni micro, aucune permission demandée. Deux pièges consignés :
+  ① si le consentement local est déjà « oui », l'app normale démarre son moteur en parallèle —
+  mesurer sur un appareil vierge ; ② les lignes affichées ne contiennent aucun nom de
+  technologie (verrou testé), seule la variante (« fine » / « large ») est nommée.
 - **TWA = premier chargement en ligne.** Pour du vrai hors-ligne dès l'installation, il faudra
   **Capacitor** (bundle natif) — arbitrage non tranché.
 - **Pré-sélection par la langue : câblée** (`paysVu = paysEffectif(ctx, navigator.languages)`
@@ -407,23 +438,30 @@ sont les documents vivants.
 
 ## 13. Prochaines étapes — par priorité recommandée
 
-**0. Fait (18 oct.).** Polish `équerrage` + bilan poussés (`39646d9`), puis vague 5 + pré-sélection
-poussées (`ec8a1ae`) et déployées — prod vérifiée au curl.
+**0. Fait (18 oct., tour 2).** Vague 6 (six métiers) + page sonde `?sonde=cerveau` + fix script
+SP4, TDD ROUGE→VERT, 668 tests, vérifiés en runtime (preview 4173) ; ce bilan et le code partent
+ensemble au push (voir §2). Le tour 1 (équerrage, vague 5, pré-sélection, mesures SP1) était
+poussé en `39646d9`/`ec8a1ae`/`4cf27b0`.
 
-**1. Vague 5 des Packs Métiers — LIVRÉE EN PROD.** Six packs (pêche artisanale, élevage,
-santé communautaire, cordonnerie, plomberie, peinture), TDD ROUGE→VERT, poussée en `ec8a1ae`
-et déployée (bundle `index-BlbwIZL5.js`).
+**1. Vagues 5 et 6 des Packs Métiers — LIVRÉES EN PROD.** Vague 5 (pêche, élevage, santé
+communautaire, cordonnerie, plomberie, peinture) en `ec8a1ae` ; vague 6 (menuiserie,
+transformation alimentaire, apiculture, boutique, soudure, savons/entretien) au commit HEAD —
+24 métiers, TDD ROUGE→VERT à chaque vague, relecture anti-intrusions (`scripts/sonde-juge-v6.mjs`).
 
 **2. Pré-sélection du pays par la langue — LIVRÉE EN PROD.** `paysEffectif` câblé dans
 `rendreMetiers()` (`paysVu`), verrou source + vérification runtime en navigateur (voir §2).
 
-**3. SP1 — poids local réel.** Télécharger et éprouver un modèle on-device, mesurer ce qui
-fonctionne sur les téléphones visés (pas seulement sur Windows desktop). C'est la promesse
-« extraordinaire sans connexion » qui devient tangible.
+**3. SP1 — poids local réel — OUTIL DE MESURE EN PROD (18 oct.).** Le protocole téléphone
+devient une tâche terrain simple : ① ouvrir `https://ecqm19services-web.github.io/nath_assist/?sonde=cerveau`
+sur le téléphone visé (Chrome Android) ; ② Wi-Fi, « Mesurer le gros cerveau », attendre ;
+③ recharger la page en **mode avion** et redemander « Mesurer » — l'atterrissage doit être
+rapide et la réponse sortir sans réseau ; ④ photographier les lignes et les rapporter. Les
+chiffres desktop sont au §2 ; c'est la fin de ce chantier, pas le début.
 
-**4. SP4 — Play Store.** Installer JDK + Android SDK **à la main**, puis
-`scripts/prepare-play-store.ps1`. Prévoir `/.well-known/assetlinks.json` sur Pages et
-l'arbitrage **TWA vs Capacitor** (voir §12).
+**4. SP4 — Play Store.** JDK 17 **déjà installé** sur ce poste (vérifié le 18 oct.) ; il ne
+manque plus que **l'Android SDK** (installation manuelle, hors dépôt), puis relancer
+`scripts/prepare-play-store.ps1` dans un terminal humain (bubblewrap veut un TTY). Prévoir
+`/.well-known/assetlinks.json` sur Pages et l'arbitrage **TWA vs Capacitor** (voir §12).
 
 **5. SP5 — Monétisation.** Décision produit à demander à l'utilisateur : pack à vie ou
 abonnement ; ensuite activer `paliers.ts` capacité par capacité + Mobile Money (agrégateur).

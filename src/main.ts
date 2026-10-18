@@ -1,3 +1,7 @@
+// La mesure de terrain se lève AVANT la vie : « ?sonde=cerveau » ouvre un
+// instrument — ni ciel, ni micro, ni Compagne ne démarrent, et aucune
+// permission n'est demandée à une page qui ne vient que compter.
+import { lancerSondeCerveau, sondeDemandee } from './compagne/sondeCerveau';
 import { createScene } from './nuage/scene';
 import { computeSceneParams, createInitialState } from './nuage/state';
 import { startBreath } from './input/breathIO';
@@ -16,6 +20,17 @@ import { probaEvenements } from './nuage/meteo';
 import { chargerCielReel, lieuDuReseau } from './nuage/cielReel';
 import { lireEndpoint } from './compagne/cerveauNet';
 import { surveillerMiseAJour } from './compagne/miseAJour';
+
+if (sondeDemandee(location.search)) {
+  void lancerSondeCerveau(document.body);
+} else {
+  vieNormale();
+}
+
+// Tout ce qui fait l'application tient dans cette fonction — drapeau levé,
+// elle n'est jamais appelée. (Indentation d'origine conservée à l'intérieur
+// pour que le bloc reste reconnaissable dans les diffs.)
+function vieNormale(): void {
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const scene = createScene(canvas);
@@ -230,3 +245,4 @@ console.log('Nath Assist v1-alpha — ICF·Future by Nath-Tech');
 // On le lui dit quand le réseau a vraiment du neuf — on ne recharge jamais à sa
 // place, par-dessus une phrase en train d'être dite.
 surveillerMiseAJour(fetch);
+}
