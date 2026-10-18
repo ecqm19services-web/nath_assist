@@ -15,11 +15,13 @@ pensée pour l'Afrique de l'Ouest, **fonctionnant hors-ligne**, en français sim
 jamais afficher le nom d'un moteur d'IA. Dépôt GitHub `ecqm19services-web/nath_assist`,
 publiée sur GitHub Pages.
 
-**L'état.** Tout est **vert, buildé et déployé** : 631 tests (59 fichiers), `tsc` 0 erreur,
-bundle prod identique en local et servi (`index-C7liTzT_.js`), `main` = `gh-pages` = poussés.
+**L'état.** Le socle est **vert, buildé, déployé** : 646 tests (59 fichiers), `tsc` 0 erreur,
+prod servie = bundle construit localement (`index-BlbwIZL5.js`, vague 5 + pré-sélection
+ comprises), `main` = `gh-pages` = poussés, vérifié au curl après délai CDN.
 
-**La priorité.** Il reste **un commit de polish non poussé** (correction `equerrage` →
-`équerrage`) — et une décision de cap (§13) à demander à l'utilisateur.
+**La priorité.** Les chantiers 1 et 2 (§13) sont **livrés en prod**. Le cap suivant est
+**SP1 — poids local réel** (§13 item 3) ; SP4 reste bloqué à l'installation manuelle
+JDK + Android SDK ; SP5 attend la décision de modèle de l'utilisateur.
 
 **Le rituel.** L'utilisateur pilote par mots-clés courts :
 `continues` (enchaîner la suite logique), `tout` (lever toutes les restrictions de périmètre),
@@ -48,18 +50,20 @@ sans `fais github`.
 
 | Surface | État vérifié |
 |---|---|
-| `main` | `4ed1191` — feat(metiers): vague 4 — **poussé** (`origin/main` synchrone) |
-| `gh-pages` | `7f0ad8c` — deploy: 2026-10-15 23:40 — **poussé** |
-| Bundle | `index-C7liTzT_.js` — hash **identique** local (`dist/`) ↔ prod (curl) |
-| Tests | **631 passed (59 files)** |
+| `main` | `ec8a1ae` — feat(metiers): vague 5 + pré-sélection par la langue — **poussé** ; avant : `39646d9` (bilan + `équerrage`) |
+| `gh-pages` | dernier deploy = bundle `index-BlbwIZL5.js` — **poussé** |
+| Bundle | `index-BlbwIZL5.js` — hash **identique** local (`dist/`) ↔ prod (curl, cache-buster) |
+| Tests | **646 passed (59 files)** |
 | `tsc --noEmit` | **0** |
-| Build Vite | OK — pré-cache ~850 KiB |
+| Build Vite | OK — pré-cache 868,39 KiB |
 | Worker Cloudflare | `nath-cerveau` — **inchangé** depuis longtemps (module 100 % client) |
-| Working tree | **1 modification locale non commitée** : `src/metiers/pack.ts` (`équerrage`) — build refait localement : nouveau hash `index-DKduT1KH.js`, **non déployé** (la prod sert encore `index-C7liTzT_.js`) |
+| Runtime | **vérifié en navigateur (preview 4173)** : 12 onglets ; `fr-SN` simulé → pastille Sénégal active, encart urgences SN, 17 packs visibles (cuisine-AO filtré, correct), pack `peche-artisanale` se rend sans erreur |
+| Working tree | **propre** — tout est commité et poussé |
 
 Historique récente (du plus récent au plus ancien) :
 
 ```text
+39646d9 docs: bilan de transmission complet + fix orthographe equerrage (pack Maconnerie)
 4ed1191 feat(metiers): vague 4 - Coiffure, Reparation telephones, Marchage, Maconnerie
 fc50962 feat(metiers): vague 3 - Afrique de l'Ouest entiere, crise, approvisionnement
 b0fd20c feat(metiers): SP3-bis packs metier hors-ligne (Couture, Boulangerie, Electricite) + onglet Metiers
@@ -102,7 +106,7 @@ Mistral, F-Droid, agrégateur Mobile Money, INAPIPI/OMPIC/BOIP pour la marque, d
 | Build | **Vite** + TypeScript strict, `target` ES2022, **SPA mono-entry** (`index.html` → `src/main.ts`) |
 | PWA | `vite-plugin-pwa` : pré-cache `generateSW`, `skipWaiting` + `clientsClaim`, pré-cache ~850 KiB |
 | 3D / visuel | **three.js** (scène « nuage sensoriel »), shaders de ciel, aurores, auréole |
-| Tests | **Vitest** (`npm test` = `vitest run`) — 59 fichiers, 631 tests |
+| Tests | **Vitest** (`npm test` = `vitest run`) — 59 fichiers, 646 tests |
 | Types | `tsconfig.json` strict ; `npm run build` = `tsc --noEmit && vite build` |
 | Backend | quasi aucun : **1 Worker Cloudflare** (`cloudflare/nath-cerveau.worker.ts`, `nath-cerveau`) pour l'assistance connectée optionnelle et le verrou de langue |
 | Données | **localStorage sous préfixe `nath.`** + coffre export/import (pas de base, pas de compte) |
@@ -127,7 +131,7 @@ entrées (`input/*`), l'audio, l'auréole, puis la **Compagne** (`compagne/ui`) 
 | `src/assist/` | outils de la boîte à outils | `flamme.ts` (feu/chauffe) `frigo`… via outilsUI, `assiette.ts` `cuisine.ts` `journal.ts` `souffle.ts` `tuteur.ts` `resume.ts` `carte.ts` `mots.ts` `dire.ts` |
 | `src/etudes/` | études & savoir | `quiz.ts` `fiches.ts` `savoir.ts` `encyclo.ts` `examen.ts` `store.ts` |
 | `src/traduction/` | langues | `lexique.ts` (socle FR/EN/WO) `carnet.ts` (enrichissable) `dictee.ts` `moteurNet.ts` |
-| `src/metiers/` | **packs métier hors-ligne** | `pack.ts` (12 packs) `pays.ts` (13 pays) `contexte.ts` (pays + mode crise) |
+| `src/metiers/` | **packs métier hors-ligne** | `pack.ts` (18 packs) `pays.ts` (13 pays) `contexte.ts` (pays + mode crise) |
 | `src/entreprise/` | vitrine & white-label | `devis.ts` `marque.ts` |
 | `src/monetisation/` | verrous doux | `cle.ts` `paliers.ts` `pro.ts` |
 
@@ -272,7 +276,7 @@ reteni par le coffre, même non listé ici.)
 
 ---
 
-## 10. Tests — 59 fichiers, 631 tests, et les verrouillages qui comptent
+## 10. Tests — 59 fichiers, 646 tests, et les verrouillages qui comptent
 
 **Commandes.** `npm.cmd test` (tout, ~155 s) · `npm.cmd test -- tests/metiers.test.ts`
 (un fichier) · `npx.cmd vitest run tests/<fichier>` (équivalent). **Le compte est la vérité :
@@ -283,7 +287,7 @@ le dire sans l'avoir vu est une faute.**
 | Test | Ce qu'il verrouille |
 |---|---|
 | `garde-fou-langue.test.ts` | aucune élision baissée (`l eau`, `d un`, `qu il`…) dans **aucun** texte servi ; scanne les sources |
-| `metiers.test.ts` | ≥ 12 packs ; les 12 ids ; marqueurs de contenu par pack ; `pays?` ; `packsPourPays` ; `ordonnerPourCrise` ; **négation médicale** `ne (jamais\|pas\|rien)` sur chaque piège soins/crise (vérifiée **piege par piege**, pas en bloc) ; **câblage UI** vérifié dans le source de `outilsUI.ts` via `import.meta.glob` raw (imports de `pays`/`contexte`, appels au filtre, présence de `Mode crise`, `data-pays=`, `data-act=`) |
+| `metiers.test.ts` | ≥ 18 packs ; les ids par vague ; marqueurs de contenu par pack ; `pays?` ; `packsPourPays` ; `ordonnerPourCrise` ; **négation médicale** `ne (jamais\|pas\|rien)` sur chaque piège soins/crise/vague 5 (vérifiée **piege par piege**, pas en bloc) ; **câblage UI** vérifié dans le source de `outilsUI.ts` via `import.meta.glob` raw (imports de `pays`/`contexte`, appels au filtre, `Mode crise`, `data-pays=`, `data-act=`, et **pré-sélection `paysVu = paysEffectif`**) |
 | `metiers-pays.test.ts` | unicité des codes, numéros d'urgence renseignés, 8 piliers AO, insensibilité à la casse, SN 15/17/18, GH 191/192/193, FR 15/17/18/112 |
 | `metiers-contexte.test.ts` | défaut, préfixe `nath.`, round-trip, **JSON menteur** toléré, code inconnu ignoré, `devinerPaysDepuisLangue` |
 | `play-store.test.ts` | manifeste conforme TWA (id, scope, start_url, lang, orientation, categories, icônes `any`+`maskable`) |
@@ -308,7 +312,7 @@ onglet **Langues**. Éprouvé en runtime hors-ligne (« merci » → « jërëj�
 appréciation qui n'est **jamais une fin** (« C'est en bonne voie ») + onglet **Examen** sur les
 paquets de l'élève. Éprouvé en runtime (5 cartes, réponses cachées puis révélées, 3/5 · 60 %).
 
-### SP3-bis — Packs Métiers — **LIVRÉ, 4 vagues, 12 packs**
+### SP3-bis — Packs Métiers — **LIVRÉ, 5 vagues, 18 packs — tout est en prod**
 `src/metiers/pack.ts`, onglet **Métiers**. Chaque pack : 5 tâches (gestes concrets), 6-8 mots
 de glossaire, 3-4 pièges avec négation explicite. Français simple, 100 % hors-ligne.
 
@@ -326,9 +330,17 @@ de glossaire, 3-4 pièges avec négation explicite. Français simple, 100 % hors
 | 10 | `reparation-telephones` | Réparation téléphones | universel |
 | 11 | `marchage` | Marîchage | universel |
 | 12 | `maconnerie` | Maçonnerie & bâtiment | universel |
+| 13 | `peche-artisanale` | Pêche artisanale | universel |
+| 14 | `elevage` | Élevage (volaille & petits animaux) | universel |
+| 15 | `sante-communautaire` | Santé communautaire (prévention + référence, **négations médicales**) | universel |
+| 16 | `cordonnerie` | Cordonnerie | universel |
+| 17 | `plomberie` | Plomberie | universel |
+| 18 | `peinture` | Peinture en bâtiment | universel |
 
-**Filtrage & crise.** `packsPourPays(packs, code)` garde universels + pays choisi (« Tous »
-par défaut). `ordonnerPourCrise(packs)` remonte `crise-survie` puis `approvisionnement` **en
+**Filtrage & crise.** `packsPourPays(packs, code)` garde universels + pays choisi. Depuis la
+vague 5, l'onglet filtre sur le **pays « vu »** : celui choisi, sinon celui deviné de la langue
+du navigateur (`fr-SN` → SN) via `paysEffectif` — l'utilisateur garde la main, le clic « Tous »
+réinitialise vers cet automatisme doux. `ordonnerPourCrise(packs)` remonte `crise-survie` puis `approvisionnement` **en
 tête sans jamais rien retirer** (doctrine gratuit non bridé). `pays.ts` : **13 pays**
 `SN ML CI BF GN BJ TG NE GH NG CM MA FR` avec numéros d'urgence, monnaie, langues, emoji +
 `AVERTISSEMENT_URGENCE`. `contexte.ts` : `lireContexte` / `ecrireContexte` /
@@ -372,11 +384,11 @@ sur réglage explicite, et alors la **clé Nath+ locale** (`monetisation/cle.ts`
   cerveau fully-on-device. WebGPU/Windows instable.
 - **TWA = premier chargement en ligne.** Pour du vrai hors-ligne dès l'installation, il faudra
   **Capacitor** (bundle natif) — arbitrage non tranché.
-- **`devinerPaysDepuisLangue` / `paysEffectif` sont tree-shakés** du bundle prod : ils sont
-  testés unitairement mais **jamais appelés par l'UI**, qui attend le choix explicite de
-  l'utilisateur (bouton « Tous » par défaut). Ce n'est **pas un bug** ; si un jour on veut la
-  pré-sélection automatique, il faut le **câbler dans `rendreMetiers()`**, et le test
-  d'intégration source le vérifiera.
+- **Pré-sélection par la langue : câblée** (`paysVu = paysEffectif(ctx, navigator.languages)`
+  dans `rendreMetiers()`, verrouillée dans `metiers.test.ts`). Nuance assumée : le clic « Tous »
+  écrit `pays: ''` et **retombe sur la devinette** de la langue — pas sur « aucun filtrage »
+  quand une région est détectable. Si on veut un « Tous » vraiment neutre, il faudra un champ
+  « choix explicite » dans `Contexte`.
 - **Les noms de fonctions internes disparaissent dans le bundle minifié** (`packsPourPays`,
   `ordonnerPourCrise`…). **Ne jamais conclure à une fonctionnalité absente à partir du JS
   servi** : vérifier les **string literals** (ids, `data-pays=`, `Mode crise`, vocabulaire).
@@ -395,21 +407,15 @@ sont les documents vivants.
 
 ## 13. Prochaines étapes — par priorité recommandée
 
-**0. À faire tout de suite (5 min).** Pousser le polish déjà prêt :
-`src/metiers/pack.ts` corrigé (`équerrage`), 631 tests verts, `tsc` 0, build OK.
-Attend le mot **« fais github »** de l'utilisateur.
+**0. Fait (18 oct.).** Polish `équerrage` + bilan poussés (`39646d9`), puis vague 5 + pré-sélection
+poussées (`ec8a1ae`) et déployées — prod vérifiée au curl.
 
-**1. Vague 5 des Packs Métiers** — le moteur est prêt, aucun nouveau câblage nécessaire :
-**🎣 Pêche artisanale** (engins, marées, chaîne du froid, sécurité en mer),
-**🐄 Élevage** (poules/moutons/vaches : alimentation, vaccination, mortalité),
-**🏥 Santé communautaire** (accouchement assisté, vaccination, paludisme — **négations
-médicales obligatoires**), **👟 Cordonnerie**, **🚰 Plomberie**, **🎨 Peinture & décoration**.
-Routine : test ROUGE (ids + marqueurs + négations) → packs dans `PACKS` → bump du compteur
-de `metiers.test.ts` → vert → suite + tsc + build.
+**1. Vague 5 des Packs Métiers — LIVRÉE EN PROD.** Six packs (pêche artisanale, élevage,
+santé communautaire, cordonnerie, plomberie, peinture), TDD ROUGE→VERT, poussée en `ec8a1ae`
+et déployée (bundle `index-BlbwIZL5.js`).
 
-**2. Pré-sélection du pays par la langue** (petit chantier, forte valeur perçue) : câbler
-`paysEffectif` dans `rendreMetiers()` pour que l'app devine `fr-SN` → SN au premier lancement,
-sans jamais forcer (l'utilisateur garde « Tous »).
+**2. Pré-sélection du pays par la langue — LIVRÉE EN PROD.** `paysEffectif` câblé dans
+`rendreMetiers()` (`paysVu`), verrou source + vérification runtime en navigateur (voir §2).
 
 **3. SP1 — poids local réel.** Télécharger et éprouver un modèle on-device, mesurer ce qui
 fonctionne sur les téléphones visés (pas seulement sur Windows desktop). C'est la promesse
