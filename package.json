@@ -1,6 +1,6 @@
 {
   "name": "nath-assist",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Nath Assist — l'assistant vivant ICF·Future (by Nath-Tech)",
   "type": "module",
   "scripts": {

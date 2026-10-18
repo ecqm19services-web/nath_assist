@@ -15,9 +15,10 @@ pensée pour l'Afrique de l'Ouest, **fonctionnant hors-ligne**, en français sim
 jamais afficher le nom d'un moteur d'IA. Dépôt GitHub `ecqm19services-web/nath_assist`,
 publiée sur GitHub Pages.
 
-**L'état.** Le socle est **vert, buildé, déployé** : 668 tests (60 fichiers), `tsc` 0 erreur,
-prod servie = bundle construit localement (`index-B9BknN5k.js`, vague 6 + page sonde de
-terrain), `main` = `gh-pages` = poussés, vérifié au curl après délai CDN.
+**L'état.** Le socle est **vert, buildé** : 673 tests (60 fichiers), `tsc` 0 erreur ; la prod
+servie est encore le bundle `index-B9BknN5k.js` (vague 6 + page sonde) — le tour « finesse »
+(« Tous » neutre, CHANGELOG, arbitrage TWA, version 0.2.0) est **committable mais non poussé**
+: en attente de l'ordre « fais github ».
 
 **La priorité.** Les chantiers 1 et 2 (§13) sont **livrés en prod**, vague 6 comprise, avec la
 **page de mesure de terrain** (`?sonde=cerveau`) : le protocole téléphone de SP1 est désormais
@@ -51,15 +52,15 @@ sans `fais github`.
 
 | Surface | État vérifié |
 |---|---|
-| `main` | HEAD = feat(metiers): vague 6 (six métiers) + page sonde `?sonde=cerveau` + fix script SP4 — **poussé** ; avant : `4cf27b0` (bilan), `ec8a1ae` (vague 5) |
-| `gh-pages` | dernier deploy = bundle `index-B9BknN5k.js` — **poussé** |
-| Bundle | `index-B9BknN5k.js` — hash **identique** local (`dist/`) ↔ prod (curl, cache-buster) ; pré-cache **894,32 KiB** |
-| Tests | **668 passed (60 files)** |
+| `main` | HEAD poussé = `1363a33` (vague 6 + sonde + fix SP4) ; **working tree = tour 3 non committé** (attend « fais github ») : `CHANGELOG.md` (nouveau), `package.json` (0.1.0→0.2.0), `src/metiers/contexte.ts` + `src/compagne/outilsUI.ts` (« Tous » neutre), `tests/metiers-contexte.test.ts` + `tests/metiers.test.ts`, ce bilan |
+| `gh-pages` | dernier deploy = bundle `index-B9BknN5k.js` — **poussé** ; le nouveau bundle local `index-oXPsK5Gz.js` n'attend que la poussée |
+| Bundle | local `index-oXPsK5Gz.js` (894,44 KiB pré-cache, 11 entrées) ↔ prod encore `index-B9BknN5k.js` tant que rien n'est poussé |
+| Tests | **673 passed (60 files)** |
 | `tsc --noEmit` | **0** |
-| Build Vite | OK — pré-cache 894,32 KiB (11 entrées) |
+| Build Vite | OK — pré-cache 894,44 KiB (11 entrées) |
 | Worker Cloudflare | `nath-cerveau` — **inchangé** depuis longtemps (module 100 % client) |
-| Runtime | **vérifié en navigateur (preview 4173, 18 oct.)** : app normale sur `index-B9BknN5k.js` — les six métiers de la vague 6 sont rendus, vue « un jour, une tâche » correcte (Menuiserie : piège du jour, mot juste, Jour suivant) ; **page sonde** `?sonde=cerveau` : l'app ne se monte PAS (ni ciel, ni micro, aucune permission), lignes en français simple, « Mesurer » → atterrissage 6 s et réponse 2 521 ms (machine déjà ré-atterrie après purge). **SP1 desktop (18 oct.)** : sans `shader-f16` → variante fp32 ; 277–278 Mo ; rechargement chaud = **0 requête modèle** ; inférence ~0,7–0,8 s ; 25×8 → « Ça fait 200. » — les mesures du tour précédent (12 onglets, `fr-SN` simulé → pastille Sénégal, cuisine-AO filtrée, `peche-artisanale` rendu) tiennent toujours |
-| Working tree | **rien en attente** — ce bilan (vague 6, sonde, fix SP4) part avec le commit HEAD |
+| Runtime | **vérifié en navigateur (preview 4173, 18 oct.)** : app normale sur `index-B9BknN5k.js` — les six métiers de la vague 6 sont rendus, vue « un jour, une tâche » correcte (Menuiserie : piège du jour, mot juste, Jour suivant) ; **page sonde** `?sonde=cerveau` : l'app ne se monte PAS (ni ciel, ni micro, aucune permission), lignes en français simple, « Mesurer » → atterrissage 6 s et réponse 2 521 ms (machine déjà ré-atterrie après purge). **SP1 desktop (18 oct.)** : sans `shader-f16` → variante fp32 ; 277–278 Mo ; rechargement chaud = **0 requête modèle** ; inférence ~0,7–0,8 s ; 25×8 → « Ça fait 200. » — les mesures du tour précédent (12 onglets, `fr-SN` simulé → pastille Sénégal, cuisine-AO filtrée, `peche-artisanale` rendu) tiennent toujours. **Tour 3 (18 oct., dev 4173)** : `fr-SN` simulé, rien choisi → pastille Sénégal (devinette préservée) ; clic « Tous » → `choixExplicite:true` au stockage et **« Tous » reste actif après rechargement** (régression fermée) |
+| Working tree | **tour 3 en attente de l'ordre « fais github »** — 8 fichiers listés à la ligne `main` ; arbre validé (673 tests, build OK) |
 
 Historique récente (du plus récent au plus ancien) :
 
@@ -107,7 +108,7 @@ Mistral, F-Droid, agrégateur Mobile Money, INAPIPI/OMPIC/BOIP pour la marque, d
 | Build | **Vite** + TypeScript strict, `target` ES2022, **SPA mono-entry** (`index.html` → `src/main.ts`) |
 | PWA | `vite-plugin-pwa` : pré-cache `generateSW`, `skipWaiting` + `clientsClaim`, pré-cache ~894 KiB |
 | 3D / visuel | **three.js** (scène « nuage sensoriel »), shaders de ciel, aurores, auréole |
-| Tests | **Vitest** (`npm.cmd run test`) — 60 fichiers, 668 tests |
+| Tests | **Vitest** (`npm.cmd run test`) — 60 fichiers, 673 tests |
 | Types | `tsconfig.json` strict ; `npm run build` = `tsc --noEmit && vite build` |
 | Backend | quasi aucun : **1 Worker Cloudflare** (`cloudflare/nath-cerveau.worker.ts`, `nath-cerveau`) pour l'assistance connectée optionnelle et le verrou de langue |
 | Données | **localStorage sous préfixe `nath.`** + coffre export/import (pas de base, pas de compte) |
@@ -278,7 +279,7 @@ reteni par le coffre, même non listé ici.)
 
 ---
 
-## 10. Tests — 60 fichiers, 668 tests, et les verrouillages qui comptent
+## 10. Tests — 60 fichiers, 673 tests, et les verrouillages qui comptent
 
 **Commandes.** `npm.cmd test` (tout, ~155 s) · `npm.cmd test -- tests/metiers.test.ts`
 (un fichier) · `npx.cmd vitest run tests/<fichier>` (équivalent). **Le compte est la vérité :
@@ -292,7 +293,7 @@ le dire sans l'avoir vu est une faute.**
 | `metiers.test.ts` | ≥ 24 packs ; les ids par vague ; marqueurs de contenu par pack ; `pays?` ; `packsPourPays` ; `ordonnerPourCrise` ; **négation médicale** `ne (jamais\|pas\|rien)` sur chaque piège soins/crise/vagues 5-6 (vérifiée **piege par piege**, pas en bloc) ; **câblage UI** vérifié dans le source de `outilsUI.ts` via `import.meta.glob` raw (imports de `pays`/`contexte`, appels au filtre, `Mode crise`, `data-pays=`, `data-act=`, et **pré-sélection `paysVu = paysEffectif`**) |
 | `sonde-cerveau.test.ts` | drapeau `?sonde=cerveau` ( parsing strict ) ; `decrireSonde` : nombres à la française, mesures manquantes absentes, **zéro nom de technologie à l'écran** ; verrou source : `main.ts` importe et teste le drapeau **avant** `createScene` |
 | `metiers-pays.test.ts` | unicité des codes, numéros d'urgence renseignés, 8 piliers AO, insensibilité à la casse, SN 15/17/18, GH 191/192/193, FR 15/17/18/112 |
-| `metiers-contexte.test.ts` | défaut, préfixe `nath.`, round-trip, **JSON menteur** toléré, code inconnu ignoré, `devinerPaysDepuisLangue` |
+| `metiers-contexte.test.ts` | défaut, préfixe `nath.`, round-trip, **JSON menteur** toléré, code inconnu ignoré, `devinerPaysDepuisLangue`, **`paysEffectif` : choisi > « Tous » explicite neutre > devinette** |
 | `play-store.test.ts` | manifeste conforme TWA (id, scope, start_url, lang, orientation, categories, icônes `any`+`maskable`) |
 | `cerveau*.test.ts` | `choisirCerveau` local > réseau > repli ; cache-first ; clé de réponse |
 | `pro.test.ts` `monetisation.test.ts` | **tout est libre par défaut** ; un paywall n'existe que sur réglage explicite |
@@ -413,13 +414,16 @@ sur réglage explicite, et alors la **clé Nath+ locale** (`monetisation/cle.ts`
   ① si le consentement local est déjà « oui », l'app normale démarre son moteur en parallèle —
   mesurer sur un appareil vierge ; ② les lignes affichées ne contiennent aucun nom de
   technologie (verrou testé), seule la variante (« fine » / « large ») est nommée.
-- **TWA = premier chargement en ligne.** Pour du vrai hors-ligne dès l'installation, il faudra
-  **Capacitor** (bundle natif) — arbitrage non tranché.
+- **TWA = premier chargement en ligne.** Pour du vrai hors-ligne dès l'installation, il faudrait
+  **Capacitor** (bundle natif) — **arbitré et écarté (18 oct., voir §13-4)** : le coût de
+  maintenance natif ne paie rien ici ; on accepte le premier chargement en ligne.
 - **Pré-sélection par la langue : câblée** (`paysVu = paysEffectif(ctx, navigator.languages)`
-  dans `rendreMetiers()`, verrouillée dans `metiers.test.ts`). Nuance assumée : le clic « Tous »
-  écrit `pays: ''` et **retombe sur la devinette** de la langue — pas sur « aucun filtrage »
-  quand une région est détectable. Si on veut un « Tous » vraiment neutre, il faudra un champ
-  « choix explicite » dans `Contexte`.
+  dans `rendreMetiers()`, verrouillée dans `metiers.test.ts`). **Nuance fermée (18 oct.)** :
+  le champ `choixExplicite` existe dans `Contexte` — tout clic sur une pastille de pays
+  (y compris « Tous ») le pose ; « Tous » reste donc **vraiment « Tous »**, la devinette de
+  la langue ne joue plus que tant que rien n'a jamais été choisi. Verrou : nouveau bloc
+  `paysEffectif` dans `metiers-contexte.test.ts` + `/choixExplicite:\s*true/` dans
+  `metiers.test.ts`.
 - **Les noms de fonctions internes disparaissent dans le bundle minifié** (`packsPourPays`,
   `ordonnerPourCrise`…). **Ne jamais conclure à une fonctionnalité absente à partir du JS
   servi** : vérifier les **string literals** (ids, `data-pays=`, `Mode crise`, vocabulaire).
@@ -430,9 +434,10 @@ sur réglage explicite, et alors la **clé Nath+ locale** (`monetisation/cle.ts`
 - Les packs **sans `pays`** s'affichent partout : un contenu très localisé (cuisine sénégalaise)
   doit penser à déclarer `pays`, sinon il pollue les autres contextes.
 
-**Dettes de forme.** Aucun `CHANGELOG.md`. Historique = messages de commit. Les specs
-anciennes (2026-10-02) ne reflètent plus l'état ; la **vision du 2026-10-15** + **ce bilan**
-sont les documents vivants.
+**Dettes de forme.** ~~Aucun `CHANGELOG.md`~~ — **comblée (18 oct.)** : `CHANGELOG.md` à la
+racine, version courant **0.2.0** ; à tenir à jour à chaque poussée. Historique avant cela =
+messages de commit. Les specs anciennes (2026-10-02) ne reflètent plus l'état ; la **vision
+du 2026-10-15** + **ce bilan** sont les documents vivants.
 
 ---
 
@@ -461,7 +466,11 @@ chiffres desktop sont au §2 ; c'est la fin de ce chantier, pas le début.
 **4. SP4 — Play Store.** JDK 17 **déjà installé** sur ce poste (vérifié le 18 oct.) ; il ne
 manque plus que **l'Android SDK** (installation manuelle, hors dépôt), puis relancer
 `scripts/prepare-play-store.ps1` dans un terminal humain (bubblewrap veut un TTY). Prévoir
-`/.well-known/assetlinks.json` sur Pages et l'arbitrage **TWA vs Capacitor** (voir §12).
+`/.well-known/assetlinks.json` sur Pages. **Arbitrage tranché (18 oct.) : TWA/Bubblewrap,
+pas Capacitor** — le site est 100 % local-first sans aucune intention native ; Capacitor
+imposerait de maintenir un projet natif et ses plugins pour rien. (La question n° 5 SP5
+reste **la seule en attente du propriétaire** ; le mécanisme est armé, rien n'est bloqué —
+doctrine « gratuit jamais bridé » : activer une réserve = son ordre explicite.)
 
 **5. SP5 — Monétisation.** Décision produit à demander à l'utilisateur : pack à vie ou
 abonnement ; ensuite activer `paliers.ts` capacité par capacité + Mobile Money (agrégateur).
@@ -469,8 +478,10 @@ abonnement ; ensuite activer `paliers.ts` capacité par capacité + Mobile Money
 **6. Marque & déploiement humain.** Vérification **INAPIPI/OMPIC/BOIP** de « NUAGE »,
 réservation des domaines et handles (liste complète dans `docs/LANCEMENT.md`).
 
-**7. Hygiène (quand même).** Un `CHANGELOG.md` par version ; relire l'orthographe française
-des textes avant poussée (le garde-fou ne couvre que les élisions).
+**7. Hygiène (quand même).** ~~Un `CHANGELOG.md` par version~~ — **fait (18 oct.) :**
+`CHANGELOG.md` à la racine, version courant 0.2.0 ; à tenir à jour à chaque poussée.
+Relire l'orthographe française des textes avant poussée (le garde-fou ne couvre que les
+élisions).
 
 ---
 
@@ -479,6 +490,7 @@ des textes avant poussée (le garde-fou ne couvre que les élisions).
 | Fichier | Rôle | Statut |
 |---|---|---|
 | **`docs/BILAN-TRANSMISSION.md`** (ce fichier) | transfert entre agents : état, accès, doctrine, pièges, cap | **à jour 18 oct. 2026** |
+| `CHANGELOG.md` (racine) | journal des versions publiées ; à tenir à jour à chaque poussée | **nouveau, 18 oct. 2026 — version courante 0.2.0** |
 | `docs/superpowers/specs/2026-10-15-indispensable-hors-ligne-vision.md` | vision produit, recherche sourcée, statuts SP1→SP5 | **à jour 18 oct. 2026** |
 | `docs/LANCEMENT.md` | kit de lancement : actions humaines, comptes, marque, déploiement | à jour (préfixe `nath.` : 18 clés) |
 | `docs/superpowers/specs/2026-10-02-…-design.md` | design originel nuage sensoriel | **historique**, dépassé sur les périmètres |

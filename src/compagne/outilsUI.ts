@@ -782,7 +782,9 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     corps.querySelectorAll<HTMLElement>('[data-pays]').forEach((b) =>
       b.addEventListener('click', () => {
         const code = b.dataset.pays ?? '';
-        ecrireContexte(storage, { ...ctx, pays: code });
+        // Choix explicite : « Tous » (code '') reste neutre dès qu'on le touche,
+        // la devinette de la langue ne reprend la main que tant que rien n'est choisi.
+        ecrireContexte(storage, { ...ctx, pays: code, choixExplicite: true });
         rendreMetiers();
       }),
     );

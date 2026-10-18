@@ -8,9 +8,13 @@ import { PAYS, paysDe } from './pays';
 export interface Contexte {
   pays: string;   // code ISO 3166-1 alpha-2, ou '' pour « pas de pays choisi »
   crise: boolean; // true = prioriser les packs survie/approvisionnement
+  // La personne a-t-elle touché une pastille de pays ? Alors plus personne ne
+  // lui devine quoi que ce soit : « Tous » (pays '' + choix explicite) reste
+  // vraiment « Tous », même avec une langue régionée (fr-SN) dans le navigateur.
+  choixExplicite?: boolean;
 }
 
-export const CONTEXTE_PAR_DEFAUT: Contexte = { pays: '', crise: false };
+export const CONTEXTE_PAR_DEFAUT: Contexte = { pays: '', crise: false, choixExplicite: false };
 export const CLE_CONTEXTE = 'nath.metiers.contexte';
 
 type Stockage = Pick<Storage, 'getItem' | 'setItem'>;
@@ -27,6 +31,7 @@ export function lireContexte(stock: Stockage): Contexte {
     return {
       pays: estCodeValide(o.pays) ? o.pays : '',
       crise: o.crise === true,
+      choixExplicite: o.choixExplicite === true,
     };
   } catch {
     return { ...CONTEXTE_PAR_DEFAUT };
@@ -37,6 +42,7 @@ export function ecrireContexte(stock: Stockage, ctx: Contexte): void {
   const propre: Contexte = {
     pays: estCodeValide(ctx.pays) ? ctx.pays : '',
     crise: ctx.crise === true,
+    choixExplicite: ctx.choixExplicite === true,
   };
   stock.setItem(CLE_CONTEXTE, JSON.stringify(propre));
 }
@@ -55,8 +61,10 @@ export function devinerPaysDepuisLangue(langues: readonly string[]): string {
   return '';
 }
 
-// Pratique : quand on veut une valeur même si l'utilisateur n'a rien choisi.
+// Le pays réellement visible : celui choisi ; à défaut le choix explicite
+// neutre (« Tous ») éteint la devinette ; sinon la langue du navigateur.
 export function paysEffectif(ctx: Contexte, langues: readonly string[]): string {
   if (ctx.pays) return ctx.pays;
+  if (ctx.choixExplicite) return '';
   return devinerPaysDepuisLangue(langues);
 }

@@ -358,6 +358,11 @@ describe('outilsUI.ts — l’onglet Métiers est branché', () => {
     expect(uiBrute).toMatch(/paysVu === '' \? ' class="actif"' : ''/);
     expect(uiBrute).toMatch(/paysVu === pp\.code/);
   });
+  it('clic sur une pastille de pays : choix explicite — le « Tous » reste neutre', () => {
+    // handler data-pays : tout clic pose ctx.choixExplicite = true ; « Tous » (code '')
+    // doit donc éteindre la devinette de la langue au lieu d’y retomber.
+    expect(uiBrute).toMatch(/choixExplicite:\s*true/);
+  });
   it('la bascule « Mode crise » et le sélecteur de pays existent à l’écran', () => {
     expect(uiBrute).toMatch(/Mode crise/);
     // Le code HTML des contrôles (data-act=…) doit prévoir les deux interactions.
