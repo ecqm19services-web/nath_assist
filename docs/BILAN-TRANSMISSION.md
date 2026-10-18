@@ -15,10 +15,10 @@ pensée pour l'Afrique de l'Ouest, **fonctionnant hors-ligne**, en français sim
 jamais afficher le nom d'un moteur d'IA. Dépôt GitHub `ecqm19services-web/nath_assist`,
 publiée sur GitHub Pages.
 
-**L'état.** Le socle est **vert, buildé** : 673 tests (60 fichiers), `tsc` 0 erreur ; la prod
-servie est encore le bundle `index-B9BknN5k.js` (vague 6 + page sonde) — le tour « finesse »
-(« Tous » neutre, CHANGELOG, arbitrage TWA, version 0.2.0) est **committable mais non poussé**
-: en attente de l'ordre « fais github ».
+**L'état.** Le socle est **vert, buildé, déployé** : 673 tests (60 fichiers), `tsc` 0 erreur,
+prod servie = bundle construit localement (`index-oXPsK5Gz.js`, tour « finesse » : « Tous »
+neutre + CHANGELOG 0.2.0), `main` = `gh-pages` = poussés, vérifié au curl et **en navigateur
+prod** après délai CDN.
 
 **La priorité.** Les chantiers 1 et 2 (§13) sont **livrés en prod**, vague 6 comprise, avec la
 **page de mesure de terrain** (`?sonde=cerveau`) : le protocole téléphone de SP1 est désormais
@@ -52,19 +52,23 @@ sans `fais github`.
 
 | Surface | État vérifié |
 |---|---|
-| `main` | HEAD poussé = `1363a33` (vague 6 + sonde + fix SP4) ; **working tree = tour 3 non committé** (attend « fais github ») : `CHANGELOG.md` (nouveau), `package.json` (0.1.0→0.2.0), `src/metiers/contexte.ts` + `src/compagne/outilsUI.ts` (« Tous » neutre), `tests/metiers-contexte.test.ts` + `tests/metiers.test.ts`, ce bilan |
-| `gh-pages` | dernier deploy = bundle `index-B9BknN5k.js` — **poussé** ; le nouveau bundle local `index-oXPsK5Gz.js` n'attend que la poussée |
-| Bundle | local `index-oXPsK5Gz.js` (894,44 KiB pré-cache, 11 entrées) ↔ prod encore `index-B9BknN5k.js` tant que rien n'est poussé |
+| `main` | HEAD poussé = `d3011c1` (« Tous » neutre + CHANGELOG 0.2.0 + arbitrage TWA) ; avant : `1363a33` (vague 6 + sonde + fix SP4), `4cf27b0`, `ec8a1ae` |
+| `gh-pages` | dernier deploy = `fde3ae3` — bundle `index-oXPsK5Gz.js` — **poussé** |
+| Bundle | `index-oXPsK5Gz.js` — hash **identique** local (`dist/`) ↔ prod (curl, cache-buster) ; pré-cache **894,44 KiB** |
 | Tests | **673 passed (60 files)** |
 | `tsc --noEmit` | **0** |
 | Build Vite | OK — pré-cache 894,44 KiB (11 entrées) |
 | Worker Cloudflare | `nath-cerveau` — **inchangé** depuis longtemps (module 100 % client) |
-| Runtime | **vérifié en navigateur (preview 4173, 18 oct.)** : app normale sur `index-B9BknN5k.js` — les six métiers de la vague 6 sont rendus, vue « un jour, une tâche » correcte (Menuiserie : piège du jour, mot juste, Jour suivant) ; **page sonde** `?sonde=cerveau` : l'app ne se monte PAS (ni ciel, ni micro, aucune permission), lignes en français simple, « Mesurer » → atterrissage 6 s et réponse 2 521 ms (machine déjà ré-atterrie après purge). **SP1 desktop (18 oct.)** : sans `shader-f16` → variante fp32 ; 277–278 Mo ; rechargement chaud = **0 requête modèle** ; inférence ~0,7–0,8 s ; 25×8 → « Ça fait 200. » — les mesures du tour précédent (12 onglets, `fr-SN` simulé → pastille Sénégal, cuisine-AO filtrée, `peche-artisanale` rendu) tiennent toujours. **Tour 3 (18 oct., dev 4173)** : `fr-SN` simulé, rien choisi → pastille Sénégal (devinette préservée) ; clic « Tous » → `choixExplicite:true` au stockage et **« Tous » reste actif après rechargement** (régression fermée) |
-| Working tree | **tour 3 en attente de l'ordre « fais github »** — 8 fichiers listés à la ligne `main` ; arbre validé (673 tests, build OK) |
+| Runtime | **vérifié en navigateur (preview 4173, 18 oct.)** : app normale sur `index-B9BknN5k.js` — les six métiers de la vague 6 sont rendus, vue « un jour, une tâche » correcte (Menuiserie : piège du jour, mot juste, Jour suivant) ; **page sonde** `?sonde=cerveau` : l'app ne se monte PAS (ni ciel, ni micro, aucune permission), lignes en français simple, « Mesurer » → atterrissage 6 s et réponse 2 521 ms (machine déjà ré-atterrie après purge). **SP1 desktop (18 oct.)** : sans `shader-f16` → variante fp32 ; 277–278 Mo ; rechargement chaud = **0 requête modèle** ; inférence ~0,7–0,8 s ; 25×8 → « Ça fait 200. » — les mesures du tour précédent (12 onglets, `fr-SN` simulé → pastille Sénégal, cuisine-AO filtrée, `peche-artisanale` rendu) tiennent toujours. **Tour 3 (18 oct., dev 4173)** : `fr-SN` simulé, rien choisi → pastille Sénégal (devinette préservée) ; clic « Tous » → `choixExplicite:true` au stockage et **« Tous » reste actif après rechargement** (régression fermée) — **revérifié en prod (bundle `oXPsK5Gz`)** : même séquence, « Tous » reste actif après rechargement avec `fr-SN` simulé |
+| Working tree | **rien en attente** — tour 3 poussé (`d3011c1`), arbre propre |
 
 Historique récente (du plus récent au plus ancien) :
 
 ```text
+d3011c1 feat: Tous vraiment neutre (choix explicite dans Contexte) + CHANGELOG.md version 0.2.0 + arbitrage TWA consigne
+1363a33 feat(metiers): vague 6 (six metiers) + page sonde ?sonde=cerveau + fix script SP4
+4cf27b0 docs(bilan): vague 5 et preselection livrees en prod, bilan a jour
+ec8a1ae feat(metiers): vague 5 (peche, elevage, sante, cordonnerie, plomberie, peinture) + preselection par la langue
 39646d9 docs: bilan de transmission complet + fix orthographe equerrage (pack Maconnerie)
 4ed1191 feat(metiers): vague 4 - Coiffure, Reparation telephones, Marchage, Maconnerie
 fc50962 feat(metiers): vague 3 - Afrique de l'Ouest entiere, crise, approvisionnement
