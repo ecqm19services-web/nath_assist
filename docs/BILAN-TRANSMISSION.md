@@ -15,14 +15,14 @@ pensée pour l'Afrique de l'Ouest, **fonctionnant hors-ligne**, en français sim
 jamais afficher le nom d'un moteur d'IA. Dépôt GitHub `ecqm19services-web/nath_assist`,
 publiée sur GitHub Pages.
 
-**L'état.** Le socle est **vert, buildé, déployé** : 673 tests (60 fichiers), `tsc` 0 erreur,
-prod servie = bundle construit localement (`index-oXPsK5Gz.js`, tour « finesse » : « Tous »
-neutre + CHANGELOG 0.2.0), `main` = `gh-pages` = poussés, vérifié au curl et **en navigateur
-prod** après délai CDN.
+**L'état.** Le socle est **vert, buildé, déployé** : 691 tests (61 fichiers), `tsc` 0 erreur,
+prod servie = bundle du chantier finesse (`index-CqGNE3JX.js`), `main` = `gh-pages` = poussés,
+vérifié au curl et **en navigateur prod** après délai CDN.
 
-**Le dernier chantier (20 oct., local).** L'audit ergonomie/puissance est **traduit en chantier
-et livré en local** : 691 tests (61 fichiers), `tsc` 0, build vérifié (`index-CqGNE3JX.js`,
-pré-cache 899,73 KiB), runtime validé en preview. Douze items : pause du rendu 3D pendant les
+**Le dernier chantier (20 oct., en prod).** L'audit ergonomie/puissance est **traduit en chantier
+et livré en prod** (`main` = `ccd8848`, deploy = `e7d6c7b`, bundle `index-CqGNE3JX.js`,
+pré-cache 899,73 KiB — vérifié en prod réelle après purge du vieux SW : Aujourd’hui premier,
+étoile favori qui réordonne, Traduire retiré de 🎓, ✦ caché). Douze items : pause du rendu 3D pendant les
 panneaux plein écran (+ clamp du `dt`) ; favoris d'outils (étoile, favoris en tête, rien de
 retiré, `nath.outils.favoris`) ; onglet « Aujourd’hui » en tête de 🧰 (métier du jour,
 révisions dues, découverte du jour, stats 30 jours) ; stats d’usage locales 30 jours
@@ -34,7 +34,7 @@ discret) ; « Toutes les tâches » + retour au jour dans Métiers ; export du j
 de la personne) ; une seule porte pour les langues (onglet « Traduire » retiré de 🎓 —
 `langues` de 🧰 garde la main, `rendreTraduire` reste prête) ; cibles tactiles ≥ 44 px +
 `:focus-visible` ; corpus encyclopédie isolé dans `encycloData.ts` (réexporté par `encyclo.ts`,
-surface inchangée). **Non poussé** : `fais github` n’a pas été donné pour ce chantier.
+surface inchangée). **Poussé et vérifié en prod le 20 oct.**
 
 **La priorité.** Les chantiers 1 et 2 (§13) sont **livrés en prod**, vague 6 comprise, avec la
 **page de mesure de terrain** (`?sonde=cerveau`) : le protocole téléphone de SP1 est désormais
@@ -64,23 +64,26 @@ sans `fais github`.
 
 ---
 
-## 2. Où on en est — instantané vérifié (18 oct. 2026)
+## 2. Où on en est — instantané vérifié (20 oct. 2026)
 
 | Surface | État vérifié |
 |---|---|
-| `main` | HEAD poussé = `d3011c1` (« Tous » neutre + CHANGELOG 0.2.0 + arbitrage TWA) ; avant : `1363a33` (vague 6 + sonde + fix SP4), `4cf27b0`, `ec8a1ae` |
-| `gh-pages` | dernier deploy = `fde3ae3` — bundle `index-oXPsK5Gz.js` — **poussé** |
-| Bundle | `index-oXPsK5Gz.js` — hash **identique** local (`dist/`) ↔ prod (curl, cache-buster) ; pré-cache **894,44 KiB** |
-| Tests | **691 passed (61 files)** — local 20 oct. ; prod encore sur 673 (60) tant que rien n'est poussé |
+| `main` | HEAD poussé = `ccd8848` (chantier ergonomie 12 items, 691 tests) ; avant : `76277e8` (docs bilan), `d3011c1` (« Tous » neutre + CHANGELOG 0.2.0 + arbitrage TWA), `1363a33` (vague 6 + sonde + fix SP4) |
+| `gh-pages` | dernier deploy = `e7d6c7b` — bundle `index-CqGNE3JX.js` — **poussé** (le script a publié le commit local sans le pousser : `git push origin gh-pages` fait à la main) |
+| Bundle | `index-CqGNE3JX.js` — hash **identique** local (`dist/`) ↔ prod (curl, cache-buster, ~2 min) ; pré-cache **899,73 KiB** |
+| Tests | **691 passed (61 files)** |
 | `tsc --noEmit` | **0** |
-| Build Vite | OK — pré-cache 894,44 KiB (11 entrées) |
+| Build Vite | OK — pré-cache 899,73 KiB (11 entrées) |
 | Worker Cloudflare | `nath-cerveau` — **inchangé** depuis longtemps (module 100 % client) |
-| Runtime | **vérifié en navigateur (preview 4173, 18 oct.)** : app normale sur `index-B9BknN5k.js` — les six métiers de la vague 6 sont rendus, vue « un jour, une tâche » correcte (Menuiserie : piège du jour, mot juste, Jour suivant) ; **page sonde** `?sonde=cerveau` : l'app ne se monte PAS (ni ciel, ni micro, aucune permission), lignes en français simple, « Mesurer » → atterrissage 6 s et réponse 2 521 ms (machine déjà ré-atterrie après purge). **SP1 desktop (18 oct.)** : sans `shader-f16` → variante fp32 ; 277–278 Mo ; rechargement chaud = **0 requête modèle** ; inférence ~0,7–0,8 s ; 25×8 → « Ça fait 200. » — les mesures du tour précédent (12 onglets, `fr-SN` simulé → pastille Sénégal, cuisine-AO filtrée, `peche-artisanale` rendu) tiennent toujours. **Tour 3 (18 oct., dev 4173)** : `fr-SN` simulé, rien choisi → pastille Sénégal (devinette préservée) ; clic « Tous » → `choixExplicite:true` au stockage et **« Tous » reste actif après rechargement** (régression fermée) — **revérifié en prod (bundle `oXPsK5Gz`)** : même séquence, « Tous » reste actif après rechargement avec `fr-SN` simulé |
-| Working tree | **rien en attente** — tour 3 poussé (`d3011c1`), arbre propre |
+| Runtime | **vérifié en navigateur (preview 4173, 18 oct.)** : app normale sur `index-B9BknN5k.js` — les six métiers de la vague 6 sont rendus, vue « un jour, une tâche » correcte (Menuiserie : piège du jour, mot juste, Jour suivant) ; **page sonde** `?sonde=cerveau` : l'app ne se monte PAS (ni ciel, ni micro, aucune permission), lignes en français simple, « Mesurer » → atterrissage 6 s et réponse 2 521 ms (machine déjà ré-atterrie après purge). **SP1 desktop (18 oct.)** : sans `shader-f16` → variante fp32 ; 277–278 Mo ; rechargement chaud = **0 requête modèle** ; inférence ~0,7–0,8 s ; 25×8 → « Ça fait 200. » — les mesures du tour précédent (12 onglets, `fr-SN` simulé → pastille Sénégal, cuisine-AO filtrée, `peche-artisanale` rendu) tiennent toujours. **Tour 3 (18 oct., dev 4173)** : `fr-SN` simulé, rien choisi → pastille Sénégal (devinette préservée) ; clic « Tous » → `choixExplicite:true` au stockage et **« Tous » reste actif après rechargement** (régression fermée) — **revérifié en prod (bundle `oXPsK5Gz`)** : même séquence, « Tous » reste actif après rechargement avec `fr-SN` simulé. **Chantier finesse (20 oct., preview 4173 puis prod `CqGNE3JX`)** : 0 draw call WebGL pendant panneau 🎓 ouvert puis reprise ; étoile favori → « Souffle★ » en tête (★ et ☆ persistés) ; carte Aujourd’hui complète (métier, « Révisions qui t’attendent : 1 carte. », découverte, 30 jours) ; « Réviser • » apparaît dès qu’une fiche est due ; Toutes les tâches ⇄ retour au jour ; export journal → fichier `nath-journal-2026-10-20.txt` dans Téléchargements (vide puis avec note) ; ✦ caché ; Traduire absent de 🎓 |
+| Working tree | **rien en attente** — chantier poussé (`ccd8848` + deploy `e7d6c7b`), arbre propre |
 
 Historique récente (du plus récent au plus ancien) :
 
 ```text
+ccd8848 feat: chantier ergonomie 12 items (pause 3D, favoris, Aujourd-hui, stats 30 j, rappel, Nath+ cache, sans attendre, toutes les taches, export journal, porte unique langues, tactile 44 px, encycloData) - 691 tests
+e7d6c7b deploy: 2026-10-20 14:29 (gh-pages)
+76277e8 docs(bilan): tour 3 livre en prod - Tous neutre verifie en prod, bundle oXPsK5Gz, historique complete
 d3011c1 feat: Tous vraiment neutre (choix explicite dans Contexte) + CHANGELOG.md version 0.2.0 + arbitrage TWA consigne
 1363a33 feat(metiers): vague 6 (six metiers) + page sonde ?sonde=cerveau + fix script SP4
 4cf27b0 docs(bilan): vague 5 et preselection livrees en prod, bilan a jour
