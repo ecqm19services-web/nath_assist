@@ -20,6 +20,7 @@ import { probaEvenements } from './nuage/meteo';
 import { chargerCielReel, lieuDuReseau } from './nuage/cielReel';
 import { lireEndpoint } from './compagne/cerveauNet';
 import { surveillerMiseAJour } from './compagne/miseAJour';
+import { panneauOuvert } from './nuage/pause';
 
 if (sondeDemandee(location.search)) {
   void lancerSondeCerveau(document.body);
@@ -213,7 +214,8 @@ setInterval(() => {
 
 let last = performance.now();
 function boucle(now: number) {
-  const dt = (now - last) / 1000;
+  // Un long silence (onglet en arrière-plan) ne doit pas projeter le ciel hors du monde.
+  const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   // L'heure locale pilote le cycle jour/nuit du ciel.
   const d = new Date();
@@ -224,6 +226,13 @@ function boucle(now: number) {
   if (state.bpm) {
     const phase = Math.sin((Date.now() / (60000 / state.bpm)) * 2 * Math.PI);
     state.breath = Math.max(state.breath, 0.08 * phase + 0.08);
+  }
+  // Un panneau plein écran ouvert : le ciel prend son repos. Le rendu 3D est
+  // sauté — la batterie travaille pour ce que la personne regarde. À la
+  // fermeture, la scène reprend toute seule, aussi vivante qu'avant.
+  if (panneauOuvert()) {
+    requestAnimationFrame(boucle);
+    return;
   }
   scene.apply(computeSceneParams(state), focus);
   scene.setBpm(state.bpm);

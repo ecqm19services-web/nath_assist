@@ -15,6 +15,7 @@ import { candidatesPourMonologue, choisirMonologue, nextDelai, type MonoCtx } fr
 import { entendReveil } from './reveil';
 import { createVoice } from './voice';
 import { idProfil } from '../monetisation/cle';
+import { capacitesReservees } from '../monetisation/paliers';
 import { activer, changerNom, estActif, nomEffectif } from '../monetisation/pro';
 import type { Face } from '../input/camera';
 
@@ -141,14 +142,34 @@ export function createCompagneUI(
     // librairie — seulement des « ressources intellectuelles » en cours de chargement.
     let ressource = 1;
     let dernierP = 0;
+    // « continuer sans attendre » : la personne garde la main — l'affichage se
+    // tait, le téléchargement continue en silence derrière, rien ne s'annule.
+    let onTait = false;
+    const sansAttendre = document.createElement('button');
+    sansAttendre.type = 'button';
+    sansAttendre.className = 'compagne-relance';
+    sansAttendre.textContent = 'continuer sans attendre';
+    sansAttendre.addEventListener('click', () => {
+      onTait = true;
+      sansAttendre.remove();
+      bCerveau.textContent = 'Je continue de charger en silence — posez-moi vos questions pendant ce temps.';
+    });
     bCerveau.textContent = 'Chargement des ressources intellectuelles en cours... 0 %';
+    bCerveau.appendChild(sansAttendre);
     creerCerveau((p) => {
       // Le % repart à zéro à chaque ressource : on les compte pour rester honnête
       // (pas un faux « ça recule »), sans jamais nommer ce qui se charge.
       if (p < dernierP - 0.2) ressource++;
       dernierP = p;
+      if (onTait) return; // la personne a demandé la discrétion : plus d'affichage, le fond continue
       bCerveau.textContent = `Chargement des ressources intellectuelles en cours... ${Math.min(99, Math.round(p * 100))} % · ressource ${ressource}`;
+      bCerveau.appendChild(sansAttendre);
     }).then(({ cerveau: c, raison }) => {
+      if (onTait) {
+        // Discrétion demandée : le cerveau est prêt sans que rien s'affiche.
+        if (c && !lireEndpoint(localStorage)) cerveau = c;
+        return;
+      }
       const net = lireEndpoint(localStorage);
       if (c) {
         // Le plus grand cerveau réglé par la personne garde la main : le local
@@ -397,8 +418,13 @@ export function createCompagneUI(
   const proFormNom = zone.querySelector('.pro-form-nom') as HTMLFormElement;
   const proNom = zone.querySelector('.pro-nom') as HTMLInputElement;
   const proEtat = zone.querySelector('.pro-etat') as HTMLElement;
+  // Dès la naissance de la page : l'étoile n'existe que pour qui a réservé.
+  proBtn.hidden = capacitesReservees().length === 0;
 
   function rafraichPro(): void {
+    // Le ✦ n'existe que pour qui a réservé une capacité : tant que le gratuit
+    // est entier (doctrine), l'étoile reste cachée — rien à acheter, rien à montrer.
+    proBtn.hidden = capacitesReservees().length === 0;
     const actif = estActif(localStorage, seedActuel());
     const nom = nomActuel();
     proId.textContent = idProfil(seedActuel());

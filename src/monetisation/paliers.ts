@@ -22,6 +22,13 @@ export function palierDe(capacite: string, reglage: Reglage = RIEN_N_EST_RESERVE
   return reglage[capacite] ?? 'libre';
 }
 
+// Quelles capacités sont réservées ? Vide tant que rien n'est décidé — et tant
+// que c'est vide, la porte d'entrée payante (l'étoile Nath+) doit rester cachée :
+// proposer ce qui n'existe pas est une promesse menteuse.
+export function capacitesReservees(reglage: Reglage = RIEN_N_EST_RESERVE): string[] {
+  return Object.keys(reglage).filter((c) => reglage[c] === 'reserve');
+}
+
 export interface Portefeuille {
   seed: string;
   cle: string | null | undefined;

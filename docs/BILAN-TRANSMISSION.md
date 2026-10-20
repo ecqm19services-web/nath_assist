@@ -20,6 +20,22 @@ prod servie = bundle construit localement (`index-oXPsK5Gz.js`, tour « finesse 
 neutre + CHANGELOG 0.2.0), `main` = `gh-pages` = poussés, vérifié au curl et **en navigateur
 prod** après délai CDN.
 
+**Le dernier chantier (20 oct., local).** L'audit ergonomie/puissance est **traduit en chantier
+et livré en local** : 691 tests (61 fichiers), `tsc` 0, build vérifié (`index-CqGNE3JX.js`,
+pré-cache 899,73 KiB), runtime validé en preview. Douze items : pause du rendu 3D pendant les
+panneaux plein écran (+ clamp du `dt`) ; favoris d'outils (étoile, favoris en tête, rien de
+retiré, `nath.outils.favoris`) ; onglet « Aujourd’hui » en tête de 🧰 (métier du jour,
+révisions dues, découverte du jour, stats 30 jours) ; stats d’usage locales 30 jours
+(`nath.outils.usage`, écrémées) ; point de rappel « • » quand des cartes attendent (🎓 Réviser
+et Journal 🧰) ; ✦ Nath+ caché tant qu’aucune capacité n’est réservée (`capacitesReservees()`) ;
+bouton « continuer sans attendre » pendant le chargement du cerveau local (le fond continue,
+discret) ; « Toutes les tâches » + retour au jour dans Métiers ; export du journal en texte
+(`texteCarnet`, Blob, repli copiable — téléchargement vérifié dans le dossier Téléchargements
+de la personne) ; une seule porte pour les langues (onglet « Traduire » retiré de 🎓 —
+`langues` de 🧰 garde la main, `rendreTraduire` reste prête) ; cibles tactiles ≥ 44 px +
+`:focus-visible` ; corpus encyclopédie isolé dans `encycloData.ts` (réexporté par `encyclo.ts`,
+surface inchangée). **Non poussé** : `fais github` n’a pas été donné pour ce chantier.
+
 **La priorité.** Les chantiers 1 et 2 (§13) sont **livrés en prod**, vague 6 comprise, avec la
 **page de mesure de terrain** (`?sonde=cerveau`) : le protocole téléphone de SP1 est désormais
 un écran, pas une console (voir §12 et §13-3). SP4 : script réparé et JDK 17 déjà présent sur
@@ -55,7 +71,7 @@ sans `fais github`.
 | `main` | HEAD poussé = `d3011c1` (« Tous » neutre + CHANGELOG 0.2.0 + arbitrage TWA) ; avant : `1363a33` (vague 6 + sonde + fix SP4), `4cf27b0`, `ec8a1ae` |
 | `gh-pages` | dernier deploy = `fde3ae3` — bundle `index-oXPsK5Gz.js` — **poussé** |
 | Bundle | `index-oXPsK5Gz.js` — hash **identique** local (`dist/`) ↔ prod (curl, cache-buster) ; pré-cache **894,44 KiB** |
-| Tests | **673 passed (60 files)** |
+| Tests | **691 passed (61 files)** — local 20 oct. ; prod encore sur 673 (60) tant que rien n'est poussé |
 | `tsc --noEmit` | **0** |
 | Build Vite | OK — pré-cache 894,44 KiB (11 entrées) |
 | Worker Cloudflare | `nath-cerveau` — **inchangé** depuis longtemps (module 100 % client) |

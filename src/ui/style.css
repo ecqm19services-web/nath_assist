@@ -275,3 +275,14 @@ html, body { margin: 0; height: 100%; background: #05070f; overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .oi-barre i, .oi-souffle i { transition: none; }
 }
+
+/* Le confort du pouce : les cibles principales font au moins 44 px — une
+   zone où le doigt tombe juste, sans changer le dessin des boutons. Et un
+   anneau de focus bien visible pour celle et ceux qui naviguent au clavier. */
+.outils-onglets button, .savoir-onglets button, .oi-actions button {
+  min-height: 44px;
+}
+.outils-onglets button:focus-visible, .savoir-onglets button:focus-visible,
+.oi-actions button:focus-visible, .outils-btn:focus-visible, .savoir-btn:focus-visible {
+  outline: 3px solid #ffd76a; outline-offset: 2px;
+}

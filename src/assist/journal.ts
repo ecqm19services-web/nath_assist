@@ -104,3 +104,19 @@ export function cartesDepuisJournal(
     .slice(0, max)
     .map((e) => ({ verso: e.titre, recto: e.texte }));
 }
+
+// Le journal s'exporte en texte simple : la personne peut le garder hors de
+// l'appareil (fichier, messagerie, imprimer) sans qu'un serveur s'en mêle.
+// La dernière note d'abord — ce qu'on vient de vivre passe devant.
+export function texteCarnet(entrees: readonly EntreeJournal[]): string {
+  if (!entrees.length) return 'Le journal est vide pour l’instant.';
+  const tete = 'Nath Assist — mon journal\n';
+  const lignes = [...entrees]
+    .sort((a, b) => b.at - a.at)
+    .map((e) => {
+      const jour = new Date(e.at).toLocaleDateString('fr-FR');
+      return `[${jour}] ${e.titre}\n${e.texte}\n`;
+    })
+    .join('\n');
+  return `${tete}\n${lignes}`;
+}

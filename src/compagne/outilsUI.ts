@@ -54,6 +54,7 @@ import {
   filtrerJournal,
   lireJournal,
   noterEntree,
+  texteCarnet,
 } from '../assist/journal';
 import { pucesDepuisTexte, pucesVersFiches, resumerParCerveau } from '../assist/resume';
 import { decouperEnonce, etapesHorsLigne, expliquerParCerveau } from '../assist/tuteur';
@@ -67,6 +68,12 @@ import {
   type PhaseSouffle,
 } from '../assist/souffle';
 import { archipel, type Ile } from '../assist/carte';
+import { ouvrirPanneau, fermerPanneau } from '../nuage/pause';
+import { basculerFavori, lireFavoris, ordonnerOnglets } from './favorisOutils';
+import { compter30, noterVisite } from './usage';
+import { construireCarteJour, pointRappel } from './aujourdhui';
+import { noticeDuJour } from '../etudes/encyclo';
+import { statsPaquet } from '../etudes/store';
 import { SOCLE, type Notice } from '../etudes/encyclo';
 import { ajouterXp, lireFlamme, niveauDe, partDuNiveau, titreDuNiveau } from '../assist/flamme';
 import { lireEndpoint, lireTemperament } from './cerveauNet';
@@ -80,9 +87,10 @@ const el = (html: string) => {
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
 
-type Onglet = 'flamme' | 'frigo' | 'assiette' | 'journal' | 'tuteur' | 'souffle' | 'resume' | 'carte' | 'langues' | 'examen' | 'metiers' | 'coffre';
+type Onglet = 'jour' | 'flamme' | 'frigo' | 'assiette' | 'journal' | 'tuteur' | 'souffle' | 'resume' | 'carte' | 'langues' | 'examen' | 'metiers' | 'coffre';
 
 const TITRES: Record<Onglet, string> = {
+  jour: 'Aujourd’hui',
   flamme: 'Flamme',
   frigo: 'Frigo',
   assiette: 'Assiette',
@@ -103,11 +111,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
   const paneau = el(`
     <div class="outils-paneau" hidden role="dialog" aria-label="Boîte à outils">
       <div class="outils-tete">
-        <div class="outils-onglets">
-          ${Object.keys(TITRES)
-            .map((k) => `<button data-ot="${k}"${k === 'flamme' ? ' class="actif"' : ''}>${TITRES[k as Onglet]}</button>`)
-            .join('')}
-        </div>
+        <div class="outils-onglets"></div>
         <button class="outils-fermer" title="Fermer" aria-label="Fermer">×</button>
       </div>
       <div class="outils-corps"></div>
@@ -116,7 +120,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
   const corps = paneau.querySelector('.outils-corps') as HTMLElement;
 
   // ——— état, hors des fonctions de rendu : il survit aux re-rendus ———
-  let actif: Onglet = 'flamme';
+  let actif: Onglet = 'jour';
   let frigo = '';
   let assiette = '';
   let tuteurQ = '';
@@ -143,9 +147,46 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
   let examenMarks: Record<string, boolean> = {};
   let examenResultat: { corrects: number; total: number; score: number } | null = null;
   let metiersPackId = METIERS_PACKS[0]?.id ?? '';
+  let metiersTout = false; // « Toutes les tâches » : le jour laisse place au chantier complet
 
   const horsLigne = () => (!navigator.onLine ? '<p class="outils-note">Hors-ligne : tout ce que tu vois ici continue de fonctionner.</p>' : '');
   const cerveauRegle = () => !!lireEndpoint(storage).trim();
+
+  // ——— La rangée d'onglets : les favoris d'abord, rien d'effacé ———
+  const estFavori = (id: string): boolean => lireFavoris(storage, [id]).includes(id);
+
+  function toggleFavori(id: string): void {
+    basculerFavori(storage, id);
+    rendreBarre(); // l'étoile s'allume et l'onglet change de place sous le doigt
+  }
+
+  // ——— 0. Aujourd'hui : une carte, pas vingt-cinq boutons ———
+  function rendreJour(): void {
+    // Chaque ligne vient de ce que l'appareil sait déjà : le métier du jour,
+    // les cartes qui attendent, la découverte du jour, la mémoire des trente jours.
+    const ctx: Contexte = lireContexte(storage);
+    const langues = navigator.languages?.length
+      ? Array.from(navigator.languages)
+      : [navigator.language ?? ''];
+    const visibles = ordonnerPourCrise(packsPourPays(METIERS_PACKS, paysEffectif(ctx, langues)));
+    const pack = trouverPack(metiersPackId) ?? visibles[0];
+    const matiere = pack
+      ? { metier: { pack: pack.nom, tache: tacheDuJour(pack, progressionDe(pack.id, storage)).titre } }
+      : {};
+    const revisions = lirePaquets(storage)
+      .reduce((somme, p) => somme + statsPaquet(p, Date.now()).aRevoir, 0);
+    const duJour = noticeDuJour(SOCLE);
+    const carte = construireCarteJour({
+      ...matiere,
+      revisions,
+      decouverte: duJour ? { titre: duJour.titre, resume: duJour.resume } : null,
+      usage: compter30(storage),
+    });
+    corps.innerHTML = `
+      <div class="oi-carte">
+        ${carte.map((l) => `<p class="${l === 'Aujourd’hui' ? 'oi-titre' : 'oi-note'}">${esc(l)}</p>`).join('')}
+      </div>${horsLigne()}`;
+  }
 
   // ——— 1. La flamme : la série des jours ———
   function rendreFlamme(): void {
@@ -291,6 +332,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
         <div class="oi-actions">
           <button data-act="noter">Noter</button>
           <button data-act="cartes">En faire des cartes</button>
+          <button data-act="exporter">📄 Exporter</button>
           ${voix.sttDisponible ? '<button data-act="micro" data-cible="jtexte">🎤 Dictater</button>' : ''}
         </div>
         <p class="oi-note">${tout.length} note${tout.length > 1 ? 's' : ''} gardée${tout.length > 1 ? 's' : ''} sur cet appareil.</p>
@@ -331,6 +373,21 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     });
     brancherMicro(corps.querySelector('[data-act="micro"]'), jx, () => {
       journalTexte = jx.value;
+    });
+    corps.querySelector('[data-act="exporter"]')?.addEventListener('click', () => {
+      const texte = texteCarnet(lireJournal(storage));
+      const nom = `nath-journal-${new Date().toISOString().slice(0, 10)}.txt`;
+      try {
+        const url = URL.createObjectURL(new Blob([texte], { type: 'text/plain;charset=utf-8' })) as unknown as string;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nom;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch {
+        (corps.querySelector('[data-zone]') as HTMLElement).innerHTML =
+          `<p class="oi-note">La téléchargière refuse ce navigateur — le voilà en texte clair, à copier.</p><textarea class="oi-champ" rows="6" readonly>${esc(texte)}</textarea>`;
+      }
     });
     corps.querySelectorAll<HTMLElement>('[data-act="del"]').forEach((b) => {
       b.addEventListener('click', () => {
@@ -736,6 +793,10 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     const t = tacheDuJour(pack, jour);
     const m = motDuJour(pack, jour);
     const p = piegeDuJour(pack, jour);
+    // « Toutes les tâches » : le pack complet d'un coup d'œil, puis on revient au jour.
+    const toutesLesTaches = pack.taches
+      .map((x, i) => `<p class="oi-pet"><strong>${i + 1}. ${esc(x.titre)}</strong> — ${x.gestes.map(esc).join(', ')}</p>`)
+      .join('');
     const boutonsPacks = visibles.map(
       (x) => `<button data-mt="${esc(x.id)}"${x.id === pack.id ? ' class="actif"' : ''}>${x.emoji} ${esc(x.nom)}</button>`,
     ).join('');
@@ -762,8 +823,11 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
         ${encartUrgence}
         <p class="oi-titre2">Le métier</p>
         <div class="oi-actions">${boutonsPacks}</div>
+        <div class="oi-actions"><button data-act="toutes">${metiersTout ? '⤺ Revenir au jour' : '☰ Toutes les tâches'}</button></div>
         <p class="oi-note">${esc(pack.resume)}</p>
-        <p class="oi-titre2">Jour ${jour + 1} — la tâche du jour</p>
+        ${metiersTout
+          ? `<p class="oi-titre2">Tout le chantier — ${pack.taches.length} tâches</p>${toutesLesTaches}`
+          : `<p class="oi-titre2">Jour ${jour + 1} — la tâche du jour</p>
         <p><strong>${esc(t.titre)}</strong></p>
         <ul class="oi-liste">${t.gestes.map((g) => `<li>• ${esc(g)}</li>`).join('')}</ul>
         <p class="oi-titre2">Le mot juste</p>
@@ -771,7 +835,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
         <p class="oi-titre2">Le piège du jour</p>
         <p>${esc(p.enoncé)}</p>
         <p class="oi-pet">Pour l’éviter : ${esc(p.eviter)}</p>
-        <div class="oi-actions"><button data-act="demain">Jour suivant</button></div>
+        <div class="oi-actions"><button data-act="demain">Jour suivant</button></div>`}
       </div>${horsLigne()}`;
     corps.querySelectorAll<HTMLElement>('[data-mt]').forEach((b) =>
       b.addEventListener('click', () => {
@@ -794,6 +858,10 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     });
     corps.querySelector('[data-act="demain"]')?.addEventListener('click', () => {
       avancerJour(pack.id, storage);
+      rendreMetiers();
+    });
+    corps.querySelector('[data-act="toutes"]')?.addEventListener('click', () => {
+      metiersTout = !metiersTout;
       rendreMetiers();
     });
   }
@@ -846,6 +914,7 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
   }
 
   const RENDUS: Record<Onglet, () => void> = {
+    jour: rendreJour,
     flamme: rendreFlamme,
     frigo: rendreFrigo,
     assiette: rendreAssiette,
@@ -860,26 +929,54 @@ export function creerPanneauOutils(storage: Storage): HTMLElement {
     coffre: rendreCoffre,
   };
 
+  // La rangée se redessine à chaque favori : favoris en tête (dans l'ordre où
+  // la personne les a choisis), le reste à sa place — rien ne disparaît.
+  function rendreBarre(): void {
+    const barre = paneau.querySelector('.outils-onglets') as HTMLElement;
+    const ids = Object.keys(TITRES) as Onglet[];
+    const favoris = lireFavoris(storage, ids);
+    const { tete, reste } = ordonnerOnglets(ids, favoris);
+    const revisions = lirePaquets(storage).reduce((somme, p) => somme + statsPaquet(p, Date.now()).aRevoir, 0);
+    // Un seul « • » de rappel sur Journal (nos cartes de revue) quand quelque chose
+    // attend — jamais de chiffre qui compte sur la personne.
+    const libelle = (k: Onglet): string => TITRES[k] + (k === 'journal' ? pointRappel(revisions) : '');
+    barre.innerHTML = [...tete, ...reste]
+      .map(
+        (k) =>
+          `<button data-ot="${k}"${k === actif ? ' class="actif"' : ''}>${esc(libelle(k as Onglet))}<i data-fav="${k}" title="Mettre en favori — ou le retirer" aria-hidden="true">${estFavori(k) ? '★' : '☆'}</i></button>`,
+      )
+      .join('');
+    barre.querySelectorAll<HTMLElement>('button[data-ot]').forEach((b) => {
+      b.addEventListener('click', () => rendre((b.dataset.ot as Onglet) ?? 'jour'));
+    });
+    barre.querySelectorAll<HTMLElement>('[data-fav]').forEach((etoile) => {
+      etoile.addEventListener('click', (e) => {
+        e.stopPropagation(); // l'étoile se touche sans changer d'onglet
+        toggleFavori(etoile.dataset.fav ?? '');
+      });
+    });
+  }
+
   function rendre(o: Onglet): void {
     actif = o;
-    paneau.querySelectorAll('.outils-onglets button').forEach((b) => {
-      b.classList.toggle('actif', (b as HTMLElement).dataset.ot === o);
-    });
+    rendreBarre();
     if (souffleTimer !== null && o !== 'souffle') arreterSouffle(false);
     corps.innerHTML = '';
+    noterVisite(storage, o); // trente jours de mémoire locale, rien qui sort
     RENDUS[o]();
   }
 
-  paneau.querySelectorAll<HTMLElement>('.outils-onglets button').forEach((b) => {
-    b.addEventListener('click', () => rendre((b.dataset.ot as Onglet) ?? 'flamme'));
-  });
+  rendreBarre();
   bouton.addEventListener('click', () => {
     paneau.hidden = !paneau.hidden;
-    if (!paneau.hidden) rendre(actif);
+    // Le panneau s'annonce au ciel : plein écran ouvert, le rendu 3D se repose.
+    if (!paneau.hidden) { ouvrirPanneau('outils'); rendre(actif); }
+    else fermerPanneau('outils');
   });
   paneau.querySelector('.outils-fermer')!.addEventListener('click', () => {
     if (souffleTimer !== null) arreterSouffle(false);
     paneau.hidden = true;
+    fermerPanneau('outils');
   });
   window.addEventListener('online', () => {
     if (!paneau.hidden) rendre(actif);

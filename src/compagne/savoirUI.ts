@@ -38,6 +38,8 @@ import {
   type Marque,
 } from '../entreprise/marque';
 import { analyserDictee, epurerDictee } from '../traduction/dictee';
+import { ouvrirPanneau, fermerPanneau } from '../nuage/pause';
+import { pointRappel } from './aujourdhui';
 import { codeLangue, traduireEnLigne } from '../traduction/moteurNet';
 import {
   approfondirParCerveau,
@@ -86,7 +88,6 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
           <button data-on="reviser" class="actif">Réviser</button>
           <button data-on="savoir">Savoir</button>
           <button data-on="encyclo">Encyclopédie</button>
-          <button data-on="traduire">Traduire</button>
           <button data-on="entreprise">Entreprise</button>
         </div>
         <button class="savoir-fermer" title="Fermer" aria-label="Fermer">×</button>
@@ -98,9 +99,14 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
 
   bouton.addEventListener('click', () => {
     paneau.hidden = !paneau.hidden;
-    if (!paneau.hidden) rendre(active);
+    // Parole donnée au ciel : panneau ouvert, le rendu 3D se repose ; fermé, il reprend.
+    if (!paneau.hidden) { ouvrirPanneau('savoir'); rendre(active); }
+    else fermerPanneau('savoir');
   });
-  paneau.querySelector('.savoir-fermer')!.addEventListener('click', () => (paneau.hidden = true));
+  paneau.querySelector('.savoir-fermer')!.addEventListener('click', () => {
+    paneau.hidden = true;
+    fermerPanneau('savoir');
+  });
 
   // ——— état ———
   let active: 'reviser' | 'savoir' | 'encyclo' | 'traduire' | 'entreprise' = 'reviser';
@@ -114,6 +120,17 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
   let encVus = 0;
   let encDom = '';
   let encNotice: Notice | null = null;
+
+  // ——— Le point de rappel : un seul « • » sur Réviser quand des cartes attendent ———
+  const boutonReviser = paneau.querySelector<HTMLElement>('.savoir-onglets [data-on="reviser"]');
+  const titreAvecRappel = (): string => {
+    const dus = lirePaquets(storage).reduce((somme, p) => somme + statsPaquet(p, Date.now()).aRevoir, 0);
+    return `Réviser${pointRappel(dus)}`;
+  };
+  const rafraichirRappel = (): void => {
+    if (boutonReviser) boutonReviser.textContent = titreAvecRappel();
+  };
+  rafraichirRappel(); // dès l'ouverture de la page, le rappel est à sa place
 
   const lireSavoir = (): Savoir[] => {
     try {
@@ -132,6 +149,7 @@ export function creerPanneauSavoir(storage: Storage): HTMLElement {
       active = (b as HTMLElement).dataset.on as typeof active;
       paneau.querySelectorAll('.savoir-onglets button').forEach((x) => x.classList.toggle('actif', x === b));
       rendre(active);
+      rafraichirRappel(); // des cartes ont pu être revues : le « • » se rafraîchit
     }));
 
   const paquetCourant = () => (paquetSel ? lirePaquets(storage).find((p) => p.id === paquetSel) ?? null : null);
